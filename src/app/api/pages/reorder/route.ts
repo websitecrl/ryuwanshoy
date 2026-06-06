@@ -2,7 +2,6 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import type { ApiResponse } from '@/types/database'
 
 // ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
@@ -13,7 +12,7 @@ export async function PATCH(req: NextRequest) {
     const body = await req.json()
 
     if (!Array.isArray(body.pages) || body.pages.length === 0) {
-      return NextResponse.json<ApiResponse<null>>(
+      return NextResponse.json<{ data: null; error: string }>(
         { data: null, error: 'pages array is required' },
         { status: 400 }
       )
@@ -28,10 +27,10 @@ export async function PATCH(req: NextRequest) {
       )
     )
 
-    return NextResponse.json<ApiResponse<null>>({ data: null, error: null })
+    return NextResponse.json<{ data: null; error: null }>({ data: null, error: null })
   } catch (error) {
     console.error('PATCH /api/pages/reorder error:', error)
-    return NextResponse.json<ApiResponse<null>>(
+    return NextResponse.json<{ data: null; error: string }>(
       { data: null, error: 'Failed to reorder pages' },
       { status: 500 }
     )
