@@ -1,0 +1,70 @@
+import 'server-only'
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/require-admin'
+import { uploadToR2 } from '@/lib/r2'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
+// ─── GET /api/posts ───────────────────────────────────────────────────────────
+export async function GET() {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json({ data, posts: data })
+  } catch (err) {
+    console.error('GET /api/posts error:', err)
+    return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
+  }
+}
+
+// ─── POST /api/posts ──────────────────────────────────────────────────────────
+export async function POST(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (auth instanceof NextResponse) return auth
+
+  try {
+    const body = await req.json()
+
+    const MAX_SIZE = 34_000_000
+    if (body.imageBase64 && body.imageBase64.length > MAX_SIZE) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 25MB.' }, { status: 413 })
+    }
+    if (!body.imageBase64) {
+      return NextResponse.json({ error: 'imageBase64 is required' }, { status: 400 })
+    }
+
+    let imageUrl: string
+    try {
+      imageUrl = await uploadToR2(body.imageBase64, 'posts')
+    } catch (uploadErr) {
+      console.error('R2 upload error:', uploadErr)
+      return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('posts')
+      .insert({
+        title:       body.title?.trim() || null,
+        description: body.description?.trim() || null,
+        post_type:   body.post_type ?? 'illustration',
+        image_url:   imageUrl,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return NextResponse.json({ data, error: null }, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/posts error:', error)
+    return NextResponse.json({ error: 'Failed to create post' }, { status: 500 })
+  }
+}

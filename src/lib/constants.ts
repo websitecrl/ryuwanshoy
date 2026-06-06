@@ -1,0 +1,3 @@
+export const COMIC_PAGE_MAX_WIDTH = 2550
+export const COMIC_PAGE_MAX_HEIGHT = 3300
+
