@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
-import sharp from 'sharp'
 
 // ─── POST — admin only ────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -29,16 +28,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid base64 string' }, { status: 400 })
   }
 
-  let uploadBase64 = base64
-  if (folder === 'hero-banners') {
-    const buffer  = Buffer.from(matches[2], 'base64')
-    const resized = await sharp(buffer)
-      .resize(1920, null, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 85 })
-      .toBuffer()
-    uploadBase64 = `data:image/webp;base64,${resized.toString('base64')}`
-  }
-
-  const url = await uploadToR2(uploadBase64, folder)
+  const url = await uploadToR2(base64, folder)
   return NextResponse.json({ url })
 }
