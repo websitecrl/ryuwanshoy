@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ['sharp', 'sharp-20c6a5da84e2135f'],
-  images:  {
+  images: {
     dangerouslyAllowSVG: true,
     unoptimized: process.env.NODE_ENV === 'development',
     remotePatterns: [
@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '25mb',
     },
+    serverComponentsExternalPackages: ['sharp', 'sharp-20c6a5da84e2135f'],
   },
 };
 
