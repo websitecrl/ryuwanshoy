@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['sharp'],
   images: {
     dangerouslyAllowSVG: true,
-    unoptimized: process.env.NODE_ENV === 'development',
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
