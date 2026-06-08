@@ -3,20 +3,8 @@
 import { useState, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { CloudUpload, X, AlertCircle } from 'lucide-react'
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  rectSortingStrategy,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
 
@@ -123,6 +111,15 @@ export default function PageUploader({
   const sensors = useSensors(useSensor(PointerSensor))
 
   // ── Shared upload logic ──────────────────────────────────────────────────
+  function getImageDimensionns(file: File): Promise<{ width: number; height: number }> {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file)
+      const img = new window.Image()
+      img.onload = () => { resolve({ width: img.naturalWidth, height: img.naturalHeight }); URL.revokeObjectURL(url) }
+      img.src = url
+    })
+  }
+
 
   const uploadFiles = useCallback(async (files: File[]) => {
     const imgs = files.filter(f => f.type.startsWith('image/'))
@@ -138,10 +135,12 @@ export default function PageUploader({
       for (const file of imgs) {
         const base64      = await fileToBase64(file)
         const page_number = pages.length + uploaded.length + 1
+        const dim         = await getImageDimensionns(file)
+        const is_spread   = dim.width > dim.height    // landscape = spread
         const res  = await fetch('/api/pages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64: base64, page_number }),
+          body: JSON.stringify({ chapter_id: chapterId, imageBase64: base64, page_number, is_spread }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Upload failed')

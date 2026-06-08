@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -116,6 +116,20 @@ export default function FlipReader({
 
   const bg = theme === 'light' ? 'bg-[#FFFBF5]' : 'bg-[#0a0a0a]'
 
+  
+
+  type DisplayPage = Page & { spreadSide: 'left' | 'right' | null }
+
+  const displayPages: DisplayPage[] = useMemo(() =>
+  pages.flatMap((page): DisplayPage[] =>
+    page.is_spread && !isMobile
+      ? [
+          { ...page, spreadSide: 'left' },
+          { ...page, spreadSide: 'right' },
+        ]
+      : [{ ...page, spreadSide: null }]
+  ),
+  [pages, isMobile])
   // ── Reader ───────────────────────────────────────────────────────────────
   return (
     <div
@@ -232,9 +246,9 @@ export default function FlipReader({
           </div>
 
           {/* Index 1+ — comic pages */}
-          {pages.map((page, index) => (
+          {displayPages.map((page, index) => (
             <div
-              key={page.id}
+              key={`${page.id}-${page.spreadSide ?? 'single'}`}
               style={{
                 width:      bookDims.width,
                 height:     bookDims.height,
@@ -247,7 +261,13 @@ export default function FlipReader({
                 src={page.image_url}
                 alt={`Page ${page.page_number}`}
                 fill
-                className="object-contain"
+                // spread leaf: cover + clip to left or right half via object-position
+                // normal page: contain (portrait fits the leaf cleanly)
+                className={page.spreadSide ? 'object-cover' : 'object-contain'}
+                style={page.spreadSide
+                  ? { objectPosition: `${page.spreadSide} center` }
+                  : undefined
+                }
                 priority={index < 4}
                 loading={index < 4 ? 'eager' : 'lazy'}
               />

@@ -32,7 +32,7 @@ async function getChapterData(slug: string, chapterNumber: number) {
   // 3. Pages
   const { data: pages } = await supabase
     .from('pages')
-    .select('id, image_url, page_number, chapter_id')
+    .select('id, image_url, page_number, chapter_id, is_spread')
     .eq('chapter_id', chapter.id)
     .order('page_number', { ascending: true })
 

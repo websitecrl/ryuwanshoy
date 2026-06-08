@@ -126,20 +126,12 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { chapter_id, series_id, post_id, name, content, parent_id } = body
 
-  if ((!chapter_id && !post_id && !series_id) || !name?.trim() || !content?.trim()) {
+  if ((!chapter_id && !post_id && !series_id) || !content?.trim()) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
   }
 
   if (content.length > 300) {
     return NextResponse.json({ error: 'Comment is too long.' }, { status: 400 })
-  }
-
-  // ── Profanity check — name ────────────────────────────────────────────────
-  if (isProfane(name.trim())) {
-    return NextResponse.json(
-      { error: 'Your comment contains prohibited language.' },
-      { status: 400 }
-    )
   }
 
   // ── Profanity check — content ─────────────────────────────────────────────
@@ -159,7 +151,7 @@ export async function POST(req: NextRequest) {
       series_id:  series_id  ?? null,
       post_id:    post_id    ?? null,
       parent_id:  parent_id  ?? null,
-      name:       name.trim(),
+      name:       'Anonymous',
       content:    content.trim(),
       edit_token,
     })

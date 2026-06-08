@@ -56,23 +56,13 @@ function ReplyForm({
   onPosted: (comment: Comment & { edit_token: string }) => void
   onCancel: () => void
 }) {
-  const [name,       setName]       = useState('')
   const [content,    setContent]    = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Restore saved name
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ryu.commenter.name')
-      if (saved) setName(saved)
-    } catch {}
-  }, [])
-
   async function handleSubmit() {
-    const trimName    = name.trim()
     const trimContent = content.trim()
-    if (!trimName || !trimContent) {
-      toast.error('Please enter your name and a reply.')
+    if (!trimContent) {
+      toast.error('Please write a comment.')
       return
     }
 
@@ -84,14 +74,13 @@ function ReplyForm({
         body: JSON.stringify({
           series_id: seriesId,
           parent_id: parentId,
-          name:      trimName,
+          name:      'Anonymous',
           content:   trimContent,
         }),
       })
       const data = await res.json() as Comment & { edit_token?: string; error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Failed to post reply.')
 
-      try { localStorage.setItem('ryu.commenter.name', trimName) } catch {}
       toast.success('Reply posted!')
       onPosted({ ...data, edit_token: data.edit_token ?? '' })
       setContent('')
@@ -104,17 +93,6 @@ function ReplyForm({
 
   return (
     <div className="mt-3 ml-11 space-y-2">
-      <input
-        type="text"
-        value={name}
-        onChange={e => setName(e.target.value)}
-        placeholder="Your name"
-        maxLength={50}
-        className="w-full text-sm rounded-lg border px-3 py-2 outline-none transition-colors
-                   bg-[var(--ryu-surface-2)] border-[var(--ryu-border)]
-                   text-[var(--ryu-text)] placeholder:text-[var(--ryu-text-3)]
-                   focus:border-[var(--ryu-primary)]"
-      />
       <textarea
         value={content}
         onChange={e => setContent(e.target.value)}
@@ -135,7 +113,7 @@ function ReplyForm({
         </button>
         <button
           onClick={handleSubmit}
-          disabled={submitting || !name.trim() || !content.trim()}
+          disabled={submitting || !content.trim()}
           className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md
                      bg-[var(--ryu-primary)] text-white
                      disabled:opacity-40 hover:opacity-80 transition-opacity"
@@ -346,7 +324,6 @@ export default function SeriesComments({ seriesId }: Props) {
   const [comments,   setComments]   = useState<Comment[]>([])
   const [loading,    setLoading]    = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [name,       setName]       = useState('')
   const [content,    setContent]    = useState('')
   const [ownIds,     setOwnIds]     = useState<Set<string>>(new Set())
 
@@ -370,18 +347,11 @@ export default function SeriesComments({ seriesId }: Props) {
 
   useEffect(() => { fetchComments() }, [fetchComments])
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ryu.commenter.name')
-      if (saved) setName(saved)
-    } catch {}
-  }, [])
 
   async function handleSubmit() {
-    const trimName    = name.trim()
     const trimContent = content.trim()
-    if (!trimName || !trimContent) {
-      toast.error('Please enter your name and a comment.')
+    if (!trimContent) {
+      toast.error('Please write a comment.')
       return
     }
 
@@ -390,7 +360,7 @@ export default function SeriesComments({ seriesId }: Props) {
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ series_id: seriesId, name: trimName, content: trimContent }),
+        body: JSON.stringify({ series_id: seriesId, name: 'Anonymous', content: trimContent }),
       })
       const data = await res.json() as Comment & { edit_token?: string; error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Failed to post comment.')
@@ -400,7 +370,6 @@ export default function SeriesComments({ seriesId }: Props) {
         setOwnIds(prev => new Set([...prev, data.id]))
       }
 
-      try { localStorage.setItem('ryu.commenter.name', trimName) } catch {}
       setContent('')
       toast.success('Comment posted!')
       await fetchComments()
@@ -460,77 +429,54 @@ export default function SeriesComments({ seriesId }: Props) {
     <div className="w-full bg-[var(--ryu-surface-1)] border-t border-[var(--ryu-border)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-6">
 
-        {/* Header */}
-        <div className="flex items-center gap-2">
-          <MessageSquare size={18} className="text-[var(--ryu-primary)]" />
-          <h2 className="text-base font-bold text-[var(--ryu-text)]">
-            Comments
-            {totalCount > 0 && (
-              <span className="ml-1.5 text-sm font-normal text-[var(--ryu-text-3)]">
-                · {totalCount}
-              </span>
-            )}
-          </h2>
-        </div>
+    {/* Header */}
+    <div className="flex items-center gap-2">
+      <MessageSquare size={18} className="text-[var(--ryu-primary)]" />
+      <h2 className="text-base font-bold text-[var(--ryu-text)]">
+        Comments
+        {totalCount > 0 && (
+          <span className="ml-1.5 text-sm font-normal text-[var(--ryu-text-3)]">
+            · {totalCount}
+          </span>
+        )}
+      </h2>
+    </div>
 
-        {/* Comment form */}
-        <div className="rounded-xl border border-[var(--ryu-border)] p-4 space-y-3
-                        bg-[var(--ryu-surface-1)]">
-          <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wide
-                              text-[var(--ryu-text-2)]">
-              Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              placeholder="How should we call you?"
-              maxLength={50}
-              className="w-full text-sm rounded-lg border px-3 py-2 outline-none
-                         transition-colors bg-[var(--ryu-surface-2)]
-                         border-[var(--ryu-border)] text-[var(--ryu-text)]
-                         placeholder:text-[var(--ryu-text-3)]
-                         focus:border-[var(--ryu-primary)]"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-semibold uppercase tracking-wide
-                              text-[var(--ryu-text-2)]">
-              Comment
-            </label>
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              placeholder="What do you think of this series?"
-              rows={3}
-              maxLength={300}
-              className="w-full text-sm rounded-lg border px-3 py-2 resize-none
-                         outline-none transition-colors bg-[var(--ryu-surface-2)]
-                         border-[var(--ryu-border)] text-[var(--ryu-text)]
-                         placeholder:text-[var(--ryu-text-3)]
-                         focus:border-[var(--ryu-primary)]"
-            />
-            <p className="text-right text-xs text-[var(--ryu-text-3)]">
-              {content.length} / 300
-            </p>
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              onClick={handleSubmit}
-              disabled={submitting || !name.trim() || !content.trim()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold
-                         bg-[var(--ryu-primary)] text-white
-                         hover:opacity-80 disabled:opacity-40 transition-opacity"
-            >
-              <Send size={14} />
-              {submitting ? 'Posting…' : 'Post Comment'}
-            </button>
-          </div>
-        </div>
-
+    {/* Comment form */}
+    <div className="rounded-xl border border-[var(--ryu-border)] p-4 space-y-3 bg-[var(--ryu-surface-1)]">
+      <div className="space-y-1">
+        <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
+          Comment
+        </label>
+        <textarea
+          value={content}
+          onChange={e => setContent(e.target.value)}
+          placeholder="What do you think of this series?"
+          rows={3}
+          maxLength={300}
+          className="w-full text-sm rounded-lg border px-3 py-2 resize-none
+                    outline-none transition-colors bg-[var(--ryu-surface-2)]
+                    border-[var(--ryu-border)] text-[var(--ryu-text)]
+                    placeholder:text-[var(--ryu-text-3)]
+                    focus:border-[var(--ryu-primary)]"
+        />
+        <p className="text-right text-xs text-[var(--ryu-text-3)]">
+          {content.length} / 300
+        </p>
+      </div>
+      <div className="flex justify-end">
+        <button
+          onClick={handleSubmit}
+          disabled={submitting || !content.trim()}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold
+                    bg-[var(--ryu-primary)] text-white
+                    hover:opacity-80 disabled:opacity-40 transition-opacity"
+        >
+          <Send size={14} />
+          {submitting ? 'Posting…' : 'Post Comment'}
+        </button>
+      </div>
+    </div>
         {/* Comment list */}
         <div>
           {loading ? (
@@ -573,8 +519,7 @@ export default function SeriesComments({ seriesId }: Props) {
             </div>
           )}
         </div>
-
       </div>
-    </div>
+      </div>
   )
 }

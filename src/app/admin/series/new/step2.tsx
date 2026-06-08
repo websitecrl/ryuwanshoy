@@ -4,13 +4,8 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft, Loader2 } from 'lucide-react'
-import {
-  DndContext, closestCenter, PointerSensor, useSensor, useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  SortableContext, rectSortingStrategy, useSortable, arrayMove,
-} from '@dnd-kit/sortable'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from '@/lib/constants'
 import { Card, CardLabel } from './components'
@@ -33,7 +28,8 @@ function SortablePage({
       ref={setNodeRef}
       style={{
         position: 'relative',
-        aspectRatio: '460/640',
+        aspectRatio: page.is_spread ? '920 / 640' : '460 / 640',
+        gridColumn: page.is_spread ? 'span 2' : undefined,
         borderRadius: 8,
         overflow: 'hidden',
         border: `2px solid ${page.error ? '#FCA5A5' : page.uploaded ? '#86EFAC' : 'var(--ryu-border)'}`,
@@ -64,18 +60,25 @@ function SortablePage({
         </div>
       )}
 
-      {/* Page number badge */}
-      <div style={{ position: 'absolute', top: 5, left: 5, background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5, zIndex: 3 }}>
-        P{String(idx + 1).padStart(2, '0')}
+      {/* Page number + spread badge */}
+      <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
+        <span style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
+          P{String(idx + 1).padStart(2, '0')}
+        </span>
+        {page.is_spread && (
+          <span style={{ background: 'var(--ryu-primary)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, letterSpacing: 0.5 }}>
+            SPREAD
+          </span>
+        )}
       </div>
 
       {/* Remove button — stops drag from firing */}
       <button
         onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
-        style={{ position: 'absolute', top: 4, right: 4, width: 18, height: 18, borderRadius: 99, background: 'rgba(28,25,23,0.8)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
-      >
-        <X size={9} />
+        style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'rgba(28,25,23,0.8)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
+>
+  <X size={13} />
       </button>
 
       {/* Drag hint */}
@@ -128,9 +131,12 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
     const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
       const preview   = URL.createObjectURL(file)
       const dim       = await getImageDimensions(file)
-      const oversized = dim.width > COMIC_PAGE_MAX_WIDTH || dim.height > COMIC_PAGE_MAX_HEIGHT
-      if (oversized) toast.warning(`"${file.name}" exceeds recommended size — it'll still upload.`)
-      return { id: crypto.randomUUID(), file, preview, width: dim.width, height: dim.height, oversized }
+      const is_spread  = dim.width > COMIC_PAGE_MAX_WIDTH
+      const oversized  = is_spread
+        ? dim.width > COMIC_PAGE_MAX_WIDTH * 2 || dim.height > COMIC_PAGE_MAX_HEIGHT
+        : dim.width > COMIC_PAGE_MAX_WIDTH || dim.height > COMIC_PAGE_MAX_HEIGHT
+      if (oversized) toast.warning(`"${file.name}" exceeds max size — it'll still upload.`)
+      return { id: crypto.randomUUID(), file, preview, width: dim.width, height: dim.height, oversized, is_spread }
     }))
     setPages(prev => [...prev, ...newPages])
   }
@@ -181,7 +187,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
         const imageBase64 = await fileToBase64(page.file)
         const res  = await fetch('/api/pages', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1 }),
+          body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1, is_spread: page.is_spread ?? false }),
         })
         const json = await res.json()
         setPages(prev => prev.map(p => p.id === page.id
@@ -263,7 +269,9 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+                    <div style={{ display: 'grid', 
+                                  gridTemplateColumns: 'repeat(5, 1fr)', 
+                                  gap: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />
                       ))}
@@ -306,7 +314,14 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
                         <Image src={page.preview} alt={`p${idx + 1}`} fill className="object-cover" />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)' }}>Page {idx + 1}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)' }}>Page {idx + 1}</p>
+                          {page.is_spread && (
+                            <span style={{ fontSize: 8, fontWeight: 700, padding: '1px 4px', borderRadius: 3, background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)' }}>
+                              SPREAD
+                            </span>
+                          )}
+                        </div>
                         <p style={{ fontSize: 10, color: 'var(--ryu-text-3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.file.name}</p>
                       </div>
                     </div>

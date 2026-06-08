@@ -107,13 +107,14 @@ export default function ScrollReader({
             data-page={index + 1}
             ref={(el) => { pageRefs.current[index] = el }}
             className="w-full"
-            style={{ maxWidth: '800px' }}
+            style={{ maxWidth: page.is_spread ? '1200px' : '800px' }}
           >
             <Image
               src={page.image_url}
               alt={`Page ${page.page_number}`}
-              width={800}
-              height={1035}
+              // spread master is ~5100×3300 → at 800px col width, height ≈ 518px
+              width={page.is_spread ? 800 : 800}
+              height={page.is_spread ? 518 : 1035}
               sizes='(max-width: 800px) 100vw, 800px'
               className="w-full h-auto block"
               priority={index < 2}

@@ -10,6 +10,7 @@ export type LocalPage = {
   uploading?: boolean
   uploaded?: boolean
   error?: string | null
+  is_spread?: boolean
 }
 
 // All Step 1 form data — lifted to WizardShell so it persists across step changes

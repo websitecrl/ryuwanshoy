@@ -26,20 +26,18 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
       </div>
     )
   }
- 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: '#111', borderRadius: 10, overflowY: 'auto', maxHeight: 700 }}>
       {pages.map((page, idx) => (
-        <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: 500 }}>
-          {/* Page number badge */}
+        <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: page.is_spread ? 700 : 500 }}>
           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
-            P{String(idx + 1).padStart(2, '0')}
+            P{String(idx + 1).padStart(2, '0')}{page.is_spread ? ' SPREAD' : ''}
           </div>
           <Image
             src={page.preview}
             alt={`Page ${idx + 1}`}
-            width={500}
-            height={700}
+            width={page.is_spread ? 700 : 500}
+            height={page.is_spread ? 453 : 700}
             className="w-full h-auto block"
             style={{ display: 'block' }}
           />
@@ -48,17 +46,25 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
     </div>
   )
 }
- 
+
 // ── Flip viewer — 2 pages side by side, paginated ─────────────────────────
  
 // Replace the entire FlipViewer function in Step3.tsx with this
 
 function FlipViewer({ pages }: { pages: LocalPage[] }) {
-  const totalSpreads              = Math.ceil(pages.length / 2)
   const [spread, setSpread]       = useState(0)
   const [flipping, setFlipping]   = useState(false)
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
-  const [showNext, setShowNext]   = useState(false) // shows next spread's page during animation
+  const [showNext, setShowNext]   = useState(false)
+
+  // Spread pages expand into two leaves — left half + right half
+  type Leaf = LocalPage & { spreadSide: 'left' | 'right' | null }
+  const leaves: Leaf[] = pages.flatMap((page): Leaf[] =>
+    page.is_spread
+      ? [{ ...page, spreadSide: 'left' }, { ...page, spreadSide: 'right' }]
+      : [{ ...page, spreadSide: null }]
+  )
+  const totalSpreads = Math.ceil(leaves.length / 2)
 
   if (pages.length === 0) {
     return (
@@ -72,32 +78,21 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
     if (flipping) return
     if (dir === 'next' && spread >= totalSpreads - 1) return
     if (dir === 'prev' && spread <= 0) return
-
     setDirection(dir)
     setFlipping(true)
     setShowNext(true)
-
-    // At halfway point (page is edge-on) — swap the spread
-    setTimeout(() => {
-      setSpread(s => dir === 'next' ? s + 1 : s - 1)
-      setShowNext(false)
-    }, 320)
-
+    setTimeout(() => { setSpread(s => dir === 'next' ? s + 1 : s - 1); setShowNext(false) }, 320)
     setTimeout(() => setFlipping(false), 640)
   }
 
-  const leftIdx  = spread * 2
-  const rightIdx = spread * 2 + 1
-  const leftPage  = pages[leftIdx]
-  const rightPage = pages[rightIdx]
-
-  // Peek at next/prev spread for the animation ghost page
-  const nextLeftIdx  = direction === 'next' ? (spread + 1) * 2     : (spread - 1) * 2
-  const nextRightIdx = direction === 'next' ? (spread + 1) * 2 + 1 : (spread - 1) * 2 + 1
-  const ghostPage    = direction === 'next' ? pages[nextRightIdx]   : pages[nextLeftIdx]
+  const leftLeaf  = leaves[spread * 2]
+  const rightLeaf = leaves[spread * 2 + 1]
+  const ghostLeaf = direction === 'next'
+    ? leaves[(spread + 1) * 2 + 1]
+    : leaves[(spread - 1) * 2]
 
   const PAGE_W = 420
-  const PAGE_H = Math.round(400 * (3300 / 2550 ))
+  const PAGE_H = Math.round(400 * (3300 / 2550))
 
   return (
     <>
@@ -126,92 +121,73 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         {/* Spread label */}
         <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: 1 }}>
-          P{String(leftIdx + 1).padStart(2, '0')}
-          {rightPage ? ` — P${String(rightIdx + 1).padStart(2, '0')}` : ''}
+          P{String(spread * 2 + 1).padStart(2, '0')}
+          {rightLeaf ? ` — P${String(spread * 2 + 2).padStart(2, '0')}` : ''}
+          {leftLeaf?.is_spread ? ' · SPREAD' : ''}
           {' · '}Spread {spread + 1} / {totalSpreads}
         </div>
 
-        {/* Book spread */}
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch' }}>
 
-          {/* ── LEFT PAGE ── */}
-          <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: '#1a1a1a', borderRadius: '6px 0 0 6px', overflow: 'hidden', flexShrink: 0 }}>
-            {leftPage ? (
-              <Image
-                src={leftPage.preview}
-                alt={`Page ${leftIdx + 1}`}
-                fill
-                className="object-cover"
-                style={{ userSelect: 'none', pointerEvents: 'none' }}
-              />
-            ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>
-                —
-              </div>
-            )}
-            <div style={{ position: 'absolute', bottom: 8, left: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
-              P{String(leftIdx + 1).padStart(2, '0')}
-            </div>
-
-            {/* Ghost page slides in from left when going Prev */}
-            {flipping && direction === 'prev' && showNext && ghostPage && (
-              <div
-                className="curl-back"
-                style={{ position: 'absolute', inset: 0, zIndex: 2, transformOrigin: 'right center' }}
-              >
-                <Image
-                  src={ghostPage.preview}
-                  alt="turning"
-                  fill
-                  className="object-cover"
-                  style={{ userSelect: 'none', pointerEvents: 'none' }}
-                />
-              </div>
-            )}
+        {/* ── LEFT PAGE ── */}
+        <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: '#1a1a1a', borderRadius: '6px 0 0 6px', overflow: 'hidden', flexShrink: 0 }}>
+          {leftLeaf ? (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${leftLeaf.preview})`,
+              backgroundSize: leftLeaf.spreadSide ? '200% 100%' : 'contain',
+              backgroundPosition: leftLeaf.spreadSide === 'left' ? 'left center' : leftLeaf.spreadSide === 'right' ? 'right center' : 'center center',
+              backgroundRepeat: 'no-repeat',
+            }} />
+          ) : (
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>—</div>
+          )}
+          <div style={{ position: 'absolute', bottom: 8, left: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+            P{String(spread * 2 + 1).padStart(2, '0')}{leftLeaf?.spreadSide ? ' L' : ''}
           </div>
+          {flipping && direction === 'prev' && showNext && ghostLeaf && (
+            <div className="curl-back" style={{ position: 'absolute', inset: 0, zIndex: 2, transformOrigin: 'right center' }}>
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${ghostLeaf.preview})`,
+                backgroundSize: ghostLeaf.spreadSide ? '200% 100%' : 'contain',
+                backgroundPosition: ghostLeaf.spreadSide === 'left' ? 'left center' : ghostLeaf.spreadSide === 'right' ? 'right center' : 'center center',
+                backgroundRepeat: 'no-repeat',
+              }} />
+            </div>
+          )}
+        </div>
 
           {/* ── SPINE ── */}
-          <div style={{
-            width: 8, flexShrink: 0,
-            background: 'linear-gradient(to right, #0a0a0a 0%, #3a3a3a 30%, #2a2a2a 70%, #0a0a0a 100%)',
-            boxShadow: '-3px 0 10px rgba(0,0,0,0.6), 3px 0 10px rgba(0,0,0,0.6)',
-            zIndex: 3,
-          }} />
+          <div style={{ width: 8, flexShrink: 0, background: 'linear-gradient(to right, #0a0a0a 0%, #3a3a3a 30%, #2a2a2a 70%, #0a0a0a 100%)', boxShadow: '-3px 0 10px rgba(0,0,0,0.6), 3px 0 10px rgba(0,0,0,0.6)', zIndex: 3 }} />
 
           {/* ── RIGHT PAGE ── */}
           <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: '#1a1a1a', borderRadius: '0 6px 6px 0', overflow: 'hidden', flexShrink: 0 }}>
-            {rightPage ? (
-              <Image
-                src={rightPage.preview}
-                alt={`Page ${rightIdx + 1}`}
-                fill
-                className="object-cover"
-                style={{ userSelect: 'none', pointerEvents: 'none' }}
-              />
+            {rightLeaf ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${rightLeaf.preview})`,
+                backgroundSize: rightLeaf.spreadSide ? '200% 100%' : 'contain',
+                backgroundPosition: rightLeaf.spreadSide === 'left' ? 'left center' : rightLeaf.spreadSide === 'right' ? 'right center' : 'center center',
+                backgroundRepeat: 'no-repeat',
+              }} />
             ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>
-                End of chapter
-              </div>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>End of chapter</div>
             )}
-            {rightPage && (
+            {rightLeaf && (
               <div style={{ position: 'absolute', bottom: 8, right: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
-                P{String(rightIdx + 1).padStart(2, '0')}
+                P{String(spread * 2 + 2).padStart(2, '0')}{rightLeaf.spreadSide ? ' R' : ''}
               </div>
             )}
-
-            {/* Flipping page — curls forward over the right side when going Next */}
-            {flipping && direction === 'next' && showNext && ghostPage && (
-              <div
-                className="curl-forward"
-                style={{ position: 'absolute', inset: 0, zIndex: 2, transformOrigin: 'left center' }}
-              >
-                <Image
-                  src={ghostPage.preview}
-                  alt="turning"
-                  fill
-                  className="object-cover"
-                  style={{ userSelect: 'none', pointerEvents: 'none' }}
-                />
+            {flipping && direction === 'next' && showNext && ghostLeaf && (
+              <div className="curl-forward" style={{ position: 'absolute', inset: 0, zIndex: 2, transformOrigin: 'left center' }}>
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${ghostLeaf.preview})`,
+                  backgroundSize: ghostLeaf.spreadSide ? '200% 100%' : 'contain',
+                  backgroundPosition: ghostLeaf.spreadSide === 'left' ? 'left center' : ghostLeaf.spreadSide === 'right' ? 'right center' : 'center center',
+                  backgroundRepeat: 'no-repeat',
+                }} />
               </div>
             )}
           </div>
@@ -220,29 +196,19 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         {/* Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
-          <button
-            onClick={() => go('prev')}
-            disabled={spread === 0 || flipping}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? '#1a1a1a' : '#2a2a2a', color: spread === 0 ? '#444' : '#ccc', border: '1px solid #333', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}
-          >
+          <button onClick={() => go('prev')} disabled={spread === 0 || flipping}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? '#1a1a1a' : '#2a2a2a', color: spread === 0 ? '#444' : '#ccc', border: '1px solid #333', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             <ChevronLeft size={15} /> Prev
           </button>
-
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {Array.from({ length: totalSpreads }).map((_, i) => (
-              <button
-                key={i}
+              <button key={i}
                 onClick={() => { if (!flipping && i !== spread) { setDirection(i > spread ? 'next' : 'prev'); setSpread(i) } }}
-                style={{ width: i === spread ? 20 : 6, height: 6, borderRadius: 99, background: i === spread ? 'var(--ryu-primary)' : '#444', border: 'none', cursor: 'pointer', transition: 'all 200ms ease', padding: 0 }}
-              />
+                style={{ width: i === spread ? 20 : 6, height: 6, borderRadius: 99, background: i === spread ? 'var(--ryu-primary)' : '#444', border: 'none', cursor: 'pointer', transition: 'all 200ms ease', padding: 0 }} />
             ))}
           </div>
-
-          <button
-            onClick={() => go('next')}
-            disabled={spread === totalSpreads - 1 || flipping}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? '#1a1a1a' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? '#444' : '#fff', border: `1px solid ${spread === totalSpreads - 1 ? '#333' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}
-          >
+          <button onClick={() => go('next')} disabled={spread === totalSpreads - 1 || flipping}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? '#1a1a1a' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? '#444' : '#fff', border: `1px solid ${spread === totalSpreads - 1 ? '#333' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             Next <ChevronRight size={15} />
           </button>
         </div>
