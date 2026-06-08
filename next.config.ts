@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['sharp'],
+  serverExternalPackages: ['sharp', 'sharp-20c6a5da84e2135f'],
   images:  {
     dangerouslyAllowSVG: true,
     unoptimized: process.env.NODE_ENV === 'development',
