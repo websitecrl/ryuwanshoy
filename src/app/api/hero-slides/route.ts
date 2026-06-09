@@ -11,6 +11,7 @@ export async function GET() {
       order_index, series_id, chapter_id,
       series ( title, slug )
     `)
+    .eq('is_visible', true)
     .order('order_index', { ascending: true })
 
   if (error) {

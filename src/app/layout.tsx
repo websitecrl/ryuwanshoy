@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Fraunces, JetBrains_Mono, Bangers, Quicksand } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";
+import AgeGate from "@/components/shared/AgeGate";
 import { createClient } from "@/lib/supabase/server";
 import { Toaster } from 'sonner'
 
@@ -106,9 +107,11 @@ export default async function RootLayout({ children,}: Readonly<{
         />
       </head>
       <body className="min-h-full flex flex-col font-sans">
-        <ConditionalLayout siteTitle={settings?.site_title ?? null}>
-          {children}
-        </ConditionalLayout>
+        <AgeGate>
+          <ConditionalLayout siteTitle={settings?.site_title ?? null}>
+            {children}
+          </ConditionalLayout>
+        </AgeGate>
         <Toaster richColors position="bottom-center" />
       </body>
     </html>

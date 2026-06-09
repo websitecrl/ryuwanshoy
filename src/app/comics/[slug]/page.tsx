@@ -6,6 +6,7 @@ import type { ChapterWithPageCount } from '@/types/reader'
 import SeriesHeader from '@/components/shared/SeriesHeader'
 import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
+
 // Raw shape Supabase returns before we map it —
 // pages(count) comes back as [{ count: number | string }]
 type RawChapter = Tables<'chapters'> & {
@@ -41,6 +42,7 @@ async function getSeriesBySlug(slug: string): Promise<{
         )
       `)
       .eq('slug', slug)
+      .eq('is_published', true)
       .order('chapter_number', { referencedTable: 'chapters', ascending: true })
       .single()
 

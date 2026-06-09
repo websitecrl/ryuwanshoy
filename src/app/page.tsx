@@ -82,7 +82,8 @@ async function getLatestChapters() {
         series:series_id (
           title,
           slug,
-          cover_image
+          cover_image,
+          min_age
         )
       `)
       .order('published_at', { ascending: false })

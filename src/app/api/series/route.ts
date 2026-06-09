@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
+import sharp from 'sharp'
 
 type SeriesInsert = TablesInsert<'series'>
 
@@ -55,23 +56,32 @@ export async function POST(req: NextRequest) {
       genre:        body.genre  || null,
       status:       body.status || 'ongoing',
       is_published: body.is_published ?? false,
+      min_age:      body.min_age ?? 0,
     }
 
     if (body.coverImageBase64) {
-      try {
-        payload.cover_image = await uploadToR2(
-          body.coverImageBase64,
-          'covers',
-          `cover-${payload.slug}`
-        )
-      } catch {
-        return NextResponse.json(
-          { error: 'Cover image upload failed' },
-          { status: 500 }
-        )
-      }
-    }
+          try {
+            const commaIdx  = body.coverImageBase64.indexOf(',')
+            const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
+            const processed = await sharp(buffer)
+              .resize(920, null, { fit: 'inside', withoutEnlargement: true })
+              .webp({ quality: 85 })
+              .toBuffer()
+            const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
 
+            payload.cover_image = await uploadToR2(
+              webpBase64,
+              'covers',
+              `cover-${payload.slug}`
+            )
+          } catch {
+            return NextResponse.json(
+              { error: 'Cover image upload failed' },
+              { status: 500 }
+            )
+          }
+        }
+        
     const { data, error } = await supabaseAdmin
       .from('series')
       .insert(payload)

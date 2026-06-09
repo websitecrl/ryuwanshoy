@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2, deleteFromR2 } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
+import sharp from 'sharp'
 
 type Series = Tables<'series'>
 type Chapter = Tables<'chapters'> & { pages: Array<{ image_url: string }> }
@@ -21,24 +22,38 @@ export async function GET(
     const { id } = await params
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
-    const { data, error } = await supabaseAdmin
+    // Check if request is from admin
+    const auth = await requireAdmin()
+    const isAdmin = !(auth instanceof NextResponse)
+
+    const chaptersSelect = `
+      id, series_id, title, chapter_number,
+      is_early_access, published_at, created_at, is_published
+    `
+
+    const query = supabaseAdmin
       .from('series')
-      .select(`
-        *,
-        chapters (
-          id, series_id, title, chapter_number,
-          is_early_access, published_at, created_at
-        )
-      `)
+      .select(`*, chapters (${chaptersSelect})`)
       .eq(isUUID ? 'id' : 'slug', id)
       .order('chapter_number', { referencedTable: 'chapters', ascending: true })
-      .single()
+
+    // Public callers only see published series + published chapters
+    if (!isAdmin) {
+      query.eq('is_published', true)
+    }
+
+    const { data, error } = await query.single()
 
     if (error || !data) {
       return NextResponse.json(
         { data: null, error: 'Series not found' },
         { status: 404 }
       )
+    }
+
+    // Filter chapters for public callers
+    if (!isAdmin) {
+      data.chapters = (data.chapters ?? []).filter(c => c.is_published === true)
     }
 
     return NextResponse.json({ data, error: null })
@@ -50,7 +65,6 @@ export async function GET(
     )
   }
 }
-
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -83,26 +97,30 @@ export async function PATCH(
     if (body.genre !== undefined)        payload.genre        = body.genre?.trim() ?? null
     if (body.status !== undefined)       payload.status       = body.status
     if (body.is_published !== undefined) payload.is_published = body.is_published
+    if (body.min_age !== undefined)      payload.min_age      = body.min_age
 
     if (body.coverImageBase64) {
-      try {
-        if (existing.cover_image) {
-          deleteFromR2(existing.cover_image).catch(err =>
-            console.error('R2 cover cleanup failed:', err)
+        try {
+          const commaIdx  = body.coverImageBase64.indexOf(',')
+          const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
+          const processed = await sharp(buffer)
+            .resize(920, null, { fit: 'inside', withoutEnlargement: true })
+            .webp({ quality: 85 })
+            .toBuffer()
+          const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
+
+          payload.cover_image = await uploadToR2(
+            webpBase64,
+            'covers',
+            `cover-${payload.slug}`
+          )
+        } catch {
+          return NextResponse.json(
+            { error: 'Cover image upload failed' },
+            { status: 500 }
           )
         }
-        payload.cover_image = await uploadToR2(
-          body.coverImageBase64,
-          'covers',
-          `cover-${existing.slug}`
-        )
-      } catch {
-        return NextResponse.json(
-          { data: null, error: 'Cover image upload failed' },
-          { status: 500 }
-        )
       }
-    }
 
     const { data, error } = await supabaseAdmin
       .from('series')

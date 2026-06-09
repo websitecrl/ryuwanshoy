@@ -23,6 +23,7 @@ export type SeriesFormData = {
   isEA: boolean
   coverFile: File | null
   coverPreview: string | null
+  minAge: number
   bannerFile: File | null
   bannerPreview: string | null
 }

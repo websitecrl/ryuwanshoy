@@ -139,6 +139,25 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           >
             {series.status === 'ongoing' ? 'Ongoing' : 'Completed'}
           </span>
+          
+        {/* Age rating badge */}
+            {series.min_age != null && series.min_age > 0 && (
+              <span
+                className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
+                style={{
+                  fontFamily: "'Bangers', cursive",
+                  letterSpacing: '0.06em',
+                  background: series.min_age === 18
+                    ? '#A32D2D'
+                    : series.min_age === 16
+                    ? '#854F0B'
+                    : '#3B6D11',
+                  color: '#fff',
+                }}
+              >
+                {series.min_age}+
+              </span>
+            )}
         </div>
 
         {/* Chapter count */}

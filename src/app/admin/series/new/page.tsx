@@ -17,6 +17,7 @@ const DEFAULT_FORM: SeriesFormData = {
   genre: 'Action', status: 'ongoing', isEA: false,
   coverFile: null, coverPreview: null,
   bannerFile: null, bannerPreview: null,
+  minAge: 13,
 }
 
 // ── Wizard shell ───────────────────────────────────────────────────────────

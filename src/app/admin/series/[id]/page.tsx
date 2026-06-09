@@ -65,6 +65,7 @@ export default function EditSeriesPage() {
   const [description, setDescription] = useState('')
   const [genre,       setGenre]       = useState('')
   const [status,      setStatus]      = useState<'ongoing' | 'completed' | 'hiatus'>('ongoing')
+  const [minAge,      setMinAge]      = useState<number>(0)
 
   const [currentCover, setCurrentCover] = useState<string | null>(null)
   const [coverFile,    setCoverFile]    = useState<File | null>(null)
@@ -81,6 +82,7 @@ export default function EditSeriesPage() {
       setTitle(s.title); setSlug(s.slug)
       setDescription(s.description ?? ''); setGenre(s.genre ?? '')
       setStatus((s.status as 'ongoing' | 'completed' | 'hiatus') ?? 'ongoing')
+      setMinAge(s.min_age && s.min_age > 0 ? s.min_age : 13)
       setCurrentCover(s.cover_image)
       setLoading(false)
     }
@@ -108,6 +110,7 @@ export default function EditSeriesPage() {
       body: JSON.stringify({
         title: title.trim(), slug: slug.trim().toLowerCase(),
         description: description || null, genre: genre || null, status,
+        min_age: minAge,
         ...(coverImageBase64 && { coverImageBase64 }),
       }),
     })
@@ -182,26 +185,34 @@ export default function EditSeriesPage() {
                   <label style={labelStyle}>Description <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional</span></label>
                   <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="A two-line synopsis..." />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                  <div>
-                    <label style={labelStyle}>Genre</label>
-                    <select style={inputStyle} value={genre} onChange={e => setGenre(e.target.value)}>
-                      <option value="">Select genre</option>
-                      {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                    <div>
+                      <label style={labelStyle}>Genre</label>
+                      <select style={inputStyle} value={genre} onChange={e => setGenre(e.target.value)}>
+                        <option value="">Select genre</option>
+                        {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Status</label>
+                      <Select value={status} onValueChange={v => setStatus(v as typeof status)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ongoing">Ongoing</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="hiatus">Hiatus</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Age rating</label>
+                      <select style={inputStyle} value={String(minAge)} onChange={e => setMinAge(Number(e.target.value))}>
+                        <option value="13">13+</option>
+                        <option value="16">16+</option>
+                        <option value="18">18+</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label style={labelStyle}>Status</label>
-                    <Select value={status} onValueChange={v => setStatus(v as typeof status)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ongoing">Ongoing</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="hiatus">Hiatus</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
               </div>
             </Card>
 

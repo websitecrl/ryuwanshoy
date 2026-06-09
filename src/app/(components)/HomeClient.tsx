@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 import HeroBanner from "@/components/admin/reader/HeroBanner";
 import ContinueReading from "@/components/admin/reader/ContinueReading";
@@ -25,7 +25,7 @@ type Chapter = {
   chapter_number: number;
   is_early_access: boolean | null;
   published_at: string | null;
-  series: { title: string; slug: string; cover_image: string | null } | null;
+  series: { title: string; slug: string; cover_image: string | null; min_age: number | null } | null;
 };
 
 type Post = {
@@ -59,6 +59,12 @@ export default function HomeClient({
   const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
   const [chapters, setChapters] = useState(initialChapters);
   const [posts, setPosts] = useState(initialPosts);
+  const [maxAge, setMaxAge] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('ryu-age')
+    setMaxAge (stored !== null ? Number(stored) : 18)
+  }, [])
 
   const fetchHeroSlides = useCallback(async () => {
     const res = await fetch("/api/hero-slides");
@@ -104,6 +110,11 @@ export default function HomeClient({
 
   const creatorName = settings?.creator_name ?? "Ryu"
   const siteDescription = settings?.site_description ?? "Original comics and art by a Filipino creator."
+  const visibleChapters = maxAge === null ? [] 
+    : chapters.filter(ch => {
+      const age = ch.series?.min_age ?? 13
+      return age <= maxAge
+    })
 
   return (
     <>
@@ -120,7 +131,7 @@ export default function HomeClient({
         </section>
 
         <ContinueReading />
-        <LatestReleases chapters={chapters} />
+        <LatestReleases chapters={visibleChapters} />
         <SketchbookPreview posts={posts} />
 
         {/* About section */}

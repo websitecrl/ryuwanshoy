@@ -1,7 +1,7 @@
 // src/components/reader/SeriesGrid.tsx
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import SeriesCard from '@/components/admin/reader/SeriesCard'
 import type { Database } from '@/types/database'
@@ -28,10 +28,16 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
   const [activeFilter, setActiveFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [search, setSearch] = useState('')
+  const [maxAge, setMaxAge] = useState<number | null>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('ryu-age')
+    setMaxAge (stored !== null ? Number(stored) : 18)
+  }, [])    
 
   // Derive unique genres from real data, preserving insertion order
   const genreFilters = useMemo(() => {
-    const seen = new Set<string>()
+    const seen = new Set<string>() 
     const result: string[] = []
     for (const s of series) {
       if (s.genre && !seen.has(s.genre)) {
@@ -53,6 +59,10 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
 
   const filtered = useMemo(() => {
     let r = series.filter(s => {
+      // Age filter 
+      const seriesAge = s.min_age && s.min_age > 0 ? s.min_age : null
+      if (seriesAge !== null && maxAge !== null && seriesAge > maxAge) return false
+
       // Search filter
       if (search) {
         const q = search.toLowerCase()
@@ -85,7 +95,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
     }
 
     return r
-  }, [series, activeFilter, sort, search, genreFilters, chapterCounts])
+  }, [series, activeFilter, sort, search, genreFilters, chapterCounts, maxAge])
 
   return (
     <div>
@@ -204,7 +214,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
 
       {/* ── Grid ─────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-12 py-6">
-        {filtered.length === 0 ? (
+        {maxAge === null ? null : filtered.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center py-24 gap-3 rounded-xl border"
             style={{ borderColor: 'var(--ryu-border)', color: 'var(--ryu-text-muted)' }}

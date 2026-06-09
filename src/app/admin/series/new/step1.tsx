@@ -87,6 +87,7 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
     { label: 'Title set',              done: hasTitle },
     { label: 'Slug valid',             done: hasSlug },
     { label: 'Genre selected',         done: data.genre.length > 0 },
+    { label: 'Age rating set',         done: data.minAge !== undefined },
     { label: 'Cover image uploaded',   done: !!data.coverPreview },
     { label: 'Description (optional)', done: data.description.trim().length > 0 },
   ]
@@ -137,22 +138,30 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
                 <label style={labelStyle}>Description <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional · 280 char recommended</span></label>
                 <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={4} value={data.description} onChange={e => onChange({ description: e.target.value })} placeholder="A two-line synopsis that hooks the reader. Avoid spoilers, keep it punchy." />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div>
-                  <label style={labelStyle}>Genre <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
-                  <select style={inputStyle} value={data.genre} onChange={e => onChange({ genre: e.target.value })}>
-                    {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                  <div>
+                    <label style={labelStyle}>Genre <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
+                    <select style={inputStyle} value={data.genre} onChange={e => onChange({ genre: e.target.value })}>
+                      {GENRES.map(g => <option key={g} value={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Status <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
+                    <select style={inputStyle} value={data.status} onChange={e => onChange({ status: e.target.value as SeriesFormData['status'] })}>
+                      <option value="ongoing">Ongoing</option>
+                      <option value="completed">Completed</option>
+                      <option value="hiatus">Hiatus</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Age rating <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
+                    <select style={inputStyle} value={String(data.minAge)} onChange={e => onChange({ minAge: Number(e.target.value) })}>
+                      <option value="13">13+</option>
+                      <option value="16">16+</option>
+                      <option value="18">18+</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label style={labelStyle}>Status <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
-                  <select style={inputStyle} value={data.status} onChange={e => onChange({ status: e.target.value as SeriesFormData['status'] })}>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                    <option value="hiatus">Hiatus</option>
-                  </select>
-                </div>
-              </div>
             </div>
           </Card>
 
