@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2, deleteFromR2 } from '@/lib/r2'
+import sharp from 'sharp'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -75,7 +76,18 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         return NextResponse.json({ error: 'Post not found' }, { status: 404 })
       }
 
-      update.image_url = await uploadToR2(body.imageBase64, 'posts')
+      try {
+        const commaIdx  = body.imageBase64.indexOf(',')
+        const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
+        const processed = await sharp(buffer)
+          .resize(1200, null, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: 85 })
+          .toBuffer()
+        const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
+        update.image_url = await uploadToR2(webpBase64, 'posts')
+      } catch {
+        return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })
+      }
 
       if (existing.image_url) {
         deleteFromR2(existing.image_url).catch(err =>

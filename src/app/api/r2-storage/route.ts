@@ -1,3 +1,4 @@
+import 'server-only'
 import { getR2StorageBytes } from '@/lib/r2'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'

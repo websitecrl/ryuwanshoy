@@ -2,11 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Eye, EyeOff, Trash2, Plus, GripVertical, Search, X, Monitor } from 'lucide-react'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 
 type HeroSlide = {
   id: string

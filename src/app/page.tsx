@@ -73,25 +73,33 @@ async function getLatestChapters() {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('chapters')
-      .select( `
+      .select(`
         id,
         title,
         chapter_number,
         is_early_access,
         published_at,
+        is_published,
         series:series_id (
           title,
           slug,
           cover_image,
-          min_age
+          min_age,
+          is_published
         )
       `)
+      .eq('is_published', true)
       .order('published_at', { ascending: false })
       .limit(6)
 
     if (error) throw error
-    return data ?? []
-  } catch { 
+
+    // Also filter out chapters whose series is unpublished
+    return (data ?? []).filter(ch => {
+      const series = ch.series as unknown as { is_published: boolean } | null
+      return series?.is_published === true
+    })
+  } catch {
     return []
   }
 }

@@ -1,18 +1,27 @@
+import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 
-// ─── GET — public, readers need hero slides ───────────────────────────────────
+// ─── GET — public gets visible only, admin gets all ───────────────────────────
 export async function GET() {
-  const { data, error } = await supabaseAdmin
+  const auth = await requireAdmin()
+  const isAdmin = !(auth instanceof NextResponse)
+
+  const query = supabaseAdmin
     .from('hero_slides')
     .select(`
       id, headline, banner_image, is_visible,
       order_index, series_id, chapter_id,
       series ( title, slug )
     `)
-    .eq('is_visible', true)
     .order('order_index', { ascending: true })
+
+  if (!isAdmin) {
+    query.eq('is_visible', true)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

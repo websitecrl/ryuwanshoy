@@ -1,3 +1,4 @@
+import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  const MAX_SIZE = 34_000_000
+  const MAX_SIZE = 50_000_000
   if (base64.length > MAX_SIZE) {
     return NextResponse.json(
       { error: 'Image size exceeds the limit of 25MB' },

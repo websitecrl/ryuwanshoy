@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import SeriesGrid from '@/components/admin/reader/SeriesGrid'
 
-export async function generateMetadat() {
+export async function generateMetadata() {
   return {
     title: 'Comics | Ryuwanshoy',
     description: 'Browse all free webcomics by Ryu — Filipino comics, skits, and more.',

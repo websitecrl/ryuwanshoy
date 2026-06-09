@@ -1,3 +1,4 @@
+import 'server-only'
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit } from "@/lib/rate-limit"

@@ -30,12 +30,13 @@ async function getSeriesBySlug(slug: string): Promise<{
       .from('series')
       .select(`
         *,
-        chapters (
+chapters (
           id,
           series_id,
           title,
           chapter_number,
           is_early_access,
+          is_published,
           published_at,
           created_at,
           pages (count)
@@ -50,9 +51,9 @@ async function getSeriesBySlug(slug: string): Promise<{
 
     const raw = data as unknown as RawSeries
 
-    // Filter drafts server-side — only pass published chapters to the client
+// Filter drafts server-side — only pass published chapters to the client
     const chapters: ChapterWithPageCount[] = (raw.chapters ?? [])
-      .filter(ch => ch.published_at !== null)
+      .filter(ch => ch.is_published === true)
       .map(ch => ({
         ...ch,
         page_count: Number(ch.pages?.[0]?.count ?? 0),
