@@ -4,82 +4,81 @@ import { checkRateLimit } from '@/lib/rate-limit'
 import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-const filter = require('leo-profanity')
+// ─── Normalize text before checking ──────────────────────────────────────────
+// Collapses repeated chars, maps common leetspeak substitutions to base letters
+function normalize(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/(.)\1+/g, '$1')   // dedupe repeated chars (aaaa → a)
+    .replace(/@/g,  'a')
+    .replace(/0/g,  'o')
+    .replace(/1/g,  'i')
+    .replace(/3/g,  'e')
+    .replace(/4/g,  'a')
+    .replace(/5/g,  's')
+    .replace(/\$/g, 's')
+    .replace(/!/g,  'i')
+    .replace(/\*/g, '')
+    .replace(/\+/g, 't')
+}
 
-// ─── Custom word list ─────────────────────────────────────────────────────────
-// Add Filipino, Bisaya, Tagalog slurs + common variants on top of the base list
+// ─── Hard block list (English only) ──────────────────────────────────────────
+// All entries are already in their normalized form (post-leetspeak substitution).
+// normalize() is applied to both the input AND each word before matching,
+// so you don't need to add leetspeak variants here.
+const HARD_BLOCK: string[] = [
+  // Racial slurs
+  'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger',
+  'ngga', 'ngger', 'kneegga', 'negga',
+  'chink', 'gook', 'spic', 'wetback',
+  'beaner', 'kike', 'cracker', 'honky', 'coon',
+  'porch monkey', 'jungle bunny', 'tar baby',
+  'zipperhead', 'slant', 'slope',
+  'towelhead', 'raghead', 'sand nigger', 'camel jockey',
+  'redskin', 'injun', 'prairie nigger', 'halfbreed',
+  'mulatto', 'sambo', 'pickaninny',
+  'wog', 'golliwog', 'dago', 'guinea', 'greaser',
+  'paddy', 'mick', 'kraut', 'hymie', 'jap', 'nip',
 
-filter.loadDictionary('en')
+  // Homophobic / transphobic slurs
+  'faggot', 'fagot', 'fag',
+  'dyke', 'tranny', 'shemale', 'heshe', 'sodomite',
 
-filter.add([
+  // Ableist slurs
+  'retard', 'retarded',
+  'spastic', 'spaz',
+  'mongoloid', 'cripple',
+
+  // Misogynistic / sexual slurs
+  'whore', 'slut', 'cunt', 'bitch', 'skank', 'thot',
+
   // Filipino / Tagalog
-  'gago', 'gaga', 'g4go', 'bobo', 'b0b0', 'tanga', 't4nga', 'ulol',
+  'gago', 'gaga', 'bobo', 'tanga', 'ulol',
   'hudas', 'lintik', 'siraulo', 'gunggong', 'engot', 'inutil',
   'paksyet', 'pekpek', 'titi', 'jakol', 'kantot', 'kantotin',
   'salsal', 'pepe', 'etits', 'bayag', 'puke',
 
   // Bisaya / Cebuano
-  'yuta', 'buang', 'buanga', 'boang', 'atay', 'piste', 'pisti',
-  'bilat', 'boto', 'pisot', 'inahan', 'amahan',
+  'yuta', 'buang', 'boang', 'atay', 'piste', 'pisti',
+  'bilat', 'boto', 'pisot',
 
-  // Leetspeak / common bypasses
-  'f*ck', 'f**k', 'sh*t', 'b*tch', 'a**hole',
-  'fvck', 'fvk', 'f4ck', 'sh!t', 'sh1t', 'b1tch',
-  'a55', 'a$$', '@ss',
-
-  // Racism / slurs (English)
-  'nigger', 'nigga', 'n1gger', 'n1gga',
-  'chink', 'ch1nk', 'gook', 'spic', 'sp1c',
-  'kike', 'wetback', 'beaner', 'cracker',
-  'faggot', 'f4ggot', 'fagot', 'dyke',
-  'retard', 'ret4rd', 'retarded',
-  'tranny', 'tr4nny',  
- 
-  // Common hate phrases
-  'kill yourself', 'kys', 'go kill', 'die already',
-  'go die', 'kill urself',
-])
-
-// ─── Normalize text before checking ──────────────────────────────────────────
-// Catches simple leetspeak: @ → a, 0 → o, 1 → i/l, 3 → e, 4 → a, 5 → s
-function normalize(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/(.)\1+/g, '$1')
-    .replace(/@/g, 'a')
-    .replace(/0/g, 'o')
-    .replace(/1/g, 'i')
-    .replace(/3/g, 'e')
-    .replace(/4/g, 'a')
-    .replace(/5/g, 's')
-    .replace(/\$/g, 's')
-    .replace(/!/g, 'i')
-    .replace(/\*/g, '')
-    .replace(/\+/g, 't')
-}
-
-const HARD_BLOCK = [
-  'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger',
-  'chink', 'gook', 'spic',
-  'kike', 'faggot', 'fagot', 'dyke', 'retard', 'tranny',
-  'ngga', 'ngger', 'nhher', 'nhha'
+  // Self-harm / violent threats (multi-word — matched via .includes())
+  'kill yourself', 'kys',
+  'go kill yourself', 'kill urself',
+  'go die', 'die already',
+  'i will kill you', 'i will hurt you',
+  'you should die', 'hope you die',
+  'end your life', 'neck yourself',
+  'rope yourself', 'drink bleach',
+  'go hang yourself', 'slit your wrists',
 ]
 
-function containsHardBlock(text: string): boolean {
-  const n = normalize(text)
-  const original = text.toLowerCase()
-  const deduped = original.replace(/(.)\1+/g, '$1')
-  return HARD_BLOCK.some(word =>
-    n.includes(word) ||
-    original.includes(word) ||
-    deduped.includes(word)
-  )
-}
-
+// ─── Core check ───────────────────────────────────────────────────────────────
+// Normalize both the input AND each blocked word before comparing.
+// This catches all leetspeak / repeated-char bypasses in one pass.
 function isProfane(text: string): boolean {
-  return filter.check(text)
-    || filter.check(normalize(text))
-    || containsHardBlock(text)
+  const normalizedInput = normalize(text)
+  return HARD_BLOCK.some(word => normalizedInput.includes(normalize(word)))
 }
 
 // ─── GET /api/comments ────────────────────────────────────────────────────────
@@ -125,7 +124,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
-  const { chapter_id, series_id, post_id, name, content, parent_id } = body
+  const { chapter_id, series_id, post_id, content, parent_id } = body
 
   if ((!chapter_id && !post_id && !series_id) || !content?.trim()) {
     return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
@@ -135,7 +134,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Comment is too long.' }, { status: 400 })
   }
 
-  // ── Profanity check — content ─────────────────────────────────────────────
   if (isProfane(content.trim())) {
     return NextResponse.json(
       { error: 'Your comment contains prohibited language.' },
