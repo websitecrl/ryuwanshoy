@@ -101,6 +101,10 @@ export async function PATCH(
 
     if (body.coverImageBase64) {
         try {
+           if (body.coverimageBase64.length > 34_000_000) {
+              return NextResponse.json({ error: 'Image too large'}, { status: 413 })
+            }
+            
           const commaIdx  = body.coverImageBase64.indexOf(',')
           const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
           const processed = await sharp(buffer)

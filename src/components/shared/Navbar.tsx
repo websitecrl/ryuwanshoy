@@ -34,26 +34,53 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         style={{ maxWidth: 1600 }}
       >
 
-      {/* Logo */}
-      <Link href="/" className="font-comic shrink-0" style={{ letterSpacing: '0.06em' }}>
-        {logoUrl ? (
-          <img src={logoUrl} alt={siteTitle ?? 'Logo'} style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
-        ) : (
-          <span
+    {/* Logo */}
+    <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.06em' }}>
+      {logoUrl ? (
+        <>
+          {/* Logo shifts left on hover */}
+          <img
+            src={logoUrl}
+            alt={siteTitle ?? 'Logo'}
             style={{
-              fontSize: 34,
+              height: 60,
+              width: 'auto',
+              objectFit: 'contain',
+              transition: 'transform 0.25s ease',
+            }}
+            className="group-hover:-translate-x-1"
+          />
+          {/* Title slides in from the right */}
+          <span
+            className="font-comic max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap"
+            style={{
+              fontSize: 30,
               background: 'linear-gradient(135deg, #F97316 0%, #FACC15 60%, #FEF08A 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: 'drop-shadow(1px 2px 0px rgba(234,88,12,0.35))',
               letterSpacing: '0.06em',
+              paddingLeft: 8,
             }}
           >
             {siteTitle ?? 'RYUWANSHOY'}
           </span>
-        )}
-      </Link>
+        </>
+      ) : (
+        <span style={{
+          fontSize: 34,
+          background: 'linear-gradient(135deg, #F97316 0%, #FACC15 60%, #FEF08A 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          filter: 'drop-shadow(1px 2px 0px rgba(234,88,12,0.35))',
+          letterSpacing: '0.06em',
+        }}>
+          {siteTitle ?? 'RYUWANSHOY'}
+        </span>
+      )}
+    </Link>
+
         {/* Desktop links — bigger */}
         <nav className="hidden md:flex items-center gap-8 flex-1 ml-10">
           {navLinks.map((link) => (

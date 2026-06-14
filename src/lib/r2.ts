@@ -1,3 +1,4 @@
+import 'server-only'
 import { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command, ListObjectsV2CommandOutput } from '@aws-sdk/client-s3'
 import { v4 as uuidv4 } from 'uuid'
 

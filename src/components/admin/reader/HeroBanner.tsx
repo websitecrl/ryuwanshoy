@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
-type Series = { title: string; slug: string }
+type Series = { title: string; slug: string; min_age: number | null }
 type Chapter = { id: string; chapter_number: number }
 type HeroSlide = {
   id: string
@@ -18,22 +18,34 @@ type HeroSlide = {
 
 export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; siteName: string }) {
   const [idx, setIdx] = useState(0)
+  const [maxAge, setMaxAge] = useState<number | null>(null)
 
+  // Read confirmed age from localStorage
   useEffect(() => {
-    if (slides.length <= 1) return
-    const t = setInterval(() => setIdx(i => (i + 1) % slides.length), 6500)
-    return () => clearInterval(t)
-  }, [slides.length])
+    const stored = localStorage.getItem('ryu-age')
+    if (stored !== null) setMaxAge(Number(stored))
+  }, [])
 
-  // ── Fallback — no slides configured ───────────────────────────────────────
-  if (slides.length === 0) {
+  // Filter slides by reader's confirmed age
+  const visibleSlides = maxAge === null ? [] : slides.filter(s => {
+    const age = s.series?.min_age ?? 13
+    return age <= maxAge
+  })
+
+  // Auto-advance carousel
+  useEffect(() => {
+    if (visibleSlides.length <= 1) return
+    const t = setInterval(() => setIdx(i => (i + 1) % visibleSlides.length), 6500)
+    return () => clearInterval(t)
+  }, [visibleSlides.length])  
+
+  // Fallback — no visible slides
+  if (visibleSlides.length === 0) {
     return (
-      <div
-        style={{
-          height: 470, background: '#0d0d18', borderRadius: 12,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}
-      >
+      <div style={{
+        height: 470, background: '#0d0d18', borderRadius: 12,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
         <div className="text-center" style={{ color: '#fff' }}>
           <h1
             className="font-comic"
@@ -62,23 +74,16 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
     )
   }
 
-  const slide = slides[idx]
+  const slide = visibleSlides[idx]
   if (!slide) return null
 
-  const href =
-    slide.series && slide.chapter
-      ? `/comics/${slide.series.slug}/${slide.chapter.chapter_number}`
-      : slide.series ? `/comics/${slide.series.slug}` : '/comics'
-
   return (
-    <div
-      style={{
-        position: 'relative', height: 470, overflow: 'hidden',
-        background: '#0d0d18', borderRadius: 12,
-      }}
-    >
+    <div style={{
+      position: 'relative', height: 470, overflow: 'hidden',
+      background: '#0d0d18', borderRadius: 12,
+    }}>
       {/* Slides */}
-      {slides.map((s, i) => {
+      {visibleSlides.map((s, i) => {
         const slideHref =
           s.series && s.chapter
             ? `/comics/${s.series.slug}/${s.chapter.chapter_number}`
@@ -107,16 +112,13 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
             )}
 
             {/* Gradient overlay */}
-            <div
-              style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)',
-              }}
-            />
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)',
+            }} />
 
             {/* Content */}
             <div style={{ position: 'relative', zIndex: 2, maxWidth: 620 }}>
-              {/* Eyebrow badges */}
               <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
                 <span
                   className="font-comic"
@@ -130,7 +132,6 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
                 </span>
               </div>
 
-              {/* Title */}
               {s.headline && (
                 <h2
                   className="font-comic"
@@ -144,39 +145,37 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
                     <>{s.series.title} <span style={{ color: 'var(--ryu-primary)' }}>·</span>{' '}</>
                   )}
                   <span style={{ color: 'var(--ryu-primary)' }}>
-                    {s.headline.includes('—') ? (s.headline.split('—')[1] ?? s.headline).trim() : s.headline}                  </span>
+                    {s.headline.includes('—') ? (s.headline.split('—')[1] ?? s.headline).trim() : s.headline}
+                  </span>
                 </h2>
               )}
-                {/* Actions — only show if series exists */}
-                {s.series && (
-                  <div className="flex items-center gap-3" style={{ marginTop: 4 }}>
-                    <Link
-                      href={slideHref}
-                      className="font-comic inline-flex items-center gap-2"
-                      style={{
-                        height: 36, padding: '0 18px',
-                        background: '#4D2C7B', color: '#fff',
-                        border: '2.5px solid #1E1E1E', borderRadius: 8,
-                        fontSize: 14, letterSpacing: '0.06em', textTransform: 'uppercase',
-                        boxShadow: '4px 4px 0 #1E1E1E',
-                      }}
-                    >
-                      {s.chapter ? 'Read Now' : 'View Series'}
-                    </Link>
-                  </div>
-                )}
+
+              {s.series && (
+                <div className="flex items-center gap-3" style={{ marginTop: 4 }}>
+                  <Link
+                    href={slideHref}
+                    className="font-comic inline-flex items-center gap-2"
+                    style={{
+                      height: 36, padding: '0 18px',
+                      background: '#4D2C7B', color: '#fff',
+                      border: '2.5px solid #1E1E1E', borderRadius: 8,
+                      fontSize: 14, letterSpacing: '0.06em', textTransform: 'uppercase',
+                      boxShadow: '4px 4px 0 #1E1E1E',
+                    }}
+                  >
+                    {s.chapter ? 'Read Now' : 'View Series'}
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )
       })}
 
       {/* Dot indicators */}
-      {slides.length > 1 && (
-        <div
-          className="absolute flex gap-2"
-          style={{ bottom: 16, right: 24, zIndex: 3 }}
-        >
-          {slides.map((_, i) => (
+      {visibleSlides.length > 1 && (
+        <div className="absolute flex gap-2" style={{ bottom: 16, right: 24, zIndex: 3 }}>
+          {visibleSlides.map((_, i) => (
             <button
               key={i}
               onClick={() => setIdx(i)}

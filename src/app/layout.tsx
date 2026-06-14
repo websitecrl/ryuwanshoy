@@ -26,9 +26,9 @@ async function getSiteSettings() {
     const supabase = await createClient()
     const { data } = await supabase
       .from('settings')
-      .select('site_title, logo_url')
+      .select('site_title, logo_url, facebook_url, instagram_url, twitter_url, youtube_url, tiktok_url')
       .single()
-    return data 
+    return data
   } catch {
     return null
   }
@@ -76,11 +76,6 @@ const quicksand = Quicksand({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "Ryuwanshoy",
-  description: "Comics by K-OS",
-};
-
 export default async function RootLayout({ children,}: Readonly<{
   children: React.ReactNode;
 }>) {
@@ -108,7 +103,15 @@ export default async function RootLayout({ children,}: Readonly<{
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <AgeGate>
-          <ConditionalLayout siteTitle={settings?.site_title ?? null}>
+          <ConditionalLayout
+              siteTitle={settings?.site_title ?? null}
+              logoUrl={settings?.logo_url ?? null}
+              facebookUrl={settings?.facebook_url ?? null}
+              instagramUrl={settings?.instagram_url ?? null}
+              twitterUrl={settings?.twitter_url ?? null}
+              youtubeUrl={settings?.youtube_url ?? null}
+              tiktokUrl={settings?.tiktok_url ?? null}
+            >
             {children}
           </ConditionalLayout>
         </AgeGate>

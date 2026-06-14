@@ -51,7 +51,8 @@ async function getHeroSlides() {
         order_index,
         series:series_id (
           title,
-          slug
+          slug,
+          min_age
         ),
         chapter: chapter_id (
           id,

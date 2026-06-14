@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('posts')
-      .select('*')
+      .select('id, title, image_url, post_type, created_at')
       .order('created_at', { ascending: false })
 
     if (error) throw error

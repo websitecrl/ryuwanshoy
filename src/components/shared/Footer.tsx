@@ -1,5 +1,13 @@
 import Link from 'next/link'
 
+type FooterProps = {
+  facebookUrl?: string | null
+  instagramUrl?: string | null
+  twitterUrl?: string | null
+  youtubeUrl?: string | null
+  tiktokUrl?: string | null
+}
+
 const footerLinks = [
   { label: 'Home',          href: '/' },
   { label: 'Comics',        href: '/comics' },
@@ -7,16 +15,24 @@ const footerLinks = [
   { label: 'Support',       href: '/donate' },
 ]
 
-const socialLinks = [
-  { label: 'Facebook',    href: 'https://facebook.com',  icon: 'ti-brand-facebook' },
-  { label: 'Instagram',   href: 'https://instagram.com', icon: 'ti-brand-instagram' },
-  { label: 'Twitter / X', href: 'https://X.com',         icon: 'ti-brand-x' },
-  { label: 'YouTube',     href: 'https://youtube.com',   icon: 'ti-brand-youtube' },
-  { label: 'TikTok',      href: 'https://tiktok.com',    icon: 'ti-brand-tiktok' },
-]
-
-export default function Footer() {
+export default function Footer({
+  facebookUrl,
+  instagramUrl,
+  twitterUrl,
+  youtubeUrl,
+  tiktokUrl,
+}: FooterProps) {
   const currentYear = new Date().getFullYear()
+
+  const socialLinks = [
+    { label: 'Facebook',    href: facebookUrl,  icon: 'ti-brand-facebook' },
+    { label: 'Instagram',   href: instagramUrl, icon: 'ti-brand-instagram' },
+    { label: 'Twitter / X', href: twitterUrl,   icon: 'ti-brand-x' },
+    { label: 'YouTube',     href: youtubeUrl,   icon: 'ti-brand-youtube' },
+    { label: 'TikTok',      href: tiktokUrl,    icon: 'ti-brand-tiktok' },
+  ].filter((link): link is { label: string; href: string; icon: string } =>
+    typeof link.href === 'string' && link.href.trim() !== ''
+  )
 
   return (
     <footer

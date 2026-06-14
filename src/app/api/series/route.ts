@@ -60,28 +60,30 @@ export async function POST(req: NextRequest) {
     }
 
     if (body.coverImageBase64) {
-          try {
-            const commaIdx  = body.coverImageBase64.indexOf(',')
-            const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
-            const processed = await sharp(buffer)
-              .resize(920, null, { fit: 'inside', withoutEnlargement: true })
-              .webp({ quality: 85 })
-              .toBuffer()
-            const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
-
-            payload.cover_image = await uploadToR2(
-              webpBase64,
-              'covers',
-              `cover-${payload.slug}`
-            )
-          } catch {
-            return NextResponse.json(
-              { error: 'Cover image upload failed' },
-              { status: 500 }
-            )
-          }
+      try {
+        if (body.coverImageBase64.length > 34_000_000) {
+          return NextResponse.json({ error: 'Image too large' }, { status: 413 })
         }
-        
+        const commaIdx  = body.coverImageBase64.indexOf(',')
+        const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
+        const processed = await sharp(buffer)
+          .resize(920, null, { fit: 'inside', withoutEnlargement: true })
+          .webp({ quality: 85 })
+          .toBuffer()
+        const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
+        payload.cover_image = await uploadToR2(
+          webpBase64,
+          'covers',
+          `cover-${payload.slug}`
+        )
+      } catch (err) {
+        return NextResponse.json(
+          { error: 'Cover image upload failed' },
+          { status: 500 }
+        )
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from('series')
       .insert(payload)

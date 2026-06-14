@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Eye, EyeOff, Trash2, Plus, GripVertical, Search, X, Monitor } from 'lucide-react'
+import { Eye, EyeOff, Trash2, Plus, GripVertical, Search, X, Monitor, Pencil } from 'lucide-react'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 
 type HeroSlide = {
@@ -41,6 +41,14 @@ export default function HeroBannerManager() {
   const [newImagePreview, setNewImagePreview] = useState('')
   const [creating, setCreating]               = useState(false)
   const [createError, setCreateError]         = useState<string | null>(null)
+
+  // Edit wow
+  const [editingId, setEditingId]         = useState<string | null>(null)
+  const [editHeadline, setEditHeadline]   = useState('')
+  const [editSeries, setEditSeries]       = useState<SeriesSummary | null>(null)
+  const [editSearch, setEditSearch]       = useState('')
+  const [editDropOpen, setEditDropOpen]   = useState(false)
+  const [saving, setSaving]               = useState(false)
 
   const fetchSlides = useCallback(async () => {
     try {
@@ -111,7 +119,39 @@ export default function HeroBannerManager() {
     }
   }
 
-  async function handleCreate() {
+  function startEdit(slide: HeroSlide) {
+    setEditingId(slide.id)
+    setEditHeadline(slide.headline ?? '')
+    const matched = seriesList.find(s => s.id === slide.series_id) ?? null
+    setEditSeries(matched)
+    setEditSearch('')
+    setEditDropOpen(false)
+  }
+
+  async function handleSaveEdit(slideId: string) {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/hero-slides/${slideId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline:  editHeadline || null,
+          series_id: editSeries?.id ?? null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to update slide')
+      await fetchSlides()
+      setEditingId(null)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+
+    async function handleCreate() {
     setCreating(true)
     setCreateError(null)
 
@@ -164,7 +204,7 @@ export default function HeroBannerManager() {
     }
   }
 
-  return (
+return (
     <div className="space-y-4">
 
       {/* Header */}
@@ -345,130 +385,240 @@ export default function HeroBannerManager() {
       {/* Slides list */}
       <div className="space-y-3">
         {slides.map(slide => (
-          <div key={slide.id} className="flex items-center gap-4 rounded-xl p-4"
-            style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
-            <GripVertical size={18} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
+          <div key={slide.id} className="space-y-2">
 
-            {/* Thumbnail */}
-            <div className="relative shrink-0 rounded-lg overflow-hidden"
-              style={{ width: 112, height: 56, background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
-              {slide.banner_image
-                ? <img src={slide.banner_image} alt={slide.headline ?? 'Slide'} className="w-full h-full object-cover" />
-                : <div className="flex h-full items-center justify-center text-xs" style={{ color: 'var(--ryu-text-3)' }}>No image</div>
-              }
-            </div>
+            {/* Slide row */}
+            <div className="flex items-center gap-4 rounded-xl p-4"
+              style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
+              <GripVertical size={18} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
-                {slide.headline ?? '(No headline)'}
-              </p>
-              <p className="text-xs truncate mt-0.5" style={{ color: 'var(--ryu-text-2)' }}>
-                {slide.series?.title ?? 'No series linked'}
-              </p>
-            </div>
+              {/* Thumbnail */}
+              <div className="relative shrink-0 rounded-lg overflow-hidden"
+                style={{ width: 112, height: 56, background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
+                {slide.banner_image
+                  ? <img src={slide.banner_image} alt={slide.headline ?? 'Slide'} className="w-full h-full object-cover" />
+                  : <div className="flex h-full items-center justify-center text-xs" style={{ color: 'var(--ryu-text-3)' }}>No image</div>
+                }
+              </div>
 
-            {/* Visible badge */}
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0"
-              style={slide.is_visible
-                ? { background: '#DCFCE7', color: '#15803D' }
-                : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-3)', border: '1px solid var(--ryu-border)' }}>
-              {slide.is_visible ? 'Visible' : 'Hidden'}
-            </span>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
+                  {slide.headline ?? '(No headline)'}
+                </p>
+                <p className="text-xs truncate mt-0.5" style={{ color: 'var(--ryu-text-2)' }}>
+                  {slide.series?.title ?? 'No series linked'}
+                </p>
+              </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-1 shrink-0">
+              {/* Visible badge */}
+              <span className="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0"
+                style={slide.is_visible
+                  ? { background: '#DCFCE7', color: '#15803D' }
+                  : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-3)', border: '1px solid var(--ryu-border)' }}>
+                {slide.is_visible ? 'Visible' : 'Hidden'}
+              </span>
 
-              {/* Preview */}
-              <button
-                onClick={() => setPreviewSlide(previewSlide?.id === slide.id ? null : slide)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
-                style={{
-                  background: previewSlide?.id === slide.id ? 'var(--ryu-primary-soft)' : 'transparent',
-                  border: '1px solid transparent',
-                  color: previewSlide?.id === slide.id ? 'var(--ryu-primary-deep)' : 'var(--ryu-text-3)',
-                }}
-                title="Preview"
-              >
-                <Monitor size={15} />
-              </button>
+              {/* Actions */}
+              <div className="flex items-center gap-1 shrink-0">
 
-              {/* Toggle visible */}
-              <button
-                onClick={() => handleToggleVisible(slide)}
-                disabled={actioningId === slide.id}
-                className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
-                style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
-                title={slide.is_visible ? 'Hide' : 'Show'}
-              >
-                {slide.is_visible ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
+                {/* Edit */}
+                <button
+                  onClick={() => editingId === slide.id ? setEditingId(null) : startEdit(slide)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
+                  style={{
+                    background: editingId === slide.id ? 'var(--ryu-primary-soft)' : 'transparent',
+                    border: '1px solid transparent',
+                    color: editingId === slide.id ? 'var(--ryu-primary-deep)' : 'var(--ryu-text-3)',
+                  }}
+                  title="Edit"
+                >
+                  <Pencil size={15} />
+                </button>
 
-              {/* Delete — AlertDialog, trigger styled directly */}
-              <AlertDialog
-                open={pendingDeleteId === slide.id}
-                onOpenChange={open => { if (!open) setPendingDeleteId(null) }}
-              >
-                <AlertDialogTrigger
+                {/* Preview */}
+                <button
+                  onClick={() => setPreviewSlide(previewSlide?.id === slide.id ? null : slide)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
+                  style={{
+                    background: previewSlide?.id === slide.id ? 'var(--ryu-primary-soft)' : 'transparent',
+                    border: '1px solid transparent',
+                    color: previewSlide?.id === slide.id ? 'var(--ryu-primary-deep)' : 'var(--ryu-text-3)',
+                  }}
+                  title="Preview"
+                >
+                  <Monitor size={15} />
+                </button>
+
+                {/* Toggle visible */}
+                <button
+                  onClick={() => handleToggleVisible(slide)}
                   disabled={actioningId === slide.id}
-                  onClick={() => setPendingDeleteId(slide.id)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
                   style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#DC2626'}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
-                  title="Delete"
+                  title={slide.is_visible ? 'Hide' : 'Show'}
                 >
-                  <Trash2 size={15} />
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete this slide?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {slide.headline
-                        ? <>The slide "<strong>{slide.headline}</strong>" will be permanently removed.</>
-                        : 'This slide will be permanently removed.'
-                      } This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={confirmDelete}
-                      style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                  {slide.is_visible ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
 
+                {/* Delete */}
+                <AlertDialog
+                  open={pendingDeleteId === slide.id}
+                  onOpenChange={open => { if (!open) setPendingDeleteId(null) }}
+                >
+                  <AlertDialogTrigger
+                    disabled={actioningId === slide.id}
+                    onClick={() => setPendingDeleteId(slide.id)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
+                    style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#DC2626'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
+                    title="Delete"
+                  >
+                    <Trash2 size={15} />
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this slide?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {slide.headline
+                          ? <>The slide "<strong>{slide.headline}</strong>" will be permanently removed.</>
+                          : 'This slide will be permanently removed.'
+                        } This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={confirmDelete}
+                        style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+              </div>
             </div>
+
+            {/* Inline edit form */}
+            {editingId === slide.id && (
+              <div className="rounded-xl p-4 space-y-3"
+                style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
+
+                {/* Series search */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>Series</label>
+                  <div className="relative">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                      style={{ background: 'var(--ryu-surface-1)', border: `1px solid ${editDropOpen ? 'var(--ryu-primary)' : 'var(--ryu-border)'}` }}>
+                      <Search size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
+                      <input
+                        type="text"
+                        value={editSeries ? editSeries.title : editSearch}
+                        onChange={e => { setEditSearch(e.target.value); setEditSeries(null); setEditDropOpen(true) }}
+                        onFocus={() => setEditDropOpen(true)}
+                        placeholder="Search series..."
+                        className="flex-1 bg-transparent text-sm focus:outline-none"
+                        style={{ color: 'var(--ryu-text)' }}
+                      />
+                      {editSeries && (
+                        <button onClick={() => { setEditSeries(null); setEditSearch('') }}
+                          style={{ color: 'var(--ryu-text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>
+                          <X size={13} />
+                        </button>
+                      )}
+                    </div>
+                    {editDropOpen && !editSeries && (
+                      <div className="absolute top-full left-0 right-0 mt-1 rounded-lg overflow-hidden z-20 max-h-40 overflow-y-auto"
+                        style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', boxShadow: '0 8px 24px -4px rgba(0,0,0,0.12)' }}>
+                        {seriesList.filter(s => s.title.toLowerCase().includes(editSearch.toLowerCase())).length === 0
+                          ? <div className="px-3 py-3 text-sm" style={{ color: 'var(--ryu-text-3)' }}>No series found</div>
+                          : seriesList.filter(s => s.title.toLowerCase().includes(editSearch.toLowerCase())).map(s => (
+                            <button key={s.id}
+                              onClick={() => { setEditSeries(s); setEditSearch(''); setEditDropOpen(false) }}
+                              className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm cursor-pointer"
+                              style={{ background: 'none', border: 'none', color: 'var(--ryu-text)' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--ryu-surface-2)' }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'none' }}
+                            >
+                              {s.cover_image
+                                ? <img src={s.cover_image} alt={s.title} className="w-7 h-7 rounded object-cover shrink-0" />
+                                : <div className="w-7 h-7 rounded shrink-0" style={{ background: 'var(--ryu-surface-3)' }} />
+                              }
+                              {s.title}
+                            </button>
+                          ))
+                        }
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Headline */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>Headline</label>
+                  <input
+                    type="text"
+                    value={editHeadline}
+                    onChange={e => setEditHeadline(e.target.value)}
+                    placeholder="e.g. New chapter out now!"
+                    className="w-full px-3 py-2 rounded-lg text-sm focus:outline-none"
+                    style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text)' }}
+                    onFocus={e => { e.currentTarget.style.borderColor = 'var(--ryu-primary)'; setEditDropOpen(false) }}
+                    onBlur={e => e.currentTarget.style.borderColor = 'var(--ryu-border)'}
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleSaveEdit(slide.id)}
+                    disabled={saving}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60"
+                    style={{ background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)' }}
+                  >
+                    {saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                    style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text)' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Inline preview panel */}
+            {previewSlide?.id === slide.id && (
+              <div className="relative w-full rounded-xl overflow-hidden flex items-end"
+                style={{
+                  height: 320,
+                  background: previewSlide.banner_image
+                    ? `url(${previewSlide.banner_image}) center/cover`
+                    : 'linear-gradient(135deg, #1C1917, #44170A)',
+                  border: '1px solid var(--ryu-border)',
+                }}>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }} />
+                <div className="relative px-6 pb-5">
+                  {previewSlide.headline && <div className="text-white font-bold text-xl leading-tight">{previewSlide.headline}</div>}
+                  {previewSlide.series && <div className="text-white/70 text-sm mt-1">{previewSlide.series.title}</div>}
+                </div>
+                <button onClick={() => setPreviewSlide(null)}
+                  className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+                  style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
           </div>
         ))}
-
-        {/* Inline preview panel */}
-        {previewSlide && (
-          <div className="relative w-full rounded-xl overflow-hidden flex items-end"
-            style={{
-              height: 320,
-              background: previewSlide.banner_image
-                ? `url(${previewSlide.banner_image}) center/cover`
-                : 'linear-gradient(135deg, #1C1917, #44170A)',
-              border: '1px solid var(--ryu-border)',
-            }}>
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }} />
-            <div className="relative px-6 pb-5">
-              {previewSlide.headline && <div className="text-white font-bold text-xl leading-tight">{previewSlide.headline}</div>}
-              {previewSlide.series && <div className="text-white/70 text-sm mt-1">{previewSlide.series.title}</div>}
-            </div>
-            <button onClick={() => setPreviewSlide(null)}
-              className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
-              style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none' }}>
-              <X size={14} />
-            </button>
-          </div>
-        )}
       </div>
+
     </div>
   )
 }

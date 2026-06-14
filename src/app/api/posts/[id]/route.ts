@@ -77,6 +77,10 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       }
 
       try {
+         if (body.imageBase64.length > 34_000_000) {
+          return NextResponse.json({ error: 'Image too large'}, { status: 413 })
+        }
+        
         const commaIdx  = body.imageBase64.indexOf(',')
         const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
         const processed = await sharp(buffer)

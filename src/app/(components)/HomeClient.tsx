@@ -15,7 +15,7 @@ type HeroSlide = {
   banner_image: string | null;
   is_visible: boolean | null;
   order_index: number;
-  series: { title: string; slug: string } | null;
+  series: { title: string; slug: string; min_age: number | null } | null;
   chapter: { id: string; chapter_number: number } | null;
 };
 
