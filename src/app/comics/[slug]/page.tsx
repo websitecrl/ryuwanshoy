@@ -7,6 +7,8 @@ import SeriesHeader from '@/components/shared/SeriesHeader'
 import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
 
+export const dynamic = 'force-dynamic'
+
 // Raw shape Supabase returns before we map it —
 // pages(count) comes back as [{ count: number | string }]
 type RawChapter = Tables<'chapters'> & {

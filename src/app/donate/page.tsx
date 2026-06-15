@@ -157,7 +157,7 @@ function PatreonCard({ url }: { url: string }) {
           }}
         >
           <SiPatreon size={16} color="#fff" />
-          BECOME A PATRON
+          BECOME A PATREON
         </a>
       </div>
     </div>

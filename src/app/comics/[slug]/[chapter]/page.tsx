@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import ReaderShell from '@/components/reader/ReaderShell'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,12 +33,11 @@ async function getChapterData(slug: string, chapterNumber: number) {
   if (chapterError || !chapter) return null
 
   // 3. Pages
-  const { data: pages } = await supabase
+  const { data: pages } = await supabaseAdmin
     .from('pages')
     .select('id, image_url, page_number, chapter_id, is_spread')
     .eq('chapter_id', chapter.id)
     .order('page_number', { ascending: true })
-
   // 4. Prev chapter
   const { data: prevChapter } = await supabase
     .from('chapters')

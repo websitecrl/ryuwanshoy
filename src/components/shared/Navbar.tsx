@@ -81,24 +81,29 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
       )}
     </Link>
 
-        {/* Desktop links — bigger */}
+        {/* Desktop links */}
         <nav className="hidden md:flex items-center gap-8 flex-1 ml-10">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-reader transition-colors"
-              style={{
-                fontSize: 15,       // ← was 13
-                fontWeight: 600,
-                color: pathname === link.href ? 'var(--ryu-text)' : 'var(--ryu-text-2)',
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
-      </nav>
-          {/* Support CTA */}
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`${isActive ? 'font-comic' : 'font-reader'} transition-colors`}
+                style={{
+                  fontSize: 15,
+                  fontWeight: isActive ? 900 : 800,
+                  fontStyle: isActive ? 'Bangers' : 'normal',
+                  color: isActive ? '#000000' : 'var(--ryu-text-2)',
+                }}
+              >
+                {link.label}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Support CTA */}
         <div className="hidden md:flex items-center gap-3">
           <Link
             href="/donate"
@@ -106,8 +111,8 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             style={{
               height: 30,
               padding: '0 14px',
-              background: '#FEF08A',  // ← always yellow
-              color: '#1E1E1E',       // ← black text
+              background: '#FEF08A',
+              color: '#1E1E1E',
               border: '2.5px solid #1E1E1E',
               borderRadius: 8,
               fontSize: 13,
@@ -152,21 +157,25 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
           }}
         >
           <nav className="flex flex-col px-5 py-3 gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className="font-reader py-2 transition-colors"
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: pathname === link.href ? 'var(--ryu-text)' : 'var(--ryu-text-2)',
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`${isActive ? 'font-comic' : 'font-reader'} py-2 transition-colors`}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: isActive ? 800 : 600,
+                    fontStyle: isActive ? 'Bangers' : 'normal',
+                    color: isActive ? '#000000' : 'var(--ryu-text-2)',
+                  }}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
             <Link
               href="/donate"
               onClick={() => setMenuOpen(false)}

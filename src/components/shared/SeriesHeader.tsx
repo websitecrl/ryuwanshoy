@@ -15,6 +15,17 @@ type Props = {
   firstChapterNumber: number
 }
 
+const STORAGE_KEY = 'ryu.bookmarks.series'
+
+function getBookmarkMap(): Record<string, boolean> {
+  if (typeof window === 'undefined') return {}
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
+  } catch {
+    return {}
+  }
+}
+
 export default function SeriesHeader({
   series,
   chapterCount,
@@ -25,17 +36,25 @@ export default function SeriesHeader({
   const [bookmarked, setBookmarked] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // Hydrate bookmark state from localStorage
+  // Hydrate bookmark state from localStorage (same key as BookmarkedSeriesDrawer)
   useEffect(() => {
-    setBookmarked(
-      localStorage.getItem(`bookmark-series-${series.id}`) === 'true'
-    )
+    const map = getBookmarkMap()
+    setBookmarked(map[series.id] === true)
   }, [series.id])
 
   function toggleBookmark() {
+    const map = getBookmarkMap()
     const next = !bookmarked
+    if (next) {
+      map[series.id] = true
+    } else {
+      delete map[series.id]
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
     setBookmarked(next)
-    localStorage.setItem(`bookmark-series-${series.id}`, String(next))
+
+    // Notify BookmarkedSeriesDrawer on the same page (it listens to 'storage' event)
+    window.dispatchEvent(new Event('storage'))
   }
 
   async function handleShare() {
@@ -49,7 +68,6 @@ export default function SeriesHeader({
     }
   }
 
-  // Genre supports comma-separated values e.g. "Action, Drama, Historical"
   const genres = series.genre
     ? series.genre.split(',').map(g => g.trim()).filter(Boolean)
     : []
@@ -61,7 +79,7 @@ export default function SeriesHeader({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <div className="flex gap-6 sm:gap-8">
 
-        {/* ── Cover image ── */}
+        {/* Cover image */}
         <div className="flex-shrink-0 w-28 sm:w-40 md:w-48">
           <div
             className="relative w-full aspect-[460/640] rounded-xl overflow-hidden
@@ -86,12 +104,11 @@ export default function SeriesHeader({
           </div>
         </div>
 
-        {/* ── Series info ── */}
+        {/* Series info */}
         <div className="flex-1 min-w-0">
 
           {/* Badges row */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-
             {updatedLabel && (
               <span
                 className="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide
@@ -101,7 +118,6 @@ export default function SeriesHeader({
               </span>
             )}
 
-            {/* Status — TODO: replace hardcoded color classes with --ryu-* tokens */}
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border
                          tracking-wide uppercase ${
@@ -119,7 +135,6 @@ export default function SeriesHeader({
                 : 'Ongoing'}
             </span>
 
-            {/* Genre tags — TODO: replace hardcoded color classes with --ryu-* tokens */}
             {genres.map(genre => (
               <span
                 key={genre}
@@ -146,64 +161,55 @@ export default function SeriesHeader({
                        border-y border-[var(--ryu-border)] mb-5"
           >
             <div>
-              <p className="text-xl font-bold text-[var(--ryu-text)]">
-                {chapterCount}
-              </p>
+              <p className="text-xl font-bold text-[var(--ryu-text)]">{chapterCount}</p>
               <p className="text-xs text-[var(--ryu-text-3)] mt-0.5">chapters</p>
             </div>
-
             {totalPages > 0 && (
               <div>
-                <p className="text-xl font-bold text-[var(--ryu-text)]">
-                  {totalPages}
-                </p>
+                <p className="text-xl font-bold text-[var(--ryu-text)]">{totalPages}</p>
                 <p className="text-xs text-[var(--ryu-text-3)] mt-0.5">pages</p>
               </div>
             )}
           </div>
 
           {/* Action buttons */}
-            <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
 
-              {/* START READING — yellow accent fill */}
-              <Link
-                href={startHref}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full
-                          bg-[var(--ryu-accent)] text-[var(--ryu-text)]
-                          text-sm font-bold tracking-wide
-                          hover:bg-[var(--ryu-accent-deep)] transition-colors"
-              >
-                <BookOpen size={14} />
-                START READING
-              </Link>
+            <Link
+              href={startHref}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full
+                        bg-[var(--ryu-accent)] text-[var(--ryu-text)]
+                        text-sm font-bold tracking-wide
+                        hover:bg-[var(--ryu-accent-deep)] transition-colors"
+            >
+              <BookOpen size={14} />
+              START READING
+            </Link>
 
-              {/* BOOKMARK — outlined */}
-              <button
-                onClick={toggleBookmark}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2
-                          text-sm font-bold tracking-wide transition-colors ${
-                            bookmarked
-                              ? 'bg-[var(--ryu-primary-soft)] border-[var(--ryu-primary)] text-[var(--ryu-primary)]'
-                              : 'border-[var(--ryu-text)] text-[var(--ryu-text)] hover:bg-[var(--ryu-surface-3)]'
-                          }`}
-              >
-                <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
-                BOOKMARK
-              </button>
+            <button
+              onClick={toggleBookmark}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2
+                        text-sm font-bold tracking-wide transition-colors ${
+                          bookmarked
+                            ? 'bg-[var(--ryu-primary-soft)] border-[var(--ryu-primary)] text-[var(--ryu-primary)]'
+                            : 'border-[var(--ryu-text)] text-[var(--ryu-text)] hover:bg-[var(--ryu-surface-3)]'
+                        }`}
+            >
+              <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+              BOOKMARK
+            </button>
 
-              {/* SHARE — outlined, slightly muted */}
-              <button
-                onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full border
-                          border-[var(--ryu-border)] text-[var(--ryu-text-2)]
-                          text-sm font-semibold
-                          hover:bg-[var(--ryu-surface-3)] transition-colors"
-              >
-                <Share2 size={14} />
-                {copied ? 'Copied!' : 'Share'}
-              </button>
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full border
+                        border-[var(--ryu-border)] text-[var(--ryu-text-2)]
+                        text-sm font-semibold
+                        hover:bg-[var(--ryu-surface-3)] transition-colors"
+            >
+              <Share2 size={14} />
+              {copied ? 'Copied!' : 'Share'}
+            </button>
 
-            {/* SUBSCRIBE — only rendered when EA is enabled */}
             {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
               <Link
                 href="/early-access"

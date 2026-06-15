@@ -38,6 +38,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       parsed[series.id] = next
       localStorage.setItem('ryu.bookmarks.series', JSON.stringify(parsed))
       setBookmarked(next)
+      window.dispatchEvent(new StorageEvent('storage'))
     } catch {}
   }
 

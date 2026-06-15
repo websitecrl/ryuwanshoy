@@ -10,6 +10,7 @@ type ContinueReadingData = {
   chapterNumber: number
   chapterTitle: string | null
   coverImage: string | null
+  currentPage?: number
 }
 
 export default function ContinueReading() {
@@ -27,8 +28,9 @@ export default function ContinueReading() {
 
   if (!mounted || !data) return null
 
-  const href = `/comics/${data.seriesSlug}/${data.chapterNumber}`
-
+  const href = `/comics/${data.seriesSlug}/${data.chapterNumber}${
+    data.currentPage && data.currentPage > 1 ? `?page=${data.currentPage}` : ''
+  }`
   return (
     <div
       className="flex items-center gap-4"

@@ -28,7 +28,7 @@ function normalize(text: string): string {
 // so you don't need to add leetspeak variants here.
 const HARD_BLOCK: string[] = [
   // Racial slurs
-  'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger',
+  'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger','negro',
   'ngga', 'ngger', 'kneegga', 'negga',
   'chink', 'gook', 'spic', 'wetback',
   'beaner', 'kike', 'cracker', 'honky', 'coon',

@@ -81,6 +81,13 @@ export default function ReaderShell({
     try { localStorage.setItem(MODE_KEY, mode) } catch {}
   }, [mode])
 
+  // Restore page from ?page= URL param on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const page = parseInt(params.get('page') ?? '1', 10)
+    if (!isNaN(page) && page > 1) setCurrentPage(page)
+  }, [])
+
   // Check bookmark state
   useEffect(() => {
     try {
@@ -114,7 +121,7 @@ export default function ReaderShell({
     }
   }, [currentPage, pages.length, chapter.id])
 
-  // Legacy continue reading
+  // Save continue reading (includes currentPage so resume works)
   useEffect(() => {
     try {
       localStorage.setItem(
@@ -125,10 +132,11 @@ export default function ReaderShell({
           chapterNumber: chapter.chapter_number,
           chapterTitle:  chapter.title,
           coverImage:    series.cover_image,
+          currentPage,                          // ← was missing from dep array
         })
       )
     } catch {}
-  }, [series, chapter])
+  }, [series, chapter, currentPage])            // ← currentPage added here
 
   function toggleBookmark() {
     try {
