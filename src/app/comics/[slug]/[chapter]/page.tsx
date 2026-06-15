@@ -3,6 +3,8 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import ReaderShell from '@/components/reader/ReaderShell'
 
+export const dynamic = 'force-dynamic'
+
 type AdjacentChapter = { chapter_number: number } | null
 
 async function getChapterData(slug: string, chapterNumber: number) {

@@ -39,15 +39,6 @@ function getLikeToken(): string {
     return token
   } catch { return uuidv4() }
 }
-
-function getSavedName(): string {
-  try { return localStorage.getItem('ryu.commenter.name') ?? '' } catch { return '' }
-}
-
-function saveName(name: string) {
-  try { localStorage.setItem('ryu.commenter.name', name) } catch {}
-}
-
 interface Props {
   post: Post
   onClose: () => void
@@ -58,7 +49,6 @@ export default function PostModal({ post, onClose }: Props) {
   const [liked,       setLiked]       = useState(false)
   const [likeLoading, setLikeLoading] = useState(false)
   const [comments,    setComments]    = useState<Comment[]>([])
-  const [name,        setName]        = useState('')
   const [content,     setContent]     = useState('')
   const [submitting,  setSubmitting]  = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -82,11 +72,6 @@ export default function PostModal({ post, onClose }: Props) {
       .catch(() => {})
   }, [post.id])
 
-  // Restore saved name
-  useEffect(() => {
-    const saved = getSavedName()
-    if (saved) setName(saved)
-  }, [])
 
   // ESC to close
   useEffect(() => {
@@ -120,9 +105,8 @@ export default function PostModal({ post, onClose }: Props) {
   }
 
   async function handleSubmit() {
-    const trimName    = name.trim()
     const trimContent = content.trim()
-    if (!trimName || !trimContent || submitting) return
+    if(!trimContent || submitting) return 
 
     setSubmitting(true)
     setSubmitError('')
@@ -132,7 +116,7 @@ export default function PostModal({ post, onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           post_id: post.id,
-          name:    trimName,
+          name:    'Anonymous',
           content: trimContent,
         }),
       })
@@ -147,9 +131,6 @@ export default function PostModal({ post, onClose }: Props) {
         setSubmitError(data.error ?? 'Failed to post. Try again.')
         return
       }
-
-      // Persist name for next time
-      saveName(trimName)
 
       setComments(prev => [...prev, data])
       setContent('')
@@ -310,22 +291,6 @@ export default function PostModal({ post, onClose }: Props) {
               </div>
             </div>
 
-            {/* Name input */}
-            <input
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              maxLength={50}
-              className="w-full h-8 px-3 rounded-lg text-xs outline-none"
-              style={{
-                border: '0.5px solid var(--ryu-border)',
-                background: 'var(--ryu-surface-2)',
-                color: 'var(--ryu-text)',
-                fontFamily: "'Quicksand', sans-serif",
-              }}
-            />
-
             {/* Comment input + send */}
             <div className="flex gap-2">
               <input
@@ -345,12 +310,12 @@ export default function PostModal({ post, onClose }: Props) {
               />
               <button
                 onClick={handleSubmit}
-                disabled={submitting || !name.trim() || !content.trim()}
+                disabled={submitting || !content.trim()}
                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150"
                 style={{
                   background: 'var(--ryu-primary)', color: '#fff', border: 'none',
-                  opacity: (submitting || !name.trim() || !content.trim()) ? 0.4 : 1,
-                  cursor: (submitting || !name.trim() || !content.trim()) ? 'not-allowed' : 'pointer',
+                  opacity: (submitting || !content.trim()) ? 0.4 : 1,
+                  cursor: (submitting || !content.trim()) ? 'not-allowed' : 'pointer',
                 }}
               >
                 <Send size={14} />
