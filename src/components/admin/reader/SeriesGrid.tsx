@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Menu, X } from 'lucide-react'
 import SeriesCard from '@/components/admin/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import BookmarkedSeriesDrawer from '@/components/shared/BookmarkedSeriesDrawer'
@@ -28,11 +28,21 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
   const [sort, setSort] = useState('recent')
   const [search, setSearch] = useState('')
   const [maxAge, setMaxAge] = useState<number | null>(null)
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('ryu-age')
     setMaxAge(stored !== null ? Number(stored) : 18)
   }, [])
+
+  useEffect(() => {
+    if (filterSheetOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [filterSheetOpen])
 
   const genreFilters = useMemo(() => {
     const seen = new Set<string>()
@@ -119,14 +129,14 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
         </div>
       </div>
 
-      {/* ── Filter pills + Bookmarks + Sort ──────────────────────────────────── */}
+      {/* ── Filter pills (desktop) + burger (mobile) + Bookmarks + Sort ──────────────────────────────────── */}
       <div
         className="sticky top-[52px] z-30 border-b"
-        style={{ background: 'var(--ryu-bg)', borderColor: 'var(--ryu-border)' }}
+        style={{ background: '#ffffff', borderColor: 'var(--ryu-border)' }}
       >
         <div className="max-w-[1600px] mx-auto px-12 py-3 flex items-center justify-between gap-4">
-          {/* Pills */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Pills — desktop */}
+          <div className="hidden sm:flex items-center gap-2 flex-wrap">
             {pills.map(pill => (
               <button
                 key={pill.id}
@@ -144,8 +154,8 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
                     ? '0.5px solid var(--ryu-primary)'
                     : '0.5px solid var(--ryu-border)',
                   background: activeFilter === pill.id
-                    ? 'color-mix(in srgb, var(--ryu-primary) 12%, white)'
-                    : 'white',
+                    ? 'color-mix(in srgb, var(--ryu-primary) 12%, transparent)'
+                    : 'transparent',
                   color: activeFilter === pill.id
                     ? 'var(--ryu-primary)'
                     : 'var(--ryu-text-secondary)',
@@ -155,6 +165,19 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
               </button>
             ))}
           </div>
+
+          {/* Burger — mobile only */}
+          <button
+            onClick={() => setFilterSheetOpen(true)}
+            className="sm:hidden flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold"
+            style={{
+              border: '0.5px solid var(--ryu-border)',
+              color: 'var(--ryu-text-secondary)',
+              fontFamily: "'Quicksand', system-ui, sans-serif",
+            }}
+          >
+            <Menu size={15} />
+          </button>
 
           {/* Bookmarks + Sort */}
           <div className="flex items-center gap-3 shrink-0">
@@ -178,6 +201,67 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
           </div>
         </div>
       </div>
+
+      {/* ── Mobile filter bottom sheet ──────────────────────────────────── */}
+      {filterSheetOpen && (
+        <div
+          className="sm:hidden fixed inset-0 z-50 flex items-end"
+          style={{ background: 'rgba(0,0,0,0.5)' }}
+          onClick={() => setFilterSheetOpen(false)}
+        >
+          <div
+            className="w-full rounded-t-2xl px-4 pt-3 pb-6"
+            style={{ background: 'var(--ryu-surface-1)', borderTop: '0.5px solid var(--ryu-border)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              className="w-8 h-1 rounded-full mx-auto mb-3"
+              style={{ background: 'var(--ryu-border)' }}
+            />
+
+            <div className="flex items-center justify-between mb-3">
+              <span
+                className="text-xs font-semibold uppercase tracking-wide"
+                style={{ color: 'var(--ryu-text-muted)' }}
+              >
+                Filter
+              </span>
+              <button onClick={() => setFilterSheetOpen(false)} style={{ color: 'var(--ryu-text-muted)' }}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {pills.map(pill => (
+                <button
+                  key={pill.id}
+                  onClick={() => { setActiveFilter(pill.id); setFilterSheetOpen(false) }}
+                  className="rounded-full px-3 py-1.5 text-xs transition-all duration-150"
+                  style={{
+                    fontFamily: activeFilter === pill.id
+                      ? "'Bangers', cursive"
+                      : "'Quicksand', system-ui, sans-serif",
+                    fontWeight: activeFilter === pill.id ? 400 : 600,
+                    letterSpacing: activeFilter === pill.id ? '0.06em' : '0',
+                    textTransform: activeFilter === pill.id ? 'uppercase' as const : 'none' as const,
+                    border: activeFilter === pill.id
+                      ? '0.5px solid var(--ryu-primary)'
+                      : '0.5px solid var(--ryu-border)',
+                    background: activeFilter === pill.id
+                      ? 'color-mix(in srgb, var(--ryu-primary) 12%, transparent)'
+                      : 'transparent',
+                    color: activeFilter === pill.id
+                      ? 'var(--ryu-primary)'
+                      : 'var(--ryu-text-secondary)',
+                  }}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Grid ─────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-12 py-6">

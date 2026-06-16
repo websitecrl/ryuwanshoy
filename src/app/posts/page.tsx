@@ -24,7 +24,7 @@ async function getPosts(type?: string) {
   }
 
   const { data, error } = await query
-  if (error) return []
+  console.log('posts data:', data, 'error:', error)
   return data ?? []
 }
 
