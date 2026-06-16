@@ -68,9 +68,15 @@ export default function ReaderShell({
     try { localStorage.setItem(THEME_KEY, theme) } catch {}
   }, [theme])
 
-  // Restore mode
+  // Restore mode = URL param takes priority over localStorage
   useEffect(() => {
     try {
+      const params = new URLSearchParams(window.location.search)
+      const urlMode = params.get('mode') as ReadMode | null
+      if (urlMode === 'flip' || urlMode === 'scroll') {
+        setMode(urlMode)
+        return
+      }
       const saved = localStorage.getItem(MODE_KEY) as ReadMode | null
       if (saved === 'flip' || saved === 'scroll') setMode(saved)
     } catch {}
@@ -178,8 +184,6 @@ export default function ReaderShell({
         allChapters={allChapters}
         mode={mode}
         onModeChange={setMode}
-        bookmarked={bookmarked}
-        onBookmark={toggleBookmark}
         visible={uiVisible}
         onToggleVisibility={() => setUiVisible((v) => !v)}
         prevHref={prevHref}

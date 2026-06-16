@@ -50,8 +50,13 @@ export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
     ? Math.min(100, Math.round((progress.currentPage! / progress.totalPages!) * 100))
     : 0
 
-  const href = `/comics/${seriesSlug}/${progress.chapterNumber}`
+  const saveMode = typeof window !== 'undefined'
+    ? localStorage.getItem('ryu.reader.mode') ?? 'scroll'
+    : 'scroll'
 
+  const href = progress.currentPage && progress.currentPage > 1
+    ? `/comics/${seriesSlug}/${progress.chapterNumber}?page=${progress.currentPage}&mode=${saveMode}`
+    : `/comics/${seriesSlug}/${progress.chapterNumber}?mode=${saveMode}`
   return (
     <div
       className="mb-6 rounded-2xl border border-[var(--ryu-border)]
@@ -105,13 +110,15 @@ export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
           )}
         </div>
 
-        {/* CONTINUE button */}
         <Link
           href={href}
-          className="flex-shrink-0 px-4 py-2 rounded-full
-                     bg-[var(--ryu-accent)] text-[var(--ryu-text)]
-                     text-xs font-bold tracking-wide whitespace-nowrap
-                     hover:bg-[var(--ryu-accent-deep)] transition-colors"
+          className="flex-shrink-0 px-4 py-2 rounded-lg
+                    font-comic bg-[var(--ryu-accent)] text-[var(--ryu-text)]
+                    border-2 border-[var(--ryu-text)]
+                    text-xs tracking-wide whitespace-nowrap
+                    shadow-[3px_3px_0px_var(--ryu-text)]
+                    hover:-translate-y-0.5 hover:shadow-[3px_5px_0px_var(--ryu-text)]
+                    transition-all duration-100"
         >
           CONTINUE →
         </Link>

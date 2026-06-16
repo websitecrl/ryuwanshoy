@@ -81,9 +81,24 @@ export default function FlipReader({
     setTotalPages(e.object.getPageCount())
     if (!didSyncRef.current && currentPage > 1) {
       didSyncRef.current = true
-      setTimeout(() => {
-        bookRef.current?.pageFlip().turnToPage(currentPage)
-      }, 100)
+
+      let attempts = 0
+      const MAX = 20
+      
+      const tryFlip = () => {
+        const api = bookRef.current?.pageFlip()
+        if (!api) {
+          if (++attempts < MAX) setTimeout(tryFlip, 100)
+          return
+        }
+        const count = api.getPageCount()
+        if (count === 0) {
+          if (++attempts < MAX) setTimeout(tryFlip, 100)
+          return
+        }
+        api.turnToPage(currentPage)
+      }
+      setTimeout(tryFlip, 100)
     }
   }
 
@@ -101,18 +116,24 @@ export default function FlipReader({
   }, [goNext, goPrev])
 
   function onFlip(e: { data: number }) {
-    onPageChange(Math.max(1, e.data))
+    const flippedTo = Math.max(1, e.data)
+    //On Desktop spread 
+    const effectivePage = !isMobile && flippedTo + 1 <= pages.length
+      ? flippedTo + 1
+      : flippedTo
+    onPageChange(effectivePage)
   }
 
   // ── Derived state ────────────────────────────────────────────────────────
   const atStart  = currentPage <= 1
-  const atEnd    = totalPages > 0 && currentPage >= totalPages - (isMobile ? 1 : 2)
-  const progress = totalPages > 0 ? Math.round((currentPage / (totalPages - 1)) * 100) : 0
-
+  const atEnd = currentPage >= pages.length - 1
+ 
   const comicPage = Math.max(1, currentPage)
   const pageLabel = isMobile
     ? `Page ${Math.min(comicPage, pages.length)} / ${pages.length}`
     : `Page ${Math.min(comicPage, pages.length)} – ${Math.min(comicPage + 1, pages.length)} / ${pages.length}`
+  const progress = Math.min(100, Math.round((Math.min(comicPage, pages.length) / pages.length) * 100))
+
 
   const bg = theme === 'light' ? 'bg-[#FFFBF5]' : 'bg-[#0a0a0a]'
 

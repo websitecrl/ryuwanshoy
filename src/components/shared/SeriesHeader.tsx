@@ -156,59 +156,65 @@ export default function SeriesHeader({
           </h1>
 
           {/* Stats row */}
-          <div
-            className="flex items-center gap-8 py-4
-                       border-y border-[var(--ryu-border)] mb-5"
-          >
-            <div>
-              <p className="text-xl font-bold text-[var(--ryu-text)]">{chapterCount}</p>
-              <p className="text-xs text-[var(--ryu-text-3)] mt-0.5">chapters</p>
+          <div className="flex items-center gap-8 py-4 border-y border-[var(--ryu-border)] mb-5">
+            <div className="flex items-center gap-1.5">
+              <span className="font-comic text-4xl text-[var(--ryu-text)]">{chapterCount}</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-[var(--ryu-text-3)]">chapters</span>
             </div>
-            {totalPages > 0 && (
-              <div>
-                <p className="text-xl font-bold text-[var(--ryu-text)]">{totalPages}</p>
-                <p className="text-xs text-[var(--ryu-text-3)] mt-0.5">pages</p>
-              </div>
-            )}
           </div>
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
+            {/* START READING */}
+          <Link
+            href={startHref}
+            className="font-comic flex items-center gap-1 px-4
+              bg-[var(--ryu-accent)] text-[var(--ryu-text)]
+              border-2 border-[var(--ryu-text)] rounded-lg
+              text-sm uppercase tracking-wide
+              shadow-[4px_4px_0px_var(--ryu-text)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+              transition-all duration-100"
+            style={{ height: '36px' }}
+          >
+            <BookOpen size={14} />
+            START READING
+          </Link>
 
-            <Link
-              href={startHref}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full
-                        bg-[var(--ryu-accent)] text-[var(--ryu-text)]
-                        text-sm font-bold tracking-wide
-                        hover:bg-[var(--ryu-accent-deep)] transition-colors"
-            >
-              <BookOpen size={14} />
-              START READING
-            </Link>
+          {/* BOOKMARK */}
+          <button
+            onClick={toggleBookmark}
+            className={`font-comic flex items-center gap-1 px-4
+              border-2 border-[var(--ryu-text)] rounded-lg
+              text-sm uppercase tracking-wide
+              shadow-[4px_4px_0px_var(--ryu-text)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+              transition-all duration-100 ${
+                bookmarked
+                  ? 'bg-[var(--ryu-accent)] text-[var(--ryu-text)]'
+                  : 'bg-[var(--ryu-surface-3)] text-[var(--ryu-text)]'
+              }`}
+            style={{ height: '36px' }}
+          >
+            <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
+            BOOKMARK
+          </button>
 
-            <button
-              onClick={toggleBookmark}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full border-2
-                        text-sm font-bold tracking-wide transition-colors ${
-                          bookmarked
-                            ? 'bg-[var(--ryu-primary-soft)] border-[var(--ryu-primary)] text-[var(--ryu-primary)]'
-                            : 'border-[var(--ryu-text)] text-[var(--ryu-text)] hover:bg-[var(--ryu-surface-3)]'
-                        }`}
-            >
-              <Bookmark size={14} fill={bookmarked ? 'currentColor' : 'none'} />
-              BOOKMARK
-            </button>
-
-            <button
-              onClick={handleShare}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-full border
-                        border-[var(--ryu-border)] text-[var(--ryu-text-2)]
-                        text-sm font-semibold
-                        hover:bg-[var(--ryu-surface-3)] transition-colors"
-            >
-              <Share2 size={14} />
-              {copied ? 'Copied!' : 'Share'}
-            </button>
+          {/* SHARE */}
+          <button
+            onClick={handleShare}
+            className="font-comic flex items-center gap-1 px-4
+              bg-[var(--ryu-surface-3)] text-[var(--ryu-text-2)]
+              border-2 border-[var(--ryu-border)] rounded-lg
+              text-sm uppercase tracking-wide
+              shadow-[4px_4px_0px_var(--ryu-border)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-border)]
+              transition-all duration-100"
+            style={{ height: '36px' }}
+          >
+            <Share2 size={14} />
+            {copied ? 'Copied!' : 'Share'}
+          </button>
 
             {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
               <Link

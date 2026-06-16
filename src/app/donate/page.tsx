@@ -105,7 +105,7 @@ function PatreonCard({ url }: { url: string }) {
       style={{ border: '0.5px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-6 py-5" style={{ background: '#E85B46' }}>
+      <div className="flex items-center gap-3 px-6 py-5" style={{ background: '#000000' }}>
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,0.18)' }}
@@ -149,7 +149,7 @@ function PatreonCard({ url }: { url: string }) {
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 rounded-lg text-white transition-opacity hover:opacity-90"
           style={{
-            background:    '#E85B46',
+            background:    '#000000',
             fontFamily:    "'Bangers', cursive",
             letterSpacing: '0.06em',
             fontSize:      15,
@@ -196,7 +196,11 @@ function NoMethodsCard() {
       className="flex flex-col items-center gap-4 rounded-xl py-16 text-center col-span-2"
       style={{ border: '0.5px dashed var(--ryu-border)' }}
     >
-      <span className="text-4xl">🛠️</span>
+      <img
+        src="/pipilabu.png"
+        alt="No donation methods yet"
+        className="w-32 h-32 object-contain"
+      />
       <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
         Donation methods are being set up. Check back soon!
       </p>
@@ -285,7 +289,7 @@ export default function DonatePage() {
         ))}
         <div className="mt-8 text-center flex flex-col gap-3">
           <p className="text-xs" style={{ color: 'var(--ryu-text-muted)', fontFamily: "'Quicksand', sans-serif" }}>
-            Can't donate right now? No worries — reading and sharing the comic is already a huge support. 💙
+           Can't donate right now? No worries. Reading and sharing the comic is already a huge support. 
           </p>
           <div className="flex justify-center gap-4 text-xs">
             <Link href="/comics" className="font-semibold hover:underline underline-offset-2" style={{ color: 'var(--ryu-primary)' }}>

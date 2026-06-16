@@ -2,13 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import {
-  ArrowLeft, Bookmark, BookmarkCheck,
-  AlignJustify, BookOpen,
-  ChevronLeft, ChevronRight,
-  Eye, EyeOff, Sun, Moon,
-  List, X,
-} from 'lucide-react'
+import { ArrowLeft, AlignJustify, BookOpen, ChevronLeft, ChevronRight,Eye, EyeOff, Sun, Moon, List, X } from 'lucide-react'
 
 type ReadMode = 'scroll' | 'flip'
 export type ReaderTheme = 'dark' | 'light'
@@ -28,8 +22,6 @@ type Props = {
   allChapters: ChapterSummary[]
   mode: ReadMode
   onModeChange: (mode: ReadMode) => void
-  bookmarked: boolean
-  onBookmark: () => void
   visible: boolean
   onToggleVisibility: () => void
   prevHref: string | null
@@ -47,8 +39,6 @@ export default function ReaderTopBar({
   allChapters,
   mode,
   onModeChange,
-  bookmarked,
-  onBookmark,
   visible,
   onToggleVisibility,
   prevHref,
@@ -182,18 +172,7 @@ export default function ReaderTopBar({
             >
               {isLight ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-
-            {/* Bookmark */}
-            <button
-              onClick={e => { e.stopPropagation(); onBookmark() }}
-              aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark chapter'}
-              className={`p-2 transition-colors ${
-                bookmarked ? 'text-yellow-400 hover:text-yellow-300' : `${mutedText} ${hoverText}`
-              }`}
-            >
-              {bookmarked ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-            </button>
-
+            
             {/* Hide UI */}
             <button
               onClick={e => { e.stopPropagation(); onToggleVisibility() }}
@@ -291,7 +270,7 @@ export default function ReaderTopBar({
                          : 'bg-neutral-900/80 border-white/10 text-neutral-400 hover:text-white'
                      }`}
         >
-          <Eye size={15} />
+          <Eye size={20} />
         </button>
       )}
     </>

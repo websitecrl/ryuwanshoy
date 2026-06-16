@@ -98,9 +98,9 @@ function ChapterRow({
   }
 
   const btn = {
-    unread:  { label: 'READ →',     cls: 'bg-[var(--ryu-text)] text-[var(--ryu-surface-1)]' },
-    reading: { label: 'CONTINUE →', cls: 'bg-[var(--ryu-text)] text-[var(--ryu-surface-1)]' },
-    read:    { label: 'RE-READ →',  cls: 'bg-[var(--ryu-surface-3)] text-[var(--ryu-text-2)] border border-[var(--ryu-border)]' },
+    unread:  { label: 'READ →',     cls: 'font-comic bg-[var(--ryu-accent)] text-[var(--ryu-text)] border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
+    reading: { label: 'CONTINUE →', cls: 'font-comic bg-[var(--ryu-primary)] text-white border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
+    read:    { label: 'RE-READ →',  cls: 'font-comic bg-[var(--ryu-surface-1)] text-[var(--ryu-text-2)] border-2 border-[var(--ryu-border)] shadow-[3px_3px_0px_var(--ryu-border)] hover:shadow-[3px_5px_0px_var(--ryu-border)] hover:-translate-y-0.5' },
   }[readState.state]
 
   return (
@@ -158,9 +158,9 @@ function ChapterRow({
       {/* Action button */}
       <Link
         href={href}
-        className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold
-                   tracking-wide hover:opacity-80 transition-opacity
-                   whitespace-nowrap ${btn.cls}`}
+        className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs
+                  tracking-wide whitespace-nowrap
+                  transition-all duration-100 ${btn.cls}`}
       >
         {btn.label}
       </Link>

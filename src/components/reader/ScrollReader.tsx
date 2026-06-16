@@ -30,16 +30,26 @@ export default function ScrollReader({
   const didScrollRef = useRef(false)
 
   // On mount — scroll to currentPage if coming from flip mode
-  useEffect(() => {
-    if (didScrollRef.current) return
-    if (currentPage <= 1) return
+useEffect(() => {
+  if (currentPage <= 1) return
+  if (didScrollRef.current) return
 
+  let attempts = 0
+  const MAX = 20 // 20 × 100ms = 2s max wait
+
+  const tryScroll = () => {
     const el = pageRefs.current[currentPage - 1]
-    if (el) {
-      el.scrollIntoView({ behavior: 'instant' })
-      didScrollRef.current = true
+    if (!el || el.getBoundingClientRect().height === 0) {
+      // Element not rendered yet or has no height — retry
+      if (++attempts < MAX) setTimeout(tryScroll, 100)
+      return
     }
-  }, [currentPage])
+    didScrollRef.current = true
+    el.scrollIntoView({ behavior: 'instant' })
+  }
+
+  tryScroll()
+}, [currentPage])
 
   // Intersection observer — tracks which page is most visible
   useEffect(() => {
@@ -64,7 +74,7 @@ export default function ScrollReader({
     return () => observer.disconnect()
   }, [pages, onPageChange])
 
-  const progress  = Math.round((currentPage / totalPages) * 100)
+  const progress = totalPages > 0 ? Math.min(100, Math.round((currentPage / totalPages) * 100)) : 0
   const isLight   = theme === 'light'
 
   return (

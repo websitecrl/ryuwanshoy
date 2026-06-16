@@ -111,8 +111,8 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             style={{
               height: 30,
               padding: '0 14px',
-              background: '#FEF08A',
-              color: '#1E1E1E',
+              background: '#a67aec',
+              color: '#ffffff',
               border: '2.5px solid #1E1E1E',
               borderRadius: 8,
               fontSize: 13,

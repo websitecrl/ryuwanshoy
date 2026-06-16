@@ -142,14 +142,14 @@ export default function PostModal({ post, onClose }: Props) {
     }
   }
 
-  return (
+return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.85)' }}
       onClick={onClose}
     >
       <div
-        className="relative flex overflow-hidden"
+        className="relative flex overflow-hidden post-modal-inner"
         style={{
           background: 'var(--ryu-surface-1)',
           borderRadius: 12,
@@ -169,7 +169,7 @@ export default function PostModal({ post, onClose }: Props) {
 
         {/* Left: image */}
         <div
-          className="flex items-center justify-center shrink-0"
+          className="flex items-center justify-center shrink-0 post-modal-image"
           style={{
             background: '#0d0d18',
             width: 'clamp(280px, 55%, 560px)',
@@ -188,7 +188,7 @@ export default function PostModal({ post, onClose }: Props) {
 
         {/* Right: info + comments + input */}
         <div
-          className="flex flex-col flex-1 min-w-0"
+          className="flex flex-col flex-1 min-w-0 post-modal-side"
           style={{ borderLeft: '0.5px solid var(--ryu-border)', minWidth: 280 }}
         >
           {/* Post info header */}
