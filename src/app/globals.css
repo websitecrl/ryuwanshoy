@@ -7,11 +7,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains-mono);
-  --font-heading: var(--font-fraunces);
-  --font-comic: var(--font-bangers);
-  --font-body-reader: var(--font-quicksand);
+  --font-sans: var(--font-fredoka);
+  --font-mono: var(--font-fredoka);
+  --font-heading: var(--font-fredoka);
+  --font-comic: var(--font-fredoka);
+  --font-body-reader: var(--font-fredoka);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -190,26 +190,23 @@
 
 /* ─── Typography utilities ──────────────────────────────────────────────── */
 .font-heading {
-  font-family: var(--font-fraunces), Georgia, serif;
-  font-feature-settings: "ss01";
+  font-family: var(--font-fredoka), sans-serif;
+  font-weight: 600;
 }
 
 .font-mono-ryu {
-  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-family: var(--font-fredoka), sans-serif;
+  font-weight: 400;
 }
 
 .font-comic {
-  font-family: var(--font-bangers), cursive;
-  letter-spacing: 0.04em;
+  font-family: var(--font-fredoka), sans-serif;
+  font-weight: 600;
 }
 
 .font-reader {
-  font-family: var(--font-quicksand), sans-serif;
-}
-
-.font-comic {
-  font-family: var(--font-bangers), cursive !important;
-  letter-spacing: 0.04em;
+  font-family: var(--font-fredoka), sans-serif;
+  font-weight: 400;
 }
 
 /* ─── Smooth theme transitions ──────────────────────────────────────────── */

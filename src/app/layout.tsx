@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter, Fraunces, JetBrains_Mono, Bangers, Quicksand } from "next/font/google";
+import { Fredoka } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";
 import AgeGate from "@/components/shared/AgeGate";
@@ -34,45 +34,10 @@ async function getSiteSettings() {
   }
 }
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const fredoka = Fredoka({
+  variable: "--font-fredoka",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-  axes: ["opsz"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const bangers = Bangers({
-  variable: "--font-bangers",
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-});
-
-const quicksand = Quicksand({
-  variable: "--font-quicksand",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -84,16 +49,7 @@ export default async function RootLayout({ children,}: Readonly<{
   return (
     <html
       lang="en"
-      className={`
-        ${geistSans.variable}
-        ${geistMono.variable}
-        ${inter.variable}
-        ${fraunces.variable}
-        ${jetbrainsMono.variable}
-        ${bangers.variable}
-        ${quicksand.variable}
-        h-full antialiased
-      `}
+      className={`${fredoka.variable} h-full antialiased`}
     >
       <head>
         <link
