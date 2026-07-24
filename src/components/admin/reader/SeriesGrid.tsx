@@ -122,7 +122,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
                 border: '0.5px solid var(--ryu-border)',
                 background: 'var(--ryu-bg)',
                 color: 'var(--ryu-text)',
-                fontFamily: "'Quicksand', system-ui, sans-serif",
+                fontFamily: "var(--font-fredoka), sans-serif",
               }}
             />
           </div>
@@ -143,11 +143,9 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
                 onClick={() => setActiveFilter(pill.id)}
                 className="rounded-full px-3 py-1 text-xs transition-all duration-150"
                 style={{
-                  fontFamily: activeFilter === pill.id
-                    ? "'Bangers', cursive"
-                    : "'Quicksand', system-ui, sans-serif",
-                  fontWeight: activeFilter === pill.id ? 400 : 600,
-                  letterSpacing: activeFilter === pill.id ? '0.06em' : '0',
+                  fontFamily: "var(--font-fredoka), sans-serif",
+                  fontWeight: activeFilter === pill.id ? 600 : 500,
+                  letterSpacing: activeFilter === pill.id ? '0.02em' : '0',
                   textTransform: activeFilter === pill.id ? 'uppercase' as const : 'none' as const,
                   fontSize: activeFilter === pill.id ? '12px' : '11px',
                   border: activeFilter === pill.id
@@ -173,7 +171,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
             style={{
               border: '0.5px solid var(--ryu-border)',
               color: 'var(--ryu-text-secondary)',
-              fontFamily: "'Quicksand', system-ui, sans-serif",
+              fontFamily: "var(--font-fredoka), sans-serif",
             }}
           >
             <Menu size={15} />
@@ -190,7 +188,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
                 border: '0.5px solid var(--ryu-border)',
                 background: 'var(--ryu-bg)',
                 color: 'var(--ryu-text-secondary)',
-                fontFamily: "'Quicksand', system-ui, sans-serif",
+                fontFamily: "var(--font-fredoka), sans-serif",
                 fontWeight: 500,
               }}
             >
@@ -238,11 +236,9 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
                   onClick={() => { setActiveFilter(pill.id); setFilterSheetOpen(false) }}
                   className="rounded-full px-3 py-1.5 text-xs transition-all duration-150"
                   style={{
-                    fontFamily: activeFilter === pill.id
-                      ? "'Bangers', cursive"
-                      : "'Quicksand', system-ui, sans-serif",
-                    fontWeight: activeFilter === pill.id ? 400 : 600,
-                    letterSpacing: activeFilter === pill.id ? '0.06em' : '0',
+                    fontFamily: "var(--font-fredoka), sans-serif",
+                    fontWeight: activeFilter === pill.id ? 600 : 500,
+                    letterSpacing: activeFilter === pill.id ? '0.02em' : '0',
                     textTransform: activeFilter === pill.id ? 'uppercase' as const : 'none' as const,
                     border: activeFilter === pill.id
                       ? '0.5px solid var(--ryu-primary)'
@@ -273,7 +269,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
             <Search size={32} strokeWidth={1.5} />
             <p
               className="text-sm font-medium"
-              style={{ fontFamily: "'Quicksand', sans-serif" }}
+              style={{ fontFamily: "var(--font-fredoka), sans-serif" }}
             >
               {series.length === 0 ? 'No comics published yet' : 'No results found'}
             </p>

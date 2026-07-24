@@ -18,9 +18,10 @@ export default function NotFound() {
     >
       <h1
         style={{
-          fontFamily: 'var(--font-bangers)',
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 'clamp(80px, 15vw, 160px)',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.02em',
           color: 'var(--ryu-primary)',
           lineHeight: 1,
         }}
@@ -29,9 +30,10 @@ export default function NotFound() {
       </h1>
       <p
         style={{
-          fontFamily: 'var(--font-bangers)',
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 'clamp(20px, 4vw, 32px)',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.02em',
           color: 'var(--ryu-text)',
         }}
       >
@@ -49,9 +51,10 @@ export default function NotFound() {
           border: '2px solid var(--ryu-primary)',
           background: 'var(--ryu-primary)',
           color: '#1E1E1E',
-          fontFamily: 'var(--font-bangers)',
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 20,
-          letterSpacing: '0.05em',
+          letterSpacing: '0.02em',
           cursor: 'pointer',
           textDecoration: 'none',
         }}

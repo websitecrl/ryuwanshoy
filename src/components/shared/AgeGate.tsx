@@ -69,17 +69,18 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
 
         {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="36" cy="36" r="32" stroke="var(--destructive)" strokeWidth="4.5" fill="var(--ryu-surface-1)"/>
-            <text x="36" y="50" textAnchor="middle" fontSize="40" fontWeight="bold" fill="var(--destructive)" fontFamily="Bangers, cursive" letterSpacing="1">18</text>
-            <line x1="10" y1="10" x2="62" y2="62" stroke="var(--destructive)" strokeWidth="5" strokeLinecap="round"/>
+          <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="47" stroke="var(--destructive)" strokeWidth="6" fill="var(--ryu-surface-1)"/>
+            <text x="48" y="49" textAnchor="middle" dominantBaseline="central" fontSize="80" fontWeight="bold" fill="var(--destructive)" fontFamily="var(--font-fredoka), sans-serif">18</text>
+            <line x1="14" y1="14" x2="90" y2="86" stroke="var(--destructive)" strokeWidth="6" strokeLinecap="round"/>
           </svg>
         </div>
 
         {/* Heading */}
         <h1 style={{
-          fontFamily: "'Bangers', cursive",
-          fontSize: 36, letterSpacing: '0.06em',
+          fontFamily: "var(--font-fredoka), sans-serif",
+          fontWeight: 600,
+          fontSize: 36, letterSpacing: '0.02em',
           color: 'var(--ryu-text)', margin: '0 0 10px',
         }}>
           HOW OLD ARE YOU?
@@ -87,7 +88,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
         <p style={{
           fontSize: 14, color: 'var(--ryu-text-2)', lineHeight: 1.6,
           margin: '0 0 24px',
-          fontFamily: "'Quicksand', sans-serif",
+          fontFamily: "var(--font-fredoka), sans-serif",
         }}>
           We'll show you comics that fit your age. Pick the band<br />
           that's true for you — you'll only be asked once.
@@ -113,22 +114,24 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
               }}
             >
               <span style={{
-                fontFamily: "'Bangers', cursive",
-                fontSize: 32, letterSpacing: '0.06em',
+                fontFamily: "var(--font-fredoka), sans-serif",
+                fontWeight: 600,
+                fontSize: 32, letterSpacing: '0.01em',
                 color: 'var(--ryu-surface-1)', display: 'block', lineHeight: 1,
               }}>
                 {tier.num}
               </span>
               <span style={{
-                fontFamily: "'Bangers', cursive",
-                fontSize: 13, letterSpacing: '0.08em',
+                fontFamily: "var(--font-fredoka), sans-serif",
+                fontWeight: 600,
+                fontSize: 13, letterSpacing: '0.04em',
                 color: 'var(--ryu-surface-1)', display: 'block',
                 marginBottom: 4, opacity: 0.9,
               }}>
                 {tier.label}
               </span>
               <span style={{
-                fontFamily: "'Quicksand', sans-serif",
+                fontFamily: "var(--font-fredoka), sans-serif",
                 fontSize: 11, color: 'var(--ryu-surface-1)',
                 display: 'block', lineHeight: 1.4, opacity: 0.85,
               }}>
@@ -146,11 +149,14 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
             width: '100%', padding: '14px',
             borderRadius: 10,
             border: '3px solid var(--ryu-text)',
-            background: selected !== null ? 'var(--ryu-primary)' : 'var(--ryu-text-3)',
+            background: selected !== null
+              ? TIERS.find(t => t.value === selected)?.bg ?? 'var(--ryu-primary)'
+              : 'var(--ryu-text-3)',
             boxShadow: selected !== null ? '4px 4px 0 var(--ryu-text)' : 'none',
             color: 'var(--ryu-surface-1)',
-            fontFamily: "'Bangers', cursive",
-            fontSize: 18, letterSpacing: '0.1em',
+            fontFamily: "var(--font-fredoka), sans-serif",
+            fontWeight: 600,
+            fontSize: 18, letterSpacing: '0.04em',
             cursor: selected === null ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s, box-shadow 0.2s',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -162,7 +168,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
         {/* Fine print */}
         <p style={{
           fontSize: 11, color: 'var(--ryu-text-3)', margin: '14px 0 0',
-          fontFamily: "'Quicksand', sans-serif",
+          fontFamily: "var(--font-fredoka), sans-serif",
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>
           <span style={{ fontSize: 13 }}>☐</span>

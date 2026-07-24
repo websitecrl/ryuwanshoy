@@ -5,7 +5,7 @@ export async function requireAdmin() {
     const supabase = await createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
 
-    if (error || !user || user.email !== process.env.ADMIN_EMAIL ) {
+    if (error || !user || user.id !== process.env.ADMIN_USER_ID ) {
         return NextResponse.json(
             { error: 'Unauthorized'},
             { status: 401 }

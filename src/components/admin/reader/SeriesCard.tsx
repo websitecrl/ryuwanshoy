@@ -1,4 +1,3 @@
-// src/components/reader/SeriesCard.tsx
 'use client'
 
 import Image from 'next/image'
@@ -102,7 +101,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           className="text-sm font-semibold leading-snug line-clamp-2"
           style={{
             color: 'var(--ryu-text)',
-            fontFamily: "'Quicksand', system-ui, sans-serif",
+            fontFamily: "var(--font-fredoka), sans-serif",
           }}
         >
           {series.title}
@@ -114,8 +113,9 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
             <span
               className="text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5"
               style={{
-                fontFamily: "'Bangers', cursive",
-                letterSpacing: '0.06em',
+                fontFamily: "var(--font-fredoka), sans-serif",
+                fontWeight: 600,
+                letterSpacing: '0.02em',
                 background: 'var(--ryu-surface-2)',
                 color: 'var(--ryu-text-secondary)',
               }}
@@ -126,8 +126,9 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           <span
             className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
             style={{
-              fontFamily: "'Bangers', cursive",
-              letterSpacing: '0.06em',
+              fontFamily: "var(--font-fredoka), sans-serif",
+              fontWeight: 600,
+              letterSpacing: '0.02em',
               background:
                 series.status === 'completed'
                   ? 'var(--ryu-surface-2)'
@@ -146,8 +147,9 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
               <span
                 className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
                 style={{
-                  fontFamily: "'Bangers', cursive",
-                  letterSpacing: '0.06em',
+                  fontFamily: "var(--font-fredoka), sans-serif",
+                  fontWeight: 600,
+                  letterSpacing: '0.02em',
                   background: series.min_age === 18
                     ? '#A32D2D'
                     : series.min_age === 16
@@ -166,7 +168,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
         className="text-xs font-semibold"
         style={{
             color: 'var(--ryu-text-2)',
-            fontFamily: "'Quicksand', system-ui, sans-serif",
+            fontFamily: "var(--font-fredoka), sans-serif",
         }}
         >
         {chapterLabel}

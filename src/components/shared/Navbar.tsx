@@ -35,7 +35,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
       >
 
     {/* Logo */}
-    <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.06em' }}>
+    <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.02em' }}>
       {logoUrl ? (
         <>
           {/* Logo shifts left on hover */}
@@ -54,12 +54,14 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
           <span
             className="font-comic max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap"
             style={{
+              fontFamily: 'var(--font-fredoka), sans-serif',
+              fontWeight: 600,
               fontSize: 30,
               background: 'linear-gradient(135deg, #F97316 0%, #FACC15 60%, #FEF08A 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              letterSpacing: '0.06em',
+              letterSpacing: '0.02em',
               paddingLeft: 8,
             }}
           >
@@ -68,13 +70,15 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         </>
       ) : (
         <span style={{
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 34,
           background: 'linear-gradient(135deg, #F97316 0%, #FACC15 60%, #FEF08A 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
           filter: 'drop-shadow(1px 2px 0px rgba(234,88,12,0.35))',
-          letterSpacing: '0.06em',
+          letterSpacing: '0.02em',
         }}>
           {siteTitle ?? 'RYUWANSHOY'}
         </span>
@@ -92,8 +96,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                 className={`${isActive ? 'font-comic' : 'font-reader'} transition-colors`}
                 style={{
                   fontSize: 15,
-                  fontWeight: isActive ? 900 : 800,
-                  fontStyle: isActive ? 'Bangers' : 'normal',
+                  fontWeight: isActive ? 700 : 500,
                   color: isActive ? '#000000' : 'var(--ryu-text-2)',
                 }}
               >
@@ -167,8 +170,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                   className={`${isActive ? 'font-comic' : 'font-reader'} py-2 transition-colors`}
                   style={{
                     fontSize: 13,
-                    fontWeight: isActive ? 800 : 600,
-                    fontStyle: isActive ? 'Bangers' : 'normal',
+                    fontWeight: isActive ? 700 : 500,
                     color: isActive ? '#000000' : 'var(--ryu-text-2)',
                   }}
                 >

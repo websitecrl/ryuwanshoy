@@ -1,8 +1,8 @@
 import 'server-only'
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit } from "@/lib/rate-limit"
-import { error } from "console"
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
+import { error } from 'console'
 
 // GET — get like count + check if token already liked
 export async function GET(req: NextRequest) {
@@ -35,11 +35,10 @@ export async function GET(req: NextRequest) {
 
 // POST — toggle like
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('CF-Connecting-IP')
-       ?? req.headers.get('x-forwarded-for')
-       ?? 'unknown'
+  const ip = getClientIp(req)
 
-  if (!checkRateLimit(`like:${ip}`, 20, 60_000)) {
+  // Check if the Ip made more than 20likes or unlikes in the last 60 seconds 
+  if (!(await checkRateLimit(`like:${ip}`, 20, 60_000))) {
     return NextResponse.json(
       { error: 'Too many requests. Please slow down.'},
       { status: 429 }
@@ -71,10 +70,18 @@ export async function POST(req: NextRequest) {
   }
 
   // Like
-  await supabaseAdmin.from('likes').insert({ post_id, like_token })
-  const { count } = await supabaseAdmin
+  const { error: insertError } = await supabaseAdmin
+    .from('likes')
+    //upsert - insert , but if therss a conflict do something else instead of failing 
+    .upsert({ post_id, like_token }, { onConflict: 'post_id,like_token', ignoreDuplicates:true })
+
+   if (insertError) {
+    return NextResponse.json({ error: insertError.message }, { status: 500 })
+   }
+
+   const { count } = await supabaseAdmin
     .from('likes')
     .select('*', { count: 'exact', head: true })
     .eq('post_id', post_id)
-  return NextResponse.json({ liked: true, count: count ?? 0 })
+    return NextResponse.json({ liked: true, count: count ?? 0 })
 }

@@ -173,7 +173,7 @@ useEffect(() => {
         <button
           onClick={toggleTheme}
           title={isDark ? 'Switch to light' : 'Switch to dark'}
-          className="flex items-center rounded-full p-[3px] cursor-pointer"
+          className="flex items-center rounded-full p-0.75 cursor-pointer"
           style={{
             background: 'var(--ryu-surface-1)',
             border: '1px solid var(--ryu-border)',
@@ -229,7 +229,7 @@ useEffect(() => {
             >
               {/* Left accent bar */}
               <span
-                className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full transition-colors duration-100"
+                className="absolute left-0 top-2 bottom-2 w-0.75 rounded-r-full transition-colors duration-100"
                 style={{ background: active ? 'var(--ryu-primary)' : 'transparent' }}
               />
               <Icon
@@ -261,7 +261,7 @@ useEffect(() => {
               }}
             >
               <span
-                className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full"
+                className="absolute left-0 top-2 bottom-2 w-0.75 rounded-r-full"
                 style={{ background: active ? 'var(--ryu-primary)' : 'transparent' }}
               />
               <Mail

@@ -196,29 +196,16 @@ return (
             className="px-4 py-3 shrink-0"
             style={{ borderBottom: '0.5px solid var(--ryu-border)' }}
           >
-            <div className="flex items-center gap-2 mb-1">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0"
-                style={{ fontFamily: "'Bangers', cursive", background: 'var(--ryu-primary)', letterSpacing: '0.04em' }}
-              >
-                R
-              </div>
-              <div>
-                <p className="text-sm font-semibold leading-none" style={{ color: 'var(--ryu-text)', fontFamily: "'Quicksand', sans-serif" }}>
-                  Ryu
-                </p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--ryu-text-muted)' }}>
-                  {formatDate(post.created_at)}
-                </p>
-              </div>
-            </div>
             {post.title && (
-              <p className="text-sm font-semibold mt-2" style={{ color: 'var(--ryu-text)', fontFamily: "'Quicksand', sans-serif" }}>
+              <p className="text-sm font-semibold leading-none" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
                 {post.title}
               </p>
             )}
+            <p className="text-[10px] mt-1" style={{ color: 'var(--ryu-text-muted)' }}>
+              {formatDate(post.created_at)}
+            </p>
             {post.description && (
-              <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--ryu-text-secondary)' }}>
+              <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--ryu-text-secondary)' }}>
                 {post.description}
               </p>
             )}
@@ -241,7 +228,7 @@ return (
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-semibold" style={{ color: 'var(--ryu-text)', fontFamily: "'Quicksand', sans-serif" }}>
+                      <span className="text-xs font-semibold" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
                         {c.name}
                       </span>
                       <span className="text-[10px]" style={{ color: 'var(--ryu-text-muted)' }}>
@@ -272,7 +259,7 @@ return (
                 style={{
                   background: 'none', border: 'none',
                   color: liked ? '#f43f5e' : 'var(--ryu-text-muted)',
-                  fontFamily: "'Quicksand', sans-serif", fontWeight: 600,
+                  fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
                   cursor: likeLoading ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -285,7 +272,7 @@ return (
               )}
               <div className="flex items-center gap-1 ml-1" style={{ color: 'var(--ryu-text-muted)' }}>
                 <MessageCircle size={16} strokeWidth={2} />
-                <span className="text-xs font-semibold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+                <span className="text-xs font-semibold" style={{ fontFamily: "var(--font-fredoka), sans-serif" }}>
                   {comments.length}
                 </span>
               </div>
@@ -305,7 +292,7 @@ return (
                   border: '0.5px solid var(--ryu-border)',
                   background: 'var(--ryu-surface-2)',
                   color: 'var(--ryu-text)',
-                  fontFamily: "'Quicksand', sans-serif",
+                  fontFamily: "var(--font-fredoka), sans-serif",
                 }}
               />
               <button

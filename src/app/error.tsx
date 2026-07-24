@@ -30,9 +30,10 @@ export default function Error({
     >
       <h1
         style={{
-          fontFamily: 'var(--font-bangers)',
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 'clamp(48px, 8vw, 96px)',
-          letterSpacing: '0.05em',
+          letterSpacing: '0.02em',
           color: 'var(--ryu-primary)',
           lineHeight: 1,
         }}
@@ -51,9 +52,10 @@ export default function Error({
           border: '2px solid var(--ryu-primary)',
           background: 'var(--ryu-primary)',
           color: '#1E1E1E',
-          fontFamily: 'var(--font-bangers)',
+          fontFamily: 'var(--font-fredoka), sans-serif',
+          fontWeight: 600,
           fontSize: 20,
-          letterSpacing: '0.05em',
+          letterSpacing: '0.02em',
           cursor: 'pointer',
         }}
       >

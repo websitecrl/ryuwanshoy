@@ -47,14 +47,8 @@ const HARD_BLOCK: string[] = [
   // Misogynistic / sexual slurs
   'whore', 'slut', 'cunt', 'bitch', 'skank', 'thot',
 
-  // Filipino / Tagalog
-  'gago', 'gaga', 'bobo', 'tanga', 'ulol',
-  'hudas', 'lintik', 'siraulo', 'gunggong', 'engot', 'inutil',
-  'paksyet', 'pekpek', 'titi', 'jakol', 'kantot', 'kantotin',
-  'salsal', 'pepe', 'etits', 'bayag', 'puke',
-
   // Self-harm / violent threats
-  'kill yourself', 'kys',
+  'kill yourself', 'kys', 'smd',
   'go kill yourself', 'kill urself',
   'go die', 'die already',
   'i will kill you', 'i will hurt you',
@@ -76,28 +70,38 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const { content, edit_token } = await req.json()
 
-  if (!content?.trim()) {
-    return NextResponse.json({ error: 'Content is required.' }, { status: 400 })
-  }
-  if (content.length > 300) {
-    return NextResponse.json({ error: 'Comment is too long.' }, { status: 400 })
+  let content: string | undefined
+  let edit_token: string | undefined
+  try {
+    const body = await req.json()
+    content = body?.content
+    edit_token = body?.edit_token
+  } catch {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
-  const { data: comment } = await supabaseAdmin
+  // Authorization first
+  const { data: comment, error: fetchError } = await supabaseAdmin
     .from('comments')
     .select('edit_token')
     .eq('id', id)
     .single()
 
-  if (!comment) {
+  if (fetchError || !comment) {
     return NextResponse.json({ error: 'Comment not found.' }, { status: 404 })
   }
   if (comment.edit_token !== edit_token) {
     return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
   }
 
+  // Validation second
+  if (!content?.trim()) {
+    return NextResponse.json({ error: 'Content is required.' }, { status: 400 })
+  }
+  if (content.length > 300) {
+    return NextResponse.json({ error: 'Comment is too long.' }, { status: 400 })
+  }
   if (isProfane(content.trim())) {
     return NextResponse.json(
       { error: 'Your comment contains prohibited language.' },
@@ -126,9 +130,9 @@ export async function DELETE(
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const isAdmin = user?.id === process.env.ADMIN_USER_ID
 
-  if (!user) {
-    // Non-admin path — parse body safely; it may be empty or malformed
+  if (!isAdmin) {
     let edit_token: string | undefined
     try {
       const body = await req.json()
@@ -141,13 +145,13 @@ export async function DELETE(
       return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
     }
 
-    const { data: comment } = await supabaseAdmin
+    const { data: comment, error: fetchError } = await supabaseAdmin
       .from('comments')
       .select('edit_token')
       .eq('id', id)
       .single()
 
-    if (!comment) {
+    if (fetchError || !comment) {
       return NextResponse.json({ error: 'Comment not found.' }, { status: 404 })
     }
     if (comment.edit_token !== edit_token) {

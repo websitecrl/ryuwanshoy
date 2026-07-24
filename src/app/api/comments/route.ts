@@ -1,6 +1,6 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -112,15 +112,13 @@ export async function GET(req: NextRequest) {
 
 // ─── POST /api/comments ───────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get('CF-Connecting-IP')
-    ?? req.headers.get('x-forwarded-for')
-    ?? 'unknown'
+  const ip = getClientIp(req)
 
-  if (!checkRateLimit(`comment:${ip}`, 3, 60_000)) {
+  if (!(await checkRateLimit(`comment:${ip}`, 3, 60_000))) {
     return NextResponse.json(
       { error: 'You can only post one comment per minute.' },
       { status: 429 }
-    )
+    ) 
   }
 
   const body = await req.json()

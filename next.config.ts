@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages:["sharp", "@img/sharp-wasm32",  "@aws-sdk/client-s3"],
   images: {
     unoptimized: process.env.NODE_ENV === 'development',
     remotePatterns: [
@@ -46,4 +48,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "ryuwanshoy",
+  project: "javascript-nextjs",
+  silent: true,
+  disableLogger: true,
+  sourcemaps: {
+    disable: true,
+  },
+});

@@ -59,7 +59,7 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
     <>
       {/* ── Empty state ──────────────────────────────────────────── */}
       {posts.length === 0 && (
-        <div className="max-w-[1600px] mx-auto px-12 py-24 text-center">
+        <div className="max-w-400 mx-auto px-12 py-24 text-center">
           <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
             No illustrations yet.
           </p>
@@ -77,7 +77,7 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
 
       {/* ── Masonry grid ─────────────────────────────────────────── */}
       {posts.length > 0 && (
-        <div className="max-w-[1600px] mx-auto px-12 py-6">
+        <div className="max-w-400 mx-auto px-12 py-6">
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
             {posts.map((post, index) => (
               <div
@@ -116,8 +116,9 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
                       <span
                         className="px-2 py-0.5 rounded-full text-[10px] capitalize"
                         style={{
-                          fontFamily: "'Bangers', cursive",
-                          letterSpacing: '0.06em',
+                          fontFamily: "var(--font-fredoka), sans-serif",
+                          fontWeight: 600,
+                          letterSpacing: '0.02em',
                           textTransform: 'uppercase',
                           ...(TYPE_BADGE[post.post_type] ?? TYPE_BADGE.other),
                         }}
@@ -138,7 +139,7 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
                       className="text-sm font-semibold leading-snug"
                       style={{
                         color: 'var(--ryu-text)',
-                        fontFamily: "'Quicksand', system-ui, sans-serif",
+                        fontFamily: "var(--font-fredoka), sans-serif",
                       }}
                     >
                       {post.title}

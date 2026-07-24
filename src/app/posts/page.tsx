@@ -46,12 +46,13 @@ export default async function PostsPage({
           borderColor: 'var(--ryu-border)',
         }}
       >
-        <div className="max-w-[1600px] mx-auto px-12 py-6">
+        <div className="max-w-400 mx-auto px-12 py-6">
           <h1
             className="text-3xl leading-none mb-1"
             style={{
-              fontFamily: "'Bangers', cursive",
-              letterSpacing: '0.04em',
+              fontFamily: "var(--font-fredoka), sans-serif",
+              fontWeight: 600,
+              letterSpacing: '0.02em',
               color: 'var(--ryu-text)',
             }}
           >

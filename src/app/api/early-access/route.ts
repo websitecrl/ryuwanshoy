@@ -54,6 +54,13 @@ async function addToMailchimp(email: string): Promise<void> {
 
 // ─── POST — public, anyone can sign up ───────────────────────────────────────
 export async function POST(req: NextRequest) {
+    if (process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED !== "true") {
+    return NextResponse.json(
+      { error: "Early access signup is not currently available." },
+      { status: 403 }
+    );
+  }
+  
   const supabase = await createClient();
   try {
     const body = (await req.json()) as {

@@ -263,7 +263,7 @@ export default function SeriesForm({ existing }: SeriesFormProps) {
           <p className="text-xs text-white/40">460 × 640px recommended</p>
 
           {/* Preview box */}
-          <div className="relative aspect-[460/640] w-full overflow-hidden rounded-xl border border-white/10 bg-white/5">
+          <div className="relative aspect-460/640 w-full overflow-hidden rounded-xl border border-white/10 bg-white/5">
             {coverPreview ? (
               <Image
                 src={coverPreview}

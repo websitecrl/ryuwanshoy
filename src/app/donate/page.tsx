@@ -12,16 +12,16 @@ type Settings = Database['public']['Tables']['settings']['Row']
 
 const FAQ_ITEMS = [
   {
-    q: 'Is supporting required to read?',
-    a: "Never. Everything on the site is free, full-resolution, no paywall, no ads. Support is for readers who want to stick something in the tip jar — that's it.",
+    q: 'Do I have to pay to read?',
+    a: "Nope, never. Everything here is free, full resolution, no paywall, no ads. Supporting is just for folks who want to leave something in the tip jar — that's really all it is.",
   },
   {
-    q: 'What do I get if I support monthly?',
-    a: 'Early access to new chapters (about a week before public release), the WIP feed where I post process work and roughs, and a tiny credit on the back-matter page if you want one.',
+    q: 'What do I get for supporting monthly?',
+    a: "You'll get chapters about a week before everyone else, access to the WIP feed where I post rough pages and process shots, and a small credit on the back-matter page if you'd like one.",
   },
   {
-    q: 'Where does the money go?',
-    a: "Software (Clip Studio, hosting, Cloudflare), printing for cons, and an extra evening a week where I can stay in and draw instead of taking on freelance. That's it.",
+    q: 'Where does the money actually go?',
+    a: 'Mostly software (Clip Studio, hosting, Cloudflare), printing for conventions, and buying myself one extra evening a week to draw instead of taking on freelance work. That covers it.',
   },
 ]
 
@@ -43,7 +43,7 @@ function KofiCard({ url }: { url: string }) {
         <div>
           <h3
             className="text-lg leading-none mb-0.5 text-white"
-            style={{ fontFamily: "'Bangers', cursive", letterSpacing: '0.06em' }}
+            style={{ fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600, letterSpacing: '0.02em' }}
           >
             KO-FI
           </h3>
@@ -84,8 +84,9 @@ function KofiCard({ url }: { url: string }) {
           className="flex items-center justify-center gap-2 rounded-lg text-white transition-opacity hover:opacity-90"
           style={{
             background:    '#D4537E',
-            fontFamily:    "'Bangers', cursive",
-            letterSpacing: '0.06em',
+            fontFamily:    "var(--font-fredoka), sans-serif",
+            fontWeight:    600,
+            letterSpacing: '0.02em',
             fontSize:      15,
             padding:       '12px 0',
           }}
@@ -115,7 +116,7 @@ function PatreonCard({ url }: { url: string }) {
         <div>
           <h3
             className="text-lg leading-none mb-0.5 text-white"
-            style={{ fontFamily: "'Bangers', cursive", letterSpacing: '0.06em' }}
+            style={{ fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600, letterSpacing: '0.02em' }}
           >
             PATREON
           </h3>
@@ -150,8 +151,9 @@ function PatreonCard({ url }: { url: string }) {
           className="flex items-center justify-center gap-2 rounded-lg text-white transition-opacity hover:opacity-90"
           style={{
             background:    '#000000',
-            fontFamily:    "'Bangers', cursive",
-            letterSpacing: '0.06em',
+            fontFamily:    "var(--font-fredoka), sans-serif",
+            fontWeight:    600,
+            letterSpacing: '0.02em',
             fontSize:      15,
             padding:       '12px 0',
           }}
@@ -173,7 +175,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between gap-4 py-3 text-left text-sm font-semibold"
-        style={{ background: 'none', border: 'none', color: 'var(--ryu-text)', fontFamily: "'Quicksand', sans-serif", cursor: 'pointer' }}
+        style={{ background: 'none', border: 'none', color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif", cursor: 'pointer' }}
       >
         {q}
         <span style={{ color: open ? 'var(--ryu-primary)' : 'var(--ryu-text-muted)', flexShrink: 0, fontSize: 18, lineHeight: 1 }}>
@@ -181,7 +183,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
         </span>
       </button>
       {open && (
-        <p className="text-xs leading-relaxed pb-3" style={{ color: 'var(--ryu-text-secondary)', fontFamily: "'Quicksand', sans-serif" }}>
+        <p className="text-xs leading-relaxed pb-3" style={{ color: 'var(--ryu-text-secondary)', fontFamily: "var(--font-fredoka), sans-serif" }}>
           {a}
         </p>
       )}
@@ -226,7 +228,7 @@ export default function DonatePage() {
   const patreonUrl = settings?.patreon_url      ?? null
   const creator    = settings?.creator_name     ?? 'Ryu'
   const message    = settings?.donation_message ??
-    "Ryuwanshoy is a one-person operation — written, drawn, lettered, and posted by someone with a day job and a deadline that keeps slipping. Everything's free. If the comics are worth a coffee, this is where you put it."
+    "Ryuwanshoy is a one-person operation — written, drawn, lettered, and posted by someone with a day job and a deadline that keeps slipping. Everything's free, always. If the comics are worth a coffee to you, this is where you'd put it."
 
   const hasKofi    = Boolean(kofiUrl)
   const hasPatreon = Boolean(patreonUrl)
@@ -237,7 +239,7 @@ export default function DonatePage() {
 
       {/* Hero */}
       <div style={{ borderBottom: '0.5px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
-        <div className="max-w-[1600px] mx-auto px-12 py-10 text-center flex flex-col items-center gap-3">
+        <div className="max-w-400 mx-auto px-12 py-10 text-center flex flex-col items-center gap-3">
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mb-1"
             style={{ background: 'rgba(212,83,126,0.12)', color: '#D4537E' }}
@@ -246,13 +248,13 @@ export default function DonatePage() {
           </div>
           <h1
             className="text-3xl"
-            style={{ fontFamily: "'Bangers', cursive", letterSpacing: '0.06em', color: 'var(--ryu-text)' }}
+            style={{ fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600, letterSpacing: '0.02em', color: 'var(--ryu-text)' }}
           >
             SUPPORT {creator.toUpperCase()}
           </h1>
           <p
             className="text-sm leading-relaxed max-w-xl"
-            style={{ color: 'var(--ryu-text-secondary)', fontFamily: "'Quicksand', sans-serif" }}
+            style={{ color: 'var(--ryu-text-secondary)', fontFamily: "var(--font-fredoka), sans-serif" }}
           >
             {message}
           </p>
@@ -260,7 +262,7 @@ export default function DonatePage() {
       </div>
 
       {/* Cards */}
-      <div className="max-w-[880px] mx-auto px-6 py-10">
+      <div className="max-w-220 mx-auto px-6 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {hasAny ? (
             <>
@@ -275,12 +277,12 @@ export default function DonatePage() {
 
       {/* FAQ */}
       <div
-        className="max-w-[720px] mx-auto px-6 pb-16"
+        className="max-w-180 mx-auto px-6 pb-16"
         style={{ borderTop: '0.5px solid var(--ryu-border)', paddingTop: 32 }}
       >
         <h2
           className="text-xl mb-4"
-          style={{ fontFamily: "'Bangers', cursive", letterSpacing: '0.06em', color: 'var(--ryu-text)' }}
+          style={{ fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600, letterSpacing: '0.02em', color: 'var(--ryu-text)' }}
         >
           FAQ
         </h2>
@@ -288,8 +290,8 @@ export default function DonatePage() {
           <FAQItem key={i} q={item.q} a={item.a} />
         ))}
         <div className="mt-8 text-center flex flex-col gap-3">
-          <p className="text-xs" style={{ color: 'var(--ryu-text-muted)', fontFamily: "'Quicksand', sans-serif" }}>
-           Can't donate right now? No worries. Reading and sharing the comic is already a huge support. 
+          <p className="text-xs" style={{ color: 'var(--ryu-text-muted)', fontFamily: "var(--font-fredoka), sans-serif" }}>
+            Can't chip in right now? Totally fine — reading the comic and sharing it with people is already a big help.
           </p>
           <div className="flex justify-center gap-4 text-xs">
             <Link href="/comics" className="font-semibold hover:underline underline-offset-2" style={{ color: 'var(--ryu-primary)' }}>
