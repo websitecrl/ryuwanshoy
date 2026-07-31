@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { X, Heart, Send, MessageCircle } from 'lucide-react'
+import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight } from 'lucide-react'
 import { timeAgo } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
+import { toast } from 'sonner'
 
 type Post = {
   id: string
@@ -20,6 +21,8 @@ type Comment = {
   name: string
   content: string
   created_at: string | null
+  updated_at: string | null
+  parent_id: string | null
 }
 
 function formatDate(dateStr: string | null): string {
@@ -39,39 +42,426 @@ function getLikeToken(): string {
     return token
   } catch { return uuidv4() }
 }
+
+// ─── Comment ownership (edit_token) storage ──────────────────────────────────
+// Same mechanism as SeriesComments.tsx: POST /api/comments issues a one-time
+// edit_token, which we keep in localStorage so this browser (and only this
+// browser) can later PATCH/DELETE that specific comment. There are no reader
+// accounts — this token is the only proof of ownership.
+const TOKEN_STORE = 'ryu.comment.tokens'
+
+function getTokenMap(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(TOKEN_STORE)
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
+  } catch { return {} }
+}
+
+function saveToken(commentId: string, token: string) {
+  try {
+    const map = getTokenMap()
+    map[commentId] = token
+    localStorage.setItem(TOKEN_STORE, JSON.stringify(map))
+  } catch {
+    // Not worth surfacing — worst case, edit/delete just won't persist
+    // across a reload for this comment.
+  }
+}
+
+function getToken(commentId: string): string | null {
+  return getTokenMap()[commentId] ?? null
+}
+
+/**
+ * Sends the request, checks res.ok, and throws a real Error carrying the
+ * server's message (from the API's `{ error: string }` shape) on any
+ * failure — HTTP error or network error alike. Every call site in this
+ * file collapses to one try/catch instead of a hand-written `if (!res.ok)`
+ * each time, which is exactly what went missing in submitEdit/submitReply
+ * before (no catch at all, so a network failure became an unhandled
+ * promise rejection instead of a toast).
+ *
+ * `status` is attached to the thrown error so callers that need to special-
+ * case a status code (handleSubmit's 429 rate-limit message) still can.
+ */
+async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(input, init)
+  const data: unknown = await res.json().catch(() => null)
+  if (!res.ok) {
+    const message =
+      data && typeof data === 'object' && 'error' in data && typeof (data as { error?: unknown }).error === 'string'
+        ? (data as { error: string }).error
+        : `Request failed (${res.status})`
+    const error = new Error(message) as Error & { status?: number }
+    error.status = res.status
+    throw error
+  }
+  return data as T
+}
+
+// ─── Single comment row (top-level or reply) ─────────────────────────────────
+
+/**
+ * Renders one comment: avatar, name, timestamp, content (or inline edit
+ * form), and reply/edit/delete actions.
+ *
+ * - Reply is only offered at depth 0 — the `comments` table has no depth
+ *   column, so replies-to-replies still attach to the same top-level parent
+ *   (see repliesFor in PostModal below), matching SeriesComments.tsx.
+ * - Edit/Delete only render when `isOwn` is true, i.e. this browser holds
+ *   the edit_token for this exact comment.
+ */
+function CommentRow({
+  comment,
+  replies,
+  isOwn,
+  ownIds,
+  postId,
+  onDelete,
+  onEdit,
+  onReplyPosted,
+  depth,
+}: {
+  comment: Comment
+  replies: Comment[]
+  isOwn: boolean
+  ownIds: Set<string>
+  postId: string
+  onDelete: (id: string) => void
+  onEdit: (id: string, content: string) => void
+  onReplyPosted: (reply: Comment & { edit_token: string }) => void
+  depth: number
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(comment.content)
+  const [saving, setSaving] = useState(false)
+  const [showReply, setShowReply] = useState(false)
+  const [replyContent, setReplyContent] = useState('')
+  const [replySubmitting, setReplySubmitting] = useState(false)
+
+  async function submitEdit() {
+    const trimmed = draft.trim()
+    if (!trimmed || trimmed === comment.content) { setEditing(false); return }
+
+    const token = getToken(comment.id)
+    if (!token) { toast.error('You can only edit your own comments.'); return }
+
+    setSaving(true)
+    try {
+      await fetchJson(`/api/comments/${comment.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: trimmed, edit_token: token }),
+      })
+      onEdit(comment.id, trimmed)
+      setEditing(false)
+      toast.success('Comment updated.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to update comment.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function submitReply() {
+    const trimmed = replyContent.trim()
+    if (!trimmed || replySubmitting) return
+
+    setReplySubmitting(true)
+    try {
+      const data = await fetchJson<Comment & { edit_token?: string }>('/api/comments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ post_id: postId, parent_id: comment.id, content: trimmed }),
+      })
+      onReplyPosted({ ...data, edit_token: data.edit_token ?? '' })
+      setReplyContent('')
+      setShowReply(false)
+      toast.success('Reply posted!')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to post reply.')
+    } finally {
+      setReplySubmitting(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2" style={{ marginLeft: depth > 0 ? 28 : 0 }}>
+      <div className="flex gap-2">
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 uppercase comment-avatar"
+          style={{ background: 'var(--ryu-primary)', color: '#fff' }}
+        >
+          {comment.name.charAt(0)}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span
+              className="text-xs font-semibold comment-name"
+              style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}
+            >
+              {comment.name}
+            </span>
+            <span className="text-[10px] comment-time" style={{ color: 'var(--ryu-text-muted)' }}>
+              {timeAgo(comment.created_at)}
+              {comment.updated_at && comment.updated_at !== comment.created_at && (
+                <span className="ml-1 italic">(edited)</span>
+              )}
+            </span>
+          </div>
+
+          {editing ? (
+            <div className="mt-1 flex flex-col gap-1.5">
+              <textarea
+                value={draft}
+                onChange={e => setDraft(e.target.value)}
+                rows={2}
+                maxLength={300}
+                autoFocus
+                className="w-full text-xs rounded-lg px-2 py-1.5 resize-none outline-none"
+                style={{
+                  border: '0.5px solid var(--ryu-border)',
+                  background: 'var(--ryu-surface-2)',
+                  color: 'var(--ryu-text)',
+                }}
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  type="button"
+                  onClick={() => { setEditing(false); setDraft(comment.content) }}
+                  disabled={saving}
+                  className="text-[10px]"
+                  style={{ color: 'var(--ryu-text-muted)', background: 'none', border: 'none' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={submitEdit}
+                  disabled={saving || !draft.trim()}
+                  className="text-[10px] font-semibold px-2 py-1 rounded-md"
+                  style={{
+                    background: 'var(--ryu-primary)',
+                    color: '#fff',
+                    border: 'none',
+                    opacity: saving || !draft.trim() ? 0.5 : 1,
+                  }}
+                >
+                  {saving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs leading-relaxed mt-0.5 comment-content" style={{ color: 'var(--ryu-text-secondary)' }}>
+              {comment.content}
+            </p>
+          )}
+
+          {!editing && (
+            <div className="flex items-center gap-2 mt-1">
+              {depth === 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowReply(s => !s)}
+                  className="flex items-center gap-1 text-[10px] comment-action-btn"
+                  style={{ color: 'var(--ryu-text-muted)', background: 'none', border: 'none' }}
+                >
+                  <CornerDownRight size={10} />
+                  {showReply ? 'Cancel' : 'Reply'}
+                </button>
+              )}
+
+              {isOwn && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="flex items-center gap-1 text-[10px] comment-action-btn"
+                    style={{ color: 'var(--ryu-text-muted)', background: 'none', border: 'none' }}
+                  >
+                    <Pencil size={10} /> Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(comment.id)}
+                    className="flex items-center gap-1 text-[10px] comment-action-btn"
+                    style={{ color: 'var(--ryu-text-muted)', background: 'none', border: 'none' }}
+                  >
+                    <Trash2 size={10} /> Delete
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {showReply && (
+            <div className="flex gap-1.5 mt-1.5">
+              <input
+                type="text"
+                placeholder="Write a reply…"
+                value={replyContent}
+                onChange={e => setReplyContent(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') submitReply() }}
+                maxLength={300}
+                autoFocus
+                className="flex-1 h-7 px-2 rounded-md text-[11px] outline-none comment-reply-input"
+                style={{
+                  border: '0.5px solid var(--ryu-border)',
+                  background: 'var(--ryu-surface-2)',
+                  color: 'var(--ryu-text)',
+                }}
+              />
+              <button
+                type="button"
+                onClick={submitReply}
+                disabled={replySubmitting || !replyContent.trim()}
+                className="w-7 h-7 rounded-md flex items-center justify-center shrink-0 comment-reply-send"
+                style={{
+                  background: 'var(--ryu-primary)',
+                  color: '#fff',
+                  border: 'none',
+                  opacity: replySubmitting || !replyContent.trim() ? 0.4 : 1,
+                }}
+              >
+                <Send size={11} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {replies.length > 0 && (
+        <div
+          className="flex flex-col gap-2 mt-1"
+          style={{ borderLeft: '2px solid var(--ryu-border)', paddingLeft: 10, marginLeft: 28 }}
+        >
+          {replies.map(reply => (
+            <CommentRow
+              key={reply.id}
+              comment={reply}
+              replies={[]}
+              isOwn={ownIds.has(reply.id)}
+              ownIds={ownIds}
+              postId={postId}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onReplyPosted={onReplyPosted}
+              depth={1}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface Props {
   post: Post
   onClose: () => void
 }
 
+/**
+ * Models the comment list's three real states explicitly, instead of using
+ * a bare `Comment[]` where `[]` ambiguously means both "still loading" and
+ * "genuinely zero comments." Before this, the UI would briefly show
+ * "No comments yet" while the fetch was still in flight, because there was
+ * no state distinguishing the two — this makes that collapse impossible
+ * at the type level.
+ */
+type CommentsState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'loaded'; comments: Comment[] }
+
+/**
+ * Same reasoning as CommentsState: `liked: false` / `count: 0` as initial
+ * values are indistinguishable from "we checked and it's really false/0."
+ * Before this, someone who'd already liked the post would see the heart
+ * render empty for a frame on reopen. It also closes a real race: without
+ * a 'loaded' gate, the heart was clickable before the initial fetch
+ * resolved, so a toggle request and the initial-state fetch could land in
+ * either order and silently overwrite each other.
+ */
+type LikeState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'loaded'; liked: boolean; count: number }
+
 export default function PostModal({ post, onClose }: Props) {
-  const [likeCount,   setLikeCount]   = useState(0)
-  const [liked,       setLiked]       = useState(false)
+  const [likeState, setLikeState] = useState<LikeState>({ status: 'loading' })
   const [likeLoading, setLikeLoading] = useState(false)
-  const [comments,    setComments]    = useState<Comment[]>([])
-  const [content,     setContent]     = useState('')
-  const [submitting,  setSubmitting]  = useState(false)
+  const [commentsState, setCommentsState] = useState<CommentsState>({ status: 'loading' })
+  const [content, setContent] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
+
+  // Which comments (across ALL posts) this browser owns — read once on mount.
+  useEffect(() => {
+    setOwnIds(new Set(Object.keys(getTokenMap())))
+  }, [])
+
+  /**
+   * Mutates the comment list only when it's actually loaded — a no-op
+   * otherwise, since there's nothing to append/edit/remove from before the
+   * first successful fetch. Centralizes every local-state comment mutation
+   * (post, edit, delete, reply) through one place instead of five separate
+   * `setComments` calls that each had to know the shape.
+   */
+  const updateLoadedComments = useCallback((updater: (comments: Comment[]) => Comment[]) => {
+    setCommentsState(prev =>
+      prev.status === 'loaded' ? { status: 'loaded', comments: updater(prev.comments) } : prev
+    )
+  }, [])
+
+  // Initial (or retry) load — drives the loading → loaded/error transition.
+  const loadComments = useCallback(async () => {
+    setCommentsState({ status: 'loading' })
+    try {
+      const res = await fetch(`/api/comments?post_id=${post.id}`)
+      if (!res.ok) throw new Error('Failed to load comments.')
+      const data = await res.json() as Comment[]
+      setCommentsState({ status: 'loaded', comments: Array.isArray(data) ? data : [] })
+    } catch {
+      setCommentsState({ status: 'error' })
+    }
+  }, [post.id])
+
+  /**
+   * Background reconciliation after a mutation (e.g. a delete that cascades
+   * to replies server-side). Deliberately does NOT flip back to 'loading'
+   * or 'error' — we already have a locally-updated list on screen, so a
+   * failed background refresh should just leave it as-is rather than
+   * regress the UI to a spinner or error state over a non-critical refresh.
+   */
+  const refetchComments = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/comments?post_id=${post.id}`)
+      if (!res.ok) return
+      const data = await res.json() as Comment[]
+      if (Array.isArray(data)) setCommentsState({ status: 'loaded', comments: data })
+    } catch {
+      // Non-fatal — local optimistic state stays as-is.
+    }
+  }, [post.id])
 
   // Load likes + comments on open
   useEffect(() => {
     const likeToken = getLikeToken()
-
     fetch(`/api/likes?post_id=${post.id}&like_token=${likeToken}`)
-      .then(r => r.json())
-      .then(({ count, liked }: { count: number; liked: boolean }) => {
-        setLikeCount(count)
-        setLiked(liked)
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to load like state.')
+        return r.json() as Promise<{ count: number; liked: boolean }>
       })
-      .catch(() => {})
+      .then(({ count, liked }) => {
+        setLikeState({ status: 'loaded', liked, count })
+      })
+      .catch(() => setLikeState({ status: 'error' }))
 
-    fetch(`/api/comments?post_id=${post.id}`)
-      .then(r => r.json())
-      .then((data: Comment[]) => setComments(Array.isArray(data) ? data : []))
-      .catch(() => {})
-  }, [post.id])
-
+    loadComments()
+  }, [post.id, loadComments])
 
   // ESC to close
   useEffect(() => {
@@ -89,7 +479,7 @@ export default function PostModal({ post, onClose }: Props) {
   }, [])
 
   async function handleLike() {
-    if (likeLoading) return
+    if (likeLoading || likeState.status !== 'loaded') return
     setLikeLoading(true)
     try {
       const res = await fetch('/api/likes', {
@@ -98,51 +488,90 @@ export default function PostModal({ post, onClose }: Props) {
         body: JSON.stringify({ post_id: post.id, like_token: getLikeToken() }),
       })
       const { liked: newLiked, count } = await res.json() as { liked: boolean; count: number }
-      setLiked(newLiked)
-      setLikeCount(count)
+      setLikeState({ status: 'loaded', liked: newLiked, count })
     } catch {}
     setLikeLoading(false)
   }
 
   async function handleSubmit() {
     const trimContent = content.trim()
-    if(!trimContent || submitting) return 
+    if (!trimContent || submitting) return
 
     setSubmitting(true)
     setSubmitError('')
     try {
-      const res = await fetch('/api/comments', {
+      const data = await fetchJson<Comment & { edit_token?: string }>('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          post_id: post.id,
-          name:    'Anonymous',
-          content: trimContent,
-        }),
+        body: JSON.stringify({ post_id: post.id, content: trimContent }),
       })
 
-      const data = await res.json() as Comment & { error?: string }
-
-      if (res.status === 429) {
-        setSubmitError('One comment per minute — try again shortly.')
-        return
-      }
-      if (!res.ok) {
-        setSubmitError(data.error ?? 'Failed to post. Try again.')
-        return
+      if (data.id && data.edit_token) {
+        saveToken(data.id, data.edit_token)
+        setOwnIds(prev => new Set([...prev, data.id]))
       }
 
-      setComments(prev => [...prev, data])
+      updateLoadedComments(prev => [...prev, data])
       setContent('')
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-    } catch {
-      setSubmitError('Something went wrong.')
+    } catch (err) {
+      const status = err instanceof Error ? (err as Error & { status?: number }).status : undefined
+      setSubmitError(
+        status === 429
+          ? 'One comment per minute — try again shortly.'
+          : err instanceof Error ? err.message : 'Something went wrong.'
+      )
     } finally {
       setSubmitting(false)
     }
   }
 
-return (
+  async function handleDelete(id: string) {
+    const token = getToken(id)
+    if (!token) { toast.error('You can only delete your own comments.'); return }
+    try {
+      await fetchJson(`/api/comments/${id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ edit_token: token }),
+      })
+      // Remove immediately for a snappy UI, then refetch — the DB cascades
+      // parent_id on delete, so this also picks up any replies that just
+      // got deleted along with it.
+      updateLoadedComments(prev => prev.filter(c => c.id !== id))
+      await refetchComments()
+      toast.success('Comment deleted.')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete comment.')
+    }
+  }
+
+  function handleEdit(id: string, newContent: string) {
+    updateLoadedComments(prev =>
+      prev.map(c => c.id === id
+        ? { ...c, content: newContent, updated_at: new Date().toISOString() }
+        : c
+      )
+    )
+  }
+
+  function handleReplyPosted(reply: Comment & { edit_token: string }) {
+    if (reply.id && reply.edit_token) {
+      saveToken(reply.id, reply.edit_token)
+      setOwnIds(prev => new Set([...prev, reply.id]))
+    }
+    updateLoadedComments(prev => [...prev, reply])
+  }
+
+  // ── Separate top-level comments from replies ────────────────────────────────
+  const comments = commentsState.status === 'loaded' ? commentsState.comments : []
+  const topLevel = comments.filter(c => !c.parent_id)
+  const repliesFor = (parentId: string) => comments.filter(c => c.parent_id === parentId)
+
+  const liked = likeState.status === 'loaded' && likeState.liked
+  const likeCount = likeState.status === 'loaded' ? likeState.count : 0
+
+  return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.85)' }}
@@ -160,8 +589,9 @@ return (
       >
         {/* Close button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center post-modal-close"
           style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', border: 'none' }}
         >
           <X size={16} />
@@ -188,7 +618,7 @@ return (
 
         {/* Right: info + comments + input */}
         <div
-          className="flex flex-col flex-1 min-w-0 post-modal-side"
+          className="flex flex-col flex-1 min-w-0 min-h-0 post-modal-side"
           style={{ borderLeft: '0.5px solid var(--ryu-border)', minWidth: 280 }}
         >
           {/* Post info header */}
@@ -197,7 +627,7 @@ return (
             style={{ borderBottom: '0.5px solid var(--ryu-border)' }}
           >
             {post.title && (
-              <p className="text-sm font-semibold leading-none" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
+              <p className="text-sm font-semibold leading-none post-modal-title" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
                 {post.title}
               </p>
             )}
@@ -205,47 +635,56 @@ return (
               {formatDate(post.created_at)}
             </p>
             {post.description && (
-              <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--ryu-text-secondary)' }}>
+              <p className="text-xs mt-2 leading-relaxed post-modal-desc" style={{ color: 'var(--ryu-text-secondary)' }}>
                 {post.description}
               </p>
             )}
           </div>
 
           {/* Comments list */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3">
-            {comments.length === 0 ? (
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+            {commentsState.status === 'loading' ? (
+              <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
+                Loading comments…
+              </p>
+            ) : commentsState.status === 'error' ? (
+              <div className="flex flex-col items-center gap-2 py-8">
+                <p className="text-xs" style={{ color: 'var(--ryu-text-muted)' }}>
+                  Couldn&apos;t load comments.
+                </p>
+                <button
+                  type="button"
+                  onClick={loadComments}
+                  className="text-xs underline"
+                  style={{ color: 'var(--ryu-primary)', background: 'none', border: 'none' }}
+                >
+                  Retry
+                </button>
+              </div>
+            ) : topLevel.length === 0 ? (
               <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
                 No comments yet — be the first!
               </p>
             ) : (
-              comments.map(c => (
-                <div key={c.id} className="flex gap-2">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 uppercase"
-                    style={{ background: 'var(--ryu-primary)', color: '#fff' }}
-                  >
-                    {c.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-semibold" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
-                        {c.name}
-                      </span>
-                      <span className="text-[10px]" style={{ color: 'var(--ryu-text-muted)' }}>
-                        {timeAgo(c.created_at)}
-                      </span>
-                    </div>
-                    <p className="text-xs leading-relaxed mt-0.5" style={{ color: 'var(--ryu-text-secondary)' }}>
-                      {c.content}
-                    </p>
-                  </div>
-                </div>
+              topLevel.map(comment => (
+                <CommentRow
+                  key={comment.id}
+                  comment={comment}
+                  replies={repliesFor(comment.id)}
+                  isOwn={ownIds.has(comment.id)}
+                  ownIds={ownIds}
+                  postId={post.id}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  onReplyPosted={handleReplyPosted}
+                  depth={0}
+                />
               ))
             )}
             <div ref={commentsEndRef} />
           </div>
 
-          {/* Like bar + name + comment input */}
+          {/* Like bar + comment input */}
           <div
             className="shrink-0 px-4 py-3 flex flex-col gap-2"
             style={{ borderTop: '0.5px solid var(--ryu-border)' }}
@@ -253,14 +692,15 @@ return (
             {/* Like button */}
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={handleLike}
-                disabled={likeLoading}
+                disabled={likeLoading || likeState.status !== 'loaded'}
                 className="flex items-center gap-1.5 text-sm transition-all duration-150"
                 style={{
                   background: 'none', border: 'none',
                   color: liked ? '#f43f5e' : 'var(--ryu-text-muted)',
                   fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
-                  cursor: likeLoading ? 'not-allowed' : 'pointer',
+                  cursor: (likeLoading || likeState.status !== 'loaded') ? 'not-allowed' : 'pointer',
                 }}
               >
                 <Heart size={18} fill={liked ? '#f43f5e' : 'none'} stroke={liked ? '#f43f5e' : 'currentColor'} strokeWidth={2} />
@@ -287,7 +727,7 @@ return (
                 onChange={e => setContent(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleSubmit() }}
                 maxLength={300}
-                className="flex-1 h-9 px-3 rounded-lg text-xs outline-none"
+                className="flex-1 h-9 px-3 rounded-lg text-xs outline-none post-comment-input"
                 style={{
                   border: '0.5px solid var(--ryu-border)',
                   background: 'var(--ryu-surface-2)',
@@ -296,9 +736,10 @@ return (
                 }}
               />
               <button
+                type="button"
                 onClick={handleSubmit}
                 disabled={submitting || !content.trim()}
-                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150"
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 post-comment-send"
                 style={{
                   background: 'var(--ryu-primary)', color: '#fff', border: 'none',
                   opacity: (submitting || !content.trim()) ? 0.4 : 1,
@@ -317,7 +758,8 @@ return (
       </div>
 
       <style>{`
-        @media (max-width: 640px) {
+        @media (max-width: 6
+        px) {
           .post-modal-inner {
             flex-direction: column !important;
             width: 100vw !important;
@@ -327,11 +769,39 @@ return (
           }
           .post-modal-image {
             width: 100% !important;
-            max-height: 45vh !important;
+            height: 40vh !important;
+            max-height: 40vh !important;
+            overflow: hidden !important;
+          }
+          .post-modal-image img {
+            width: auto !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            max-width: 100% !important;
           }
           .post-modal-side {
             border-left: none !important;
             border-top: 0.5px solid var(--ryu-border) !important;
+            min-height: 0 !important;
+          }
+          .post-modal-close {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          .post-modal-title { font-size: 1rem !important; }
+          .post-modal-desc { font-size: 0.875rem !important; }
+          .comment-avatar { width: 32px !important; height: 32px !important; font-size: 0.75rem !important; }
+          .comment-name { font-size: 0.875rem !important; }
+          .comment-time { font-size: 0.75rem !important; }
+          .comment-content { font-size: 0.875rem !important; }
+          .comment-action-btn { font-size: 0.75rem !important; padding: 6px 4px !important; }
+          .post-comment-input, .comment-reply-input {
+            height: 44px !important;
+            font-size: 0.9rem !important;
+          }
+          .post-comment-send, .comment-reply-send {
+            width: 44px !important;
+            height: 44px !important;
           }
         }
       `}</style>

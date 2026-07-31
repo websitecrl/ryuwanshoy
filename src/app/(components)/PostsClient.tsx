@@ -16,13 +16,6 @@ type Post = {
 
 const POST_TYPES = ["sketch", "drawing", "meme", "other"];
 
-const TYPE_BADGE: Record<string, React.CSSProperties> = {
-  sketch:  { background: 'var(--ryu-primary-muted)', color: 'var(--ryu-primary)' },
-  drawing: { background: '#e6f1fb', color: '#0c447c' },
-  meme:    { background: '#e1f5ee', color: '#085041' },
-  other:   { background: 'var(--ryu-surface-2)', color: 'var(--ryu-text-muted)' },
-};
-
 function formatDate(dateString: string | null): string {
   if (!dateString) return "";
   return new Date(dateString).toLocaleDateString("en-PH", {
@@ -109,34 +102,18 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
                 </div>
 
                 {/* Body */}
-                <div className="p-3 flex flex-col gap-1.5">
-                  {/* Badge + date row */}
-                  <div className="flex items-center gap-2">
-                    {post.post_type && (
-                      <span
-                        className="px-2 py-0.5 rounded-full text-[10px] capitalize"
-                        style={{
-                          fontFamily: "var(--font-fredoka), sans-serif",
-                          fontWeight: 600,
-                          letterSpacing: '0.02em',
-                          textTransform: 'uppercase',
-                          ...(TYPE_BADGE[post.post_type] ?? TYPE_BADGE.other),
-                        }}
-                      >
-                        {post.post_type}
-                      </span>
-                    )}
-                    {post.created_at && (
-                      <span className="text-[11px]" style={{ color: 'var(--ryu-text-muted)' }}>
-                        {formatDate(post.created_at)}
-                      </span>
-                    )}
-                  </div>
+                <div className="p-3.5 flex flex-col gap-2">
+                  {/* Date */}
+                  {post.created_at && (
+                    <span className="text-[11px] whitespace-nowrap" style={{ color: 'var(--ryu-text-muted)' }}>
+                      {formatDate(post.created_at)}
+                    </span>
+                  )}
 
                   {/* Title */}
                   {post.title && (
                     <p
-                      className="text-sm font-semibold leading-snug"
+                      className="text-sm font-semibold leading-snug line-clamp-2"
                       style={{
                         color: 'var(--ryu-text)',
                         fontFamily: "var(--font-fredoka), sans-serif",

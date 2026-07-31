@@ -12,7 +12,7 @@ type Comment = {
   name: string
   content: string
   created_at: string
-  updated_at: string
+  updated_at: string | null
   parent_id: string | null
 }
 
@@ -200,7 +200,7 @@ function CommentRow({
             </span>
             <span className="text-xs text-[var(--ryu-text-3)]">
               {timeAgo(comment.created_at)}
-              {comment.updated_at !== comment.created_at && (
+              {comment.updated_at && comment.updated_at !== comment.created_at && (
                 <span className="ml-1 italic">(edited)</span>
               )}
             </span>
@@ -396,6 +396,7 @@ export default function SeriesComments({ seriesId }: Props) {
       }
       setComments(prev => prev.filter(c => c.id !== id))
       toast.success('Comment deleted.')
+      await fetchComments()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete comment.')
     }

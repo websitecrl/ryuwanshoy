@@ -278,20 +278,37 @@ export default function FlipReader({
                 overflow:   'hidden',
               }}
             >
-              <Image
-                src={page.image_url}
-                alt={`Page ${page.page_number}`}
-                fill
-                // spread leaf: cover + clip to left or right half via object-position
-                // normal page: contain (portrait fits the leaf cleanly)
-                className={page.spreadSide ? 'object-cover' : 'object-contain'}
-                style={page.spreadSide
-                  ? { objectPosition: `${page.spreadSide} center` }
-                  : undefined
-                }
-                priority={index < 4}
-                loading={index < 4 ? 'eager' : 'lazy'}
-              />
+              {page.spreadSide ? (
+                // Force a deterministic split: render the image at 2x page width,
+                // then shift it exactly one page-width left or right.
+                <div
+                  style={{
+                    position: 'absolute',
+                    top:      0,
+                    left:     page.spreadSide === 'left' ? 0 : -bookDims.width,
+                    width:    bookDims.width * 2,
+                    height:   bookDims.height,
+                  }}
+                >
+                  <Image
+                    src={page.image_url}
+                    alt={`Page ${page.page_number}`}
+                    fill
+                    className="object-cover"
+                    priority={index < 4}
+                    loading={index < 4 ? 'eager' : 'lazy'}
+                  />
+                </div>
+              ) : (
+                <Image
+                  src={page.image_url}
+                  alt={`Page ${page.page_number}`}
+                  fill
+                  className="object-contain"
+                  priority={index < 4}
+                  loading={index < 4 ? 'eager' : 'lazy'}
+                />
+              )}
             </div>
           ))}
         </HTMLFlipBook>
