@@ -50,3 +50,5 @@ next-env.d.ts
 
 #opennext/cloudflare
 .open-next/
+
+.dev.vars.*

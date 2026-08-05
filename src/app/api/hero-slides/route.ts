@@ -35,7 +35,12 @@ export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
-  const body = await request.json()
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
 
   const { data, error } = await supabaseAdmin
     .from('hero_slides')

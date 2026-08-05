@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
   if (auth instanceof NextResponse) return auth
 
   const body = await req.json()
-  const { series_id, chapter_number, title, is_early_access, published_at, is_published } = body
+  const { series_id, chapter_number, title, is_early_access, published_at, is_published, is_draft } = body
 
   if (!series_id || chapter_number === undefined) {
     return NextResponse.json(
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       is_early_access: is_early_access ?? false,
       published_at:    published_at || null,
       is_published:    is_published ?? false,
-      is_draft:        false,
+      is_draft:        is_draft ?? false,
     })
     .select()
     .single()

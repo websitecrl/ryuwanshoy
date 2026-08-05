@@ -101,7 +101,7 @@ export async function PATCH(
 
     if (body.coverImageBase64) {
         try {
-           if (body.coverimageBase64.length > 34_000_000) {
+           if (body.coverImageBase64.length > 34_000_000) {
               return NextResponse.json({ error: 'Image too large'}, { status: 413 })
             }
             
