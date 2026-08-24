@@ -2,7 +2,6 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
-import sharp from 'sharp'
 
 // Folder-specific max widths — pages and hero banners get more room
 const MAX_WIDTHS: Record<string, number> = {
@@ -42,6 +41,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+
+    const sharp = (await import('sharp')).default
     const buffer    = Buffer.from(base64.slice(commaIdx + 1), 'base64')
     const maxWidth  = MAX_WIDTHS[folder] ?? DEFAULT_MAX_WIDTH
     const processed = await sharp(buffer)

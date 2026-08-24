@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
-import sharp from 'sharp'
+
 
 type SeriesInsert = TablesInsert<'series'>
 
@@ -64,6 +64,8 @@ export async function POST(req: NextRequest) {
         if (body.coverImageBase64.length > 34_000_000) {
           return NextResponse.json({ error: 'Image too large' }, { status: 413 })
         }
+        
+        const sharp = (await import('sharp')).default 
         const commaIdx  = body.coverImageBase64.indexOf(',')
         const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
         const processed = await sharp(buffer)

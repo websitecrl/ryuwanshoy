@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
-import sharp from 'sharp'
+
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -44,6 +44,7 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string
       try {
+        const sharp = (await import('sharp')).default
         const commaIdx  = body.imageBase64.indexOf(',')
         const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
         const processed = await sharp(buffer)

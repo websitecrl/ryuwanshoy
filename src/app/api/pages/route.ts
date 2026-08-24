@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
-import sharp from 'sharp'
+
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
 
       // Spreads: max 2400px wide (preserves panorama quality)
       // Singles: max 1200px wide (standard portrait page)
+      const sharp = (await import('sharp')).default
       const maxWidth   = body.is_spread ? 2400 : 1200
       const processed  = await sharp(rawBuffer)
         .resize({ width: maxWidth, withoutEnlargement: true })

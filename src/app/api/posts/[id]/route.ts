@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2, deleteFromR2 } from '@/lib/r2'
-import sharp from 'sharp'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -81,6 +80,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
           return NextResponse.json({ error: 'Image too large'}, { status: 413 })
         }
         
+        const sharp = (await import('sharp')).default
         const commaIdx  = body.imageBase64.indexOf(',')
         const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
         const processed = await sharp(buffer)
