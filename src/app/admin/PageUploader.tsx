@@ -7,6 +7,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEn
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
+import { compressImage } from '@/lib/image-compress'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,7 +134,9 @@ export default function PageUploader({
     try {
       const uploaded: Page[] = []
       for (const file of imgs) {
-        const base64      = await fileToBase64(file)
+        // Shrink to a sane size BEFORE sending — the raw 2550x3300 originals
+        // are what were blowing the Worker's free-tier CPU limit.
+        const base64      = await compressImage(file)
         const page_number = pages.length + uploaded.length + 1
         const dim         = await getImageDimensionns(file)
         const is_spread   = dim.width > dim.height    // landscape = spread
@@ -317,15 +320,4 @@ export default function PageUploader({
 
     </div>
   )
-}
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
 }

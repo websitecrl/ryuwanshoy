@@ -10,22 +10,54 @@ import { v4 as uuidv4 } from 'uuid'
 // be undefined at build/cold-start time, producing silent failures. Every
 // exported function below calls this at the start instead of relying on a
 // module-level singleton. See the ryu-r2-upload skill.
+
+/**
+ * Builds the R2 client + the raw config values every upload/delete call needs.
+ *
+ * Validates required vars instead of using `!` non-null assertions — a
+ * missing or malformed value here (e.g. R2_ENDPOINT accidentally carrying a
+ * bucket-name suffix, or a stale R2_PUBLIC_URL after a bucket rename) used to
+ * fail silently: the SDK would still "succeed" but read/write the wrong
+ * location. Now it throws immediately with the actual (non-secret) values,
+ * so a misconfigured deploy shows up in the logs on the very first request
+ * instead of as a mysterious 404 downstream.
+ *
+ * @throws if any required var is missing/blank, or if R2_ENDPOINT/R2_PUBLIC_URL
+ *         carry a path segment (they must be bare origins — no trailing bucket name)
+ */
 function getR2() {
-  console.error('DEBUG R2_BUCKET_NAME:', JSON.stringify(process.env.R2_BUCKET_NAME))
+  const bucket     = process.env.R2_BUCKET_NAME ?? ''
+  const endpoint   = process.env.R2_ENDPOINT ?? ''
+  const publicUrl  = process.env.R2_PUBLIC_URL ?? ''
+  const eaBucket   = process.env.R2_EA_BUCKET_NAME ?? ''
+  const accessKeyId     = process.env.R2_ACCESS_KEY_ID ?? ''
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY ?? ''
+
+  const missing = Object.entries({ bucket, endpoint, publicUrl, eaBucket, accessKeyId, secretAccessKey })
+    .filter(([, v]) => v.trim() === '')
+    .map(([k]) => k)
+
+  if (missing.length) {
+    throw new Error(`R2 misconfigured — missing env var(s): ${missing.join(', ')}`)
+  }
+
+  // endpoint/publicUrl must be bare origins. A bucket name (or anything else)
+  // tacked onto the path here gets silently prepended to every object key by
+  // the AWS SDK — the exact bug that caused covers to land under an extra
+  // "<bucket>/" folder while the returned public URL pointed somewhere else.
+  for (const [name, value] of [['R2_ENDPOINT', endpoint], ['R2_PUBLIC_URL', publicUrl]] as const) {
+    const path = new URL(value).pathname
+    if (path !== '' && path !== '/') {
+      throw new Error(`${name} must be a bare origin with no path — got "${value}"`)
+    }
+  }
+
   const client = new S3Client({
     region: 'auto',
-    endpoint: process.env.R2_ENDPOINT!,
-    credentials: {
-      accessKeyId:     process.env.R2_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
-    },
+    endpoint,
+    credentials: { accessKeyId, secretAccessKey },
   })
-  const bucket = process.env.R2_BUCKET_NAME!
-  const publicUrl = process.env.R2_PUBLIC_URL!
-  // Early Access bucket — same account/credentials, different bucket, no
-  // public domain attached to it (deliberately). Only ever reached through
-  // uploadToEAR2 / getEASignedUrl / deleteFromEAR2 below.
-  const eaBucket = process.env.R2_EA_BUCKET_NAME!
+
   return { client, bucket, publicUrl, eaBucket }
 }
 
@@ -114,7 +146,7 @@ export function extractR2Key(url: string): string {
  * Returns total storage used in the R2 bucket in bytes.
  * paginate through all objects and sum of their sizes.
  */
-export async function  getR2StorageBytes(): Promise<number>  {
+export async function getR2StorageBytes(): Promise<number> {
   const { client, bucket } = getR2()
 
   let totalBytes = 0

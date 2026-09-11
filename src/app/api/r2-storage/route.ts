@@ -10,14 +10,22 @@ export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
-  const used    = await getR2StorageBytes()
-  const percent = parseFloat(((used / BUCKET_MAX_BYTES) * 100).toFixed(2))
-  const usedGB  = (used / (1024 ** 3)).toFixed(2)
+  try {
+    const used    = await getR2StorageBytes()
+    const percent = parseFloat(((used / BUCKET_MAX_BYTES) * 100).toFixed(2))
+    const usedGB  = (used / (1024 ** 3)).toFixed(2)
 
-  return NextResponse.json({
-    usedBytes:   used,
-    usedGB:      parseFloat(usedGB),
-    totalGB:     10,
-    percentUsed: percent,
-  })
+    return NextResponse.json({
+      usedBytes:   used,
+      usedGB:      parseFloat(usedGB),
+      totalGB:     10,
+      percentUsed: percent,
+    })
+  } catch (err) {
+    console.error('GET /api/r2-storage error:', err)
+    return NextResponse.json(
+      { error: 'Failed to get storage usage' },
+      { status: 500 }
+    )
+  }
 }

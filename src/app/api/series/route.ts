@@ -73,6 +73,7 @@ export async function POST(req: NextRequest) {
           `cover-${payload.slug}`
         )
       } catch (err) {
+        console.error('POST /api/series cover upload error:', err)
         return NextResponse.json(
           { error: 'Cover image upload failed' },
           { status: 500 }

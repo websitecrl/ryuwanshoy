@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
     // currently broken on this deployment. See src/lib/image-processing.ts.
     const url = await uploadToR2(base64, folder)
     return NextResponse.json({ url })
-  } catch {
+  } catch (err) {
+    console.error('POST /api/upload error:', err)
     return NextResponse.json(
       { error: 'Image processing failed' },
       { status: 500 }

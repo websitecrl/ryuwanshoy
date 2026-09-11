@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         'pages',
         `chapter-${body.chapter_id}-page-${body.page_number}`
       )
-    } catch {
+    } catch (err) {
+      console.error('POST /api/pages upload error:', err)
       return NextResponse.json(
         { data: null, error: 'Image upload failed' },
         { status: 500 }

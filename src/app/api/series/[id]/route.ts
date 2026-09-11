@@ -109,7 +109,8 @@ export async function PATCH(
             'covers',
             `cover-${payload.slug}`
           )
-        } catch {
+        } catch (err) {
+          console.error(`PATCH /api/series/${id} cover upload error:`, err)
           return NextResponse.json(
             { error: 'Cover image upload failed' },
             { status: 500 }
