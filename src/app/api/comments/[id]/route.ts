@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { isProfane } from '@/lib/profanity'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 // ─── PATCH /api/comments/[id] ─────────────────────────────────────────────────
 // Edit a comment — requires matching edit_token
@@ -11,6 +12,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+
+  const ip = getClientIp(req)
+  const allowed = await checkRateLimit(`comment-edit:${ip}`, 5, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please slow down.' }, { status: 429 })
+  }
 
   let content: string | undefined
   let edit_token: string | undefined
@@ -68,6 +75,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+
+  const ip = getClientIp(req)
+  const allowed = await checkRateLimit(`comment-delete:${ip}`, 5, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests. Please slow down.' }, { status: 429 })
+  }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

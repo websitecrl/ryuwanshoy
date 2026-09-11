@@ -52,6 +52,5 @@ next-env.d.ts
 .open-next/
 
 # cloudflare
-.wrangler
 .dev.vars
 .dev.vars.*

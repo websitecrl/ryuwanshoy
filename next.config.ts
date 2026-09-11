@@ -1,10 +1,19 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+
+initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
   serverExternalPackages:["sharp", "@img/sharp-wasm32",  "@aws-sdk/client-s3"],
   images: {
-    unoptimized: process.env.NODE_ENV === 'development',
+    // TEMPORARY STOPGAP: unoptimized in all environments, not just dev.
+    // Next's built-in optimizer on Cloudflare Workers (via OpenNext) routes
+    // through the same env.IMAGES binding that's currently broken (platform
+    // bug, ticket open — see src/lib/image-processing.ts for full history).
+    // This serves images at their original size/format directly from R2
+    // instead of failing with "upstream response is invalid".
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -46,6 +55,13 @@ const nextConfig: NextConfig = {
     ]
   },
   poweredByHeader: false,
+  webpack: (config) => {
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true
+    }
+    return config
+  }
 };
 
 export default withSentryConfig(nextConfig, {
@@ -55,5 +71,10 @@ export default withSentryConfig(nextConfig, {
   disableLogger: true,
   sourcemaps: {
     disable: true,
+  },
+    webpack: {
+    autoInstrumentServerFunctions: false,
+    autoInstrumentMiddleware: false,
+    autoInstrumentAppDirectory: false,
   },
 });

@@ -5,7 +5,6 @@ import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
 
-
 type SeriesInsert = TablesInsert<'series'>
 
 export async function GET() {
@@ -64,17 +63,12 @@ export async function POST(req: NextRequest) {
         if (body.coverImageBase64.length > 34_000_000) {
           return NextResponse.json({ error: 'Image too large' }, { status: 413 })
         }
-        
-        const sharp = (await import('sharp')).default 
-        const commaIdx  = body.coverImageBase64.indexOf(',')
-        const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
-        const processed = await sharp(buffer)
-          .resize(920, null, { fit: 'inside', withoutEnlargement: true })
-          .webp({ quality: 85 })
-          .toBuffer()
-        const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
+
+        // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
+        // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
+        // currently broken on this deployment. See src/lib/image-processing.ts.
         payload.cover_image = await uploadToR2(
-          webpBase64,
+          body.coverImageBase64,
           'covers',
           `cover-${payload.slug}`
         )

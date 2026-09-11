@@ -5,7 +5,6 @@ import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2, deleteFromR2 } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
 
-
 type Series = Tables<'series'>
 type Chapter = Tables<'chapters'> & { pages: Array<{ image_url: string }> }
 type SeriesUpdate = TablesUpdate<'series'>
@@ -22,7 +21,6 @@ export async function GET(
     const { id } = await params
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
-    // Check if request is from admin
     const auth = await requireAdmin()
     const isAdmin = !(auth instanceof NextResponse)
 
@@ -37,7 +35,6 @@ export async function GET(
       .eq(isUUID ? 'id' : 'slug', id)
       .order('chapter_number', { referencedTable: 'chapters', ascending: true })
 
-    // Public callers only see published series + published chapters
     if (!isAdmin) {
       query.eq('is_published', true)
     }
@@ -51,7 +48,6 @@ export async function GET(
       )
     }
 
-    // Filter chapters for public callers
     if (!isAdmin) {
       data.chapters = (data.chapters ?? []).filter(c => c.is_published === true)
     }
@@ -101,21 +97,15 @@ export async function PATCH(
 
     if (body.coverImageBase64) {
         try {
-           if (body.coverImageBase64.length > 34_000_000) {
-              return NextResponse.json({ error: 'Image too large'}, { status: 413 })
-            }
-            
-          const sharp = (await import('sharp')).default
-          const commaIdx  = body.coverImageBase64.indexOf(',')
-          const buffer    = Buffer.from(body.coverImageBase64.slice(commaIdx + 1), 'base64')
-          const processed = await sharp(buffer)
-            .resize(920, null, { fit: 'inside', withoutEnlargement: true })
-            .webp({ quality: 85 })
-            .toBuffer()
-          const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
+          if (body.coverImageBase64.length > 34_000_000) {
+            return NextResponse.json({ error: 'Image too large'}, { status: 413 })
+          }
 
+          // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
+          // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
+          // currently broken on this deployment. See src/lib/image-processing.ts.
           payload.cover_image = await uploadToR2(
-            webpBase64,
+            body.coverImageBase64,
             'covers',
             `cover-${payload.slug}`
           )

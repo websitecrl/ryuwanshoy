@@ -4,7 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
 
-
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -44,15 +43,10 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string
       try {
-        const sharp = (await import('sharp')).default
-        const commaIdx  = body.imageBase64.indexOf(',')
-        const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
-        const processed = await sharp(buffer)
-          .resize(1200, null, { fit: 'inside', withoutEnlargement: true })
-          .webp({ quality: 85 })
-          .toBuffer()
-        const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
-        imageUrl = await uploadToR2(webpBase64, 'posts')
+        // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
+        // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
+        // currently broken on this deployment. See src/lib/image-processing.ts.
+        imageUrl = await uploadToR2(body.imageBase64, 'posts')
       } catch (uploadErr) {
         console.error('R2 upload error:', uploadErr)
         return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })

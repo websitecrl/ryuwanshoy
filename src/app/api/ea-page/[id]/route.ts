@@ -3,12 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getEASignedUrl} from '@/lib/r2'
 import { checkEarlyAccessEntitlement } from '@/lib/ea-entitlement'
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const ip = getClientIp(request)
+    const allowed = await checkRateLimit(`ea-page:${ip}`, 60, 60_000)
+    if (!allowed) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const { id } = await params
 
     const { data: page, error } = await supabaseAdmin

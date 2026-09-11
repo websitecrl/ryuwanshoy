@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid'
 // exported function below calls this at the start instead of relying on a
 // module-level singleton. See the ryu-r2-upload skill.
 function getR2() {
+  console.error('DEBUG R2_BUCKET_NAME:', JSON.stringify(process.env.R2_BUCKET_NAME))
   const client = new S3Client({
     region: 'auto',
     endpoint: process.env.R2_ENDPOINT!,

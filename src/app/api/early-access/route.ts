@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -61,6 +62,15 @@ export async function POST(req: NextRequest) {
     );
   }
   
+  const ip = getClientIp(req)
+  const allowed = await checkRateLimit(`early-access:${ip}`, 3, 60_000)
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   const supabase = await createClient();
   try {
     const body = (await req.json()) as {

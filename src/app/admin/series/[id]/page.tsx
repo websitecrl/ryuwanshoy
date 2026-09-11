@@ -139,7 +139,7 @@ export default function EditSeriesPage() {
   }
 
   return (
-    <div className="animate-page-in px-8 pb-28" style={{ minHeight: '100vh' }}>
+    <div className="animate-page-in px-8 pb-28 pt-6" style={{ minHeight: '100vh' }}>
 
       {/* Header */}
       <div className="mb-8">
@@ -231,7 +231,7 @@ export default function EditSeriesPage() {
               </label>
               {activeCover ? (
                 <div style={{ borderRadius: 10, border: '2px solid var(--ryu-primary)', overflow: 'hidden', background: 'var(--ryu-primary-soft)' }}>
-                  <div style={{ position: 'relative', width: '100%', aspectRatio: '460/640' }}>
+                  <div style={{ position: 'relative', width: '100%', maxHeight: 220, overflow: 'hidden' }}>
                     <Image src={activeCover} alt="Cover" fill className="object-cover" />
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '10px 12px' }}>

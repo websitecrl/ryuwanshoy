@@ -106,18 +106,16 @@ export default function AdminSeriesPage() {
     return (
       <div className="p-8">
         {/* Header skeleton */}
-        <div className="flex items-end justify-between mb-8">
-          <div className="space-y-2">
-            <div className="h-3 w-24 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
-            <div className="h-10 w-32 rounded-lg animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
-            <div className="h-4 w-72 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
-          </div>
+        <div className="mb-8 space-y-2">
+          <div className="h-3 w-24 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
           <div className="h-10 w-32 rounded-lg animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
+          <div className="h-4 w-72 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
         </div>
         {/* Search + pills skeleton */}
         <div className="flex gap-3 mb-6">
           <div className="h-10 flex-1 rounded-xl animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
           {[1,2,3].map(n => <div key={n} className="h-10 w-24 rounded-full animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />)}
+          <div className="h-10 w-32 rounded-lg animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
         </div>
         {/* Cards skeleton */}
         <div className="grid grid-cols-3 gap-5">
@@ -140,29 +138,90 @@ export default function AdminSeriesPage() {
   return (
     <div className="p-8 animate-page-in">
 
-      {/* ── Page header ──────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between mb-8 gap-4">
-        <div>
-          <div
-            className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
-            style={{ color: 'var(--ryu-primary-deep)' }}
-          >
-            Library · {series.length} title{series.length !== 1 ? 's' : ''}
+      {/* ── Page header — title block only, button moved to the search row below ── */}
+      <div className="mb-8">
+        <div
+          className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
+          style={{ color: 'var(--ryu-primary-deep)' }}
+        >
+          Library · {series.length} title{series.length !== 1 ? 's' : ''}
+        </div>
+        <h1
+          className="font-heading font-bold leading-tight"
+          style={{ fontSize: 38, letterSpacing: -0.8, color: 'var(--ryu-text)' }}
+        >
+          Series
+        </h1>
+        <p className="mt-1.5 text-sm" style={{ color: 'var(--ryu-text-2)' }}>
+          Every story in your shelf. Tap a card to manage chapters, cover.
+        </p>
+      </div>
+
+      {/* ── Search + filter pills + New Series button ─────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative" style={{ minWidth: 360 }}>
+            <Search
+              size={13}
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: 'var(--ryu-text-muted)' }}
+            />
+            <input
+              type="text"
+              placeholder="Search by title, genre, or author..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full h-9 pl-8 pr-4 rounded-lg text-sm outline-none"
+              style={{
+                border: '1px solid var(--ryu-border)',
+                background: 'var(--ryu-surface-2)',
+                color: 'var(--ryu-text)',
+                fontFamily: "'Quicksand', system-ui, sans-serif",
+              }}
+            />
           </div>
-          <h1
-            className="font-heading font-bold leading-tight"
-            style={{ fontSize: 38, letterSpacing: -0.8, color: 'var(--ryu-text)' }}
-          >
-            Series
-          </h1>
-          <p className="mt-1.5 text-sm" style={{ color: 'var(--ryu-text-2)' }}>
-            Every story in your shelf. Tap a card to manage chapters, cover.
-          </p>
+
+          {/* Filter pills */}
+          {(['all', 'ongoing', 'completed', 'hiatus'] as const)
+              .filter(s => s === 'all' || counts[s] > 0)
+              .map(status => (
+                <button
+                  key={status}
+                  onClick={() => setStatus(status)}
+                  className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-colors capitalize"
+                  style={
+                    statusFilter === status
+                      ? {
+                          background: 'var(--ryu-primary)',
+                          color: '#fff',
+                          border: '1.5px solid var(--ryu-primary-deep)',
+                        }
+                      : {
+                          background: 'var(--ryu-surface-1)',
+                          color: 'var(--ryu-text-2)',
+                          border: '1.5px solid var(--ryu-border)',
+                        }
+                  }
+                >
+                  {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+                  <span
+                    className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold"
+                    style={
+                      statusFilter === status
+                        ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
+                        : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-2)' }
+                    }
+                  >
+                    {counts[status]}
+                  </span>
+                </button>
+              ))}
         </div>
 
         <Link
           href="/admin/series/new"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0 transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-semibold shrink-0 transition-opacity hover:opacity-90"
           style={{
             background: '#FEF08A',
             color: '#1E1E1E',
@@ -173,67 +232,6 @@ export default function AdminSeriesPage() {
           <Plus size={16} strokeWidth={2.5} />
           New Series
         </Link>
-      </div>
-
-      {/* ── Search + filter pills ─────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-
-      <div className="relative" style={{ minWidth: 360 }}>
-        <Search
-          size={13}
-          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: 'var(--ryu-text-muted)' }}
-        />
-        <input
-          type="text"
-          placeholder="Search by title, genre, or author..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full h-9 pl-8 pr-4 rounded-lg text-sm outline-none"
-          style={{
-            border: '1px solid var(--ryu-border)',
-            background: 'var(--ryu-surface-2)',
-            color: 'var(--ryu-text)',
-            fontFamily: "'Quicksand', system-ui, sans-serif",
-          }}
-        />
-      </div>
-
-      {/* Filter pills */}
-      {(['all', 'ongoing', 'completed', 'hiatus'] as const)
-          .filter(s => s === 'all' || counts[s] > 0)
-          .map(status => (
-            <button
-              key={status}
-              onClick={() => setStatus(status)}
-              className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-colors capitalize"
-              style={
-                statusFilter === status
-                  ? {
-                      background: 'var(--ryu-primary)',
-                      color: '#fff',
-                      border: '1.5px solid var(--ryu-primary-deep)',
-                    }
-                  : {
-                      background: 'var(--ryu-surface-1)',
-                      color: 'var(--ryu-text-2)',
-                      border: '1.5px solid var(--ryu-border)',
-                    }
-              }
-            >
-              {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-              <span
-                className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold"
-                style={
-                  statusFilter === status
-                    ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
-                    : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-2)' }
-                }
-              >
-                {counts[status]}
-              </span>
-            </button>
-          ))}
       </div>
 
       {/* ── Empty state — no series at all ───────────────────────────── */}

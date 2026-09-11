@@ -4,7 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { uploadToR2 } from '@/lib/r2'
 
-
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
@@ -45,23 +44,14 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string
     try {
-      // Decode → resize with sharp → re-encode as WebP → upload
-      const commaIdx   = body.imageBase64.indexOf(',')
-      const rawBuffer  = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
-
-      // Spreads: max 2400px wide (preserves panorama quality)
-      // Singles: max 1200px wide (standard portrait page)
-      const sharp = (await import('sharp')).default
-      const maxWidth   = body.is_spread ? 2400 : 1200
-      const processed  = await sharp(rawBuffer)
-        .resize({ width: maxWidth, withoutEnlargement: true })
-        .webp({ quality: 85 })
-        .toBuffer()
-
-      const processedBase64 = `data:image/webp;base64,${processed.toString('base64')}`
-
+      // TEMPORARY STOPGAP: skip resize/webp conversion entirely and upload
+      // the original file as-is. Both the Cloudflare Images binding (platform
+      // bug, ticket open) and @cf-wasm/photon (webpack/wasm bundling issue,
+      // in progress) are currently broken on this Workers deployment.
+      // Revisit once either is resolved — see src/lib/image-processing.ts
+      // for full history of what's been tried.
       imageUrl = await uploadToR2(
-        processedBase64,
+        body.imageBase64,
         'pages',
         `chapter-${body.chapter_id}-page-${body.page_number}`
       )

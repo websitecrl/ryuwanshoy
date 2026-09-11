@@ -23,16 +23,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Image size exceeds the limit of 25MB' }, { status: 413 })
     }
 
-    const sharp = (await import('sharp')).default
-    const commaIdx  = body.imageBase64.indexOf(',')
-    const buffer    = Buffer.from(body.imageBase64.slice(commaIdx + 1), 'base64')
-    const processed = await sharp(buffer)
-      .resize(400, null, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 85 })
-      .toBuffer()
-    const webpBase64 = `data:image/webp;base64,${processed.toString('base64')}`
-
-    const imageUrl = await uploadToR2(webpBase64, 'settings', 'site-logo')
+    // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
+    // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
+    // currently broken on this deployment. See src/lib/image-processing.ts.
+    const imageUrl = await uploadToR2(body.imageBase64, 'settings', 'site-logo')
 
     const { data: existing } = await supabaseAdmin
       .from('settings')
