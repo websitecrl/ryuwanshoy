@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Settings, HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2 } from 'lucide-react'
+import { compressImage } from '@/lib/image-compress'
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
 
@@ -63,7 +64,7 @@ export default function SettingsPage() {
       try {
         const res  = await fetch('/api/settings')
         const data = await res.json()
-        setSettings(data)
+        setSettings(data.settings ?? {})
       } catch (err) { console.error('Failed to fetch settings:', err) }
       finally { setLoading(false) }
     }
@@ -107,12 +108,9 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]; if (!file) return
     setUploadingLogo(true)
     try {
-      const reader = new FileReader()
-      const imageBase64 = await new Promise<string>((resolve, reject) => {
-        reader.onload  = () => resolve(reader.result as string)
-        reader.onerror = () => reject(new Error('Failed to read file'))
-        reader.readAsDataURL(file)
-      })
+      // Logo only ever renders small — 800px is generous — and stays PNG
+      // by default so a transparent logo doesn't get flattened to black.
+      const imageBase64 = await compressImage(file, { maxDimension: 800 })
 
       const res  = await fetch('/api/upload-logo', {
         method: 'POST',

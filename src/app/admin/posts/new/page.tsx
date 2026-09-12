@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { CloudUpload, X, Loader2, ImageIcon, CheckCircle2, Circle } from 'lucide-react'
+import { compressImage } from '@/lib/image-compress'
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -74,7 +75,9 @@ export default function NewPostPage() {
     setSubmitting(true)
 
     try {
-      const imageBase64 = await fileToBase64(imageFile)
+      // Posts can be any size/orientation — cap at 1600px, keep original
+      // format so a transparent PNG sticker/meme isn't flattened to black.
+      const imageBase64 = await compressImage(imageFile, { maxDimension: 1600 })
 
       const res  = await fetch('/api/posts', {
         method: 'POST',
@@ -347,15 +350,4 @@ export default function NewPostPage() {
 
     </div>
   )
-}
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
 }

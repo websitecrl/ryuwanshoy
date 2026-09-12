@@ -226,7 +226,7 @@ export default function ChapterList({
       : null
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-16">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-5 sm:pb-16">
 
       {/* Continue reading bar — above tabs, only shown if progress exists */}
       <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} />

@@ -51,12 +51,6 @@ export default async function RootLayout({ children,}: Readonly<{
       lang="en"
       className={`${fredoka.variable} h-full antialiased`}
     >
-      <head>
-        <link
-         rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.5.0/dist/tabler-icons.min.css"
-        />
-      </head>
       <body className="min-h-full flex flex-col font-sans">
         <AgeGate>
           <ConditionalLayout

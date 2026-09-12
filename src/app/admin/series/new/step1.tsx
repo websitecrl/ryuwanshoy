@@ -7,7 +7,8 @@ import { toast } from 'sonner'
 import { Image as ImageIcon, CheckCircle2, Circle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, GENRES, inputStyle, labelStyle, fileToBase64, generateSlug, type SeriesFormData } from './types'
+import { BOTTOM_BAR, GENRES, inputStyle, labelStyle, generateSlug, type SeriesFormData } from './types'
+import { compressImage } from '@/lib/image-compress'
 
 interface Step1Props {
   data: SeriesFormData
@@ -58,7 +59,9 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
 
     let coverImageBase64: string | undefined
     try {
-      if (data.coverFile) coverImageBase64 = await fileToBase64(data.coverFile)
+      // Cover cards render at 460x640 — 1280px longest side is plenty of
+      // headroom for retina without shipping a multi-MB original.
+      if (data.coverFile) coverImageBase64 = await compressImage(data.coverFile, { maxDimension: 1280 })
     } catch { toast.error('Failed to process images'); setSubmitting(false); return }
 
     const res = await fetch('/api/series', {

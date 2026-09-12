@@ -126,7 +126,7 @@ async function getSettings() {
   try {
     const { data, error } = await supabaseAdmin
       .from('settings')
-      .select('site_title, creator_name, site_description, logo_url')
+      .select('site_title, creator_name, site_description, logo_url, facebook_url, instagram_url, twitter_url, tiktok_url, youtube_url')
       .single()
 
     if ( error ) throw error

@@ -101,8 +101,17 @@ export async function uploadToR2(
     CacheControl: 'public, max-age=31536000, immutable', // cache for 1 year
   }))
 
-  // Return the public URL
-  return `${publicUrl}/${key}`
+  // Callers that pass a fixed `filename` (site logo, series covers, chapter
+  // pages) reuse the exact same key on every re-upload. Combined with the
+  // "immutable" Cache-Control above, that means the FIRST response any
+  // browser or CDN ever saw for that URL — a 404, if the upload happened to
+  // fail or land in the wrong place that one time — can get cached for a
+  // year and keep being served even after a later upload succeeds, because
+  // the URL string never changed. A `?v=` query string doesn't affect which
+  // R2 object gets served (the Key above has no query string in it), but it
+  // does make every upload return a distinct URL, so a stale cached response
+  // for the old URL is never in the way of the new one.
+  return `${publicUrl}/${key}?v=${Date.now()}`
 }
 
 /**
@@ -120,7 +129,9 @@ export async function deleteFromR2(url: string): Promise<void> {
     return
   }
 
-  const key = url.replace(`${publicUrl}/`, '')
+  // Strip the "?v=..." cache-busting suffix uploadToR2 now appends — the
+  // actual R2 object Key never includes it, only the returned URL does.
+  const key = url.replace(`${publicUrl}/`, '').split('?')[0]
 
   if (!key || key === url) {
     throw new Error(`Could not extract key from URL: ${url}`)
@@ -138,7 +149,7 @@ export async function deleteFromR2(url: string): Promise<void> {
  */
 export function extractR2Key(url: string): string {
   const { publicUrl } = getR2()
-  return url.replace(`${publicUrl}/`, '')
+  return url.replace(`${publicUrl}/`, '').split('?')[0] ?? ''
 }
 
 

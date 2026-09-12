@@ -1,34 +1,46 @@
 'use client'
 
+export interface CompressOptions {
+  /** Longest side (width or height) is capped to this, aspect ratio preserved.
+   *  Never upscales a smaller source image. Default 1600. */
+  maxDimension?: number
+  /** JPEG output quality, 0-1. Ignored when the output stays PNG. Default 0.85. */
+  quality?: number
+  /** Force JPEG output even for a PNG source. Only safe when the source is
+   *  known to have no transparency (e.g. comic pages, which are full-bleed
+   *  art with no alpha channel) — forcing JPEG on a transparent PNG flattens
+   *  transparent areas to black. Default false: PNG in stays PNG out, so
+   *  logos/stickers/banners with real transparency aren't corrupted. */
+  forceJpeg?: boolean
+}
+
 /**
  * Resizes and compresses an image in the browser, before it's ever sent to
  * the server.
  *
- * Comic pages come in at up to 2550x3300px / 25MB. Decoding a base64 string
- * that large, and then hashing it again for R2's AWS SigV4 signing, is what
- * was blowing past Cloudflare Workers' free-tier 10ms CPU budget (see the
- * "Worker exceeded CPU time limit" errors in wrangler tail). Shrinking the
- * image here, client-side, means the Worker only ever touches a small
- * payload — the CPU-heavy part never happens on the server at all.
+ * Full-resolution admin uploads (comic pages up to 2550x3300px/25MB, but
+ * also hero banners, post images, etc.) blow past Cloudflare Workers'
+ * free-tier 10ms CPU budget once the Worker has to base64-decode them and
+ * hash them again for R2's AWS SigV4 signing (see the "Worker exceeded CPU
+ * time limit" errors in wrangler tail). Shrinking here, client-side, means
+ * the Worker only ever touches a small payload — the CPU-heavy part never
+ * happens on the server at all.
  *
- * @param file         the original image file picked or dropped by the admin
- * @param maxDimension the longest side (width or height) is capped to this,
- *                      aspect ratio preserved. 1600px is 2x the 800px reader
- *                      width used in scroll mode, so it still looks sharp.
- * @param quality       JPEG quality, 0-1. 0.85 is visually lossless for
- *                      comic art and cuts file size drastically vs. the original.
- * @returns             a base64 data URL — same shape the old raw-file
- *                      FileReader output was, so callers don't change.
- * @throws              if the browser can't decode the file as an image,
- *                      or canvas isn't available (shouldn't happen in any
- *                      real browser, but the admin dashboard should fail
- *                      loudly instead of silently sending a bad payload).
+ * @param file the original image file picked or dropped by the admin
+ * @param opts see {@link CompressOptions}
+ * @returns    a base64 data URL — same shape a raw FileReader output was,
+ *             so callers don't otherwise change
+ * @throws     if the browser can't decode the file as an image, or canvas
+ *             isn't available (shouldn't happen in any real browser, but
+ *             the admin dashboard should fail loudly instead of silently
+ *             sending a bad payload)
  */
 export function compressImage(
   file: File,
-  maxDimension = 1600,
-  quality = 0.85
+  opts: CompressOptions = {}
 ): Promise<string> {
+  const { maxDimension = 1600, quality = 0.85, forceJpeg = false } = opts
+
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file)
     const img = new window.Image()
@@ -56,11 +68,12 @@ export function compressImage(
 
       ctx.drawImage(img, 0, 0, width, height)
 
-      // Comic pages are full-bleed art with speech bubbles baked in — no
-      // transparency to preserve — so JPEG (much smaller than PNG) is
-      // always the right output format here.
-      const dataUrl = canvas.toDataURL('image/jpeg', quality)
-      resolve(dataUrl)
+      // PNG sources keep their transparency unless the caller explicitly
+      // knows there's none to preserve (forceJpeg) — everything else
+      // (JPEG/WEBP sources) already has no alpha, so JPEG out is always
+      // the smaller, correct choice for them.
+      const outputType = !forceJpeg && file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+      resolve(canvas.toDataURL(outputType, quality))
     }
 
     img.onerror = () => {

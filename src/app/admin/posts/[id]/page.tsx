@@ -16,6 +16,7 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import type { Tables } from '@/types/database'
+import { compressImage } from '@/lib/image-compress'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
       // If a new image was selected, convert and send it
       if (newImageFile) {
-        body.imageBase64 = await fileToBase64(newImageFile)
+        body.imageBase64 = await compressImage(newImageFile, { maxDimension: 1600 })
       }
 
       const res  = await fetch(`/api/posts/${postId}`, {
@@ -442,15 +443,4 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
     </div>
   )
-}
-
-// ─── Helper ───────────────────────────────────────────────────────────────────
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
 }

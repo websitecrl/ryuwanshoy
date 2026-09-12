@@ -19,6 +19,10 @@ type NavbarProps = {
 export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  // A stale/broken logo_url (e.g. from before an R2 config fix) would
+  // otherwise render as a permanent broken-image icon — fall back to the
+  // text wordmark instead once the image actually fails to load.
+  const [logoFailed, setLogoFailed] = useState(false)
 
   return (
     <header
@@ -36,12 +40,13 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
 
     {/* Logo */}
     <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.02em' }}>
-      {logoUrl ? (
+      {logoUrl && !logoFailed ? (
         <>
           {/* Logo shifts left on hover */}
           <img
             src={logoUrl}
             alt={siteTitle ?? 'Logo'}
+            onError={() => setLogoFailed(true)}
             style={{
               height: 60,
               width: 'auto',

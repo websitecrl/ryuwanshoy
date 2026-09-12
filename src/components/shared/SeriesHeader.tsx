@@ -3,9 +3,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Bookmark, Share2, Bell, BookOpen } from 'lucide-react'
+import { Bookmark, Share2, Bell, BookOpen, RotateCcw } from 'lucide-react'
 import { timeAgo } from '@/lib/time'
 import type { Tables } from '@/types/database'
+import type { ReadingProgress } from '@/types/reader'
 
 type Props = {
   series: Tables<'series'>
@@ -26,6 +27,23 @@ function getBookmarkMap(): Record<string, boolean> {
   }
 }
 
+// Same key/shape as ContinueReadingBar and ChapterList — reading-progress-{seriesId}
+function getReadingProgress(seriesId: string): ReadingProgress | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem(`reading-progress-${seriesId}`)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw) as ReadingProgress
+    if (typeof parsed.chapterNumber !== 'number' || typeof parsed.chapterId !== 'string') {
+      return null
+    }
+    return parsed
+  } catch {
+    return null
+  }
+}
+
 export default function SeriesHeader({
   series,
   chapterCount,
@@ -35,12 +53,25 @@ export default function SeriesHeader({
 }: Props) {
   const [bookmarked, setBookmarked] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [progress, setProgress] = useState<ReadingProgress | null>(null)
 
-  // Hydrate bookmark state from localStorage (same key as BookmarkedSeriesDrawer)
+  // Hydrate bookmark state from localStorage (same key as BookmarksNavLink/BookmarksGrid)
   useEffect(() => {
     const map = getBookmarkMap()
     setBookmarked(map[series.id] === true)
   }, [series.id])
+
+  // Hydrate reading progress from localStorage (same key as ContinueReadingBar/ChapterList)
+  useEffect(() => {
+    setProgress(getReadingProgress(series.id))
+  }, [series.id])
+
+  function handleRestart() {
+    try {
+      localStorage.removeItem(`reading-progress-${series.id}`)
+    } catch {}
+    setProgress(null)
+  }
 
   function toggleBookmark() {
     const map = getBookmarkMap()
@@ -53,7 +84,7 @@ export default function SeriesHeader({
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
     setBookmarked(next)
 
-    // Notify BookmarkedSeriesDrawer on the same page (it listens to 'storage' event)
+    // Notify BookmarksNavLink/BookmarksGrid on the same page (they listen to 'storage' event)
     window.dispatchEvent(new Event('storage'))
   }
 
@@ -75,8 +106,17 @@ export default function SeriesHeader({
   const updatedLabel = timeAgo(lastPublishedAt)
   const startHref = `/comics/${series.slug}/${firstChapterNumber}`
 
+  const hasProgress = progress !== null
+  const continueHref = progress
+    ? progress.currentPage && progress.currentPage > 1
+      ? `/comics/${series.slug}/${progress.chapterNumber}?page=${progress.currentPage}`
+      : `/comics/${series.slug}/${progress.chapterNumber}`
+    : startHref
+  const ctaHref = hasProgress ? continueHref : startHref
+  const ctaLabel = hasProgress ? `CONTINUE — CH. ${progress!.chapterNumber}` : 'START READING'
+
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-8 sm:pb-12">
       <div className="flex gap-6 sm:gap-8">
 
         {/* Cover image */}
@@ -165,9 +205,9 @@ export default function SeriesHeader({
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* START READING */}
+            {/* START READING / CONTINUE */}
           <Link
-            href={startHref}
+            href={ctaHref}
             className="font-comic flex items-center gap-1 px-4
               bg-[var(--ryu-accent)] text-[var(--ryu-text)]
               border-2 border-[var(--ryu-text)] rounded-lg
@@ -178,8 +218,27 @@ export default function SeriesHeader({
             style={{ height: '36px' }}
           >
             <BookOpen size={14} />
-            START READING
+            {ctaLabel}
           </Link>
+
+          {/* RESTART — only shown when there's progress to restart from */}
+          {hasProgress && (
+            <Link
+              href={startHref}
+              onClick={handleRestart}
+              aria-label="Restart from Chapter 1"
+              title="Restart from Chapter 1"
+              className="flex items-center justify-center flex-shrink-0
+                bg-[var(--ryu-surface-3)] text-[var(--ryu-text)]
+                border-2 border-[var(--ryu-text)] rounded-lg
+                shadow-[4px_4px_0px_var(--ryu-text)]
+                hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+                transition-all duration-100"
+              style={{ width: '44px', height: '44px' }}
+            >
+              <RotateCcw size={16} />
+            </Link>
+          )}
 
           {/* BOOKMARK */}
           <button

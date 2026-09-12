@@ -12,17 +12,9 @@ import {
 } from '@/components/ui/select'
 import type { Tables } from '@/types/database'
 import { GENRES } from '../new/types'
+import { compressImage } from '@/lib/image-compress'
 
 type Series = Tables<'series'>
-
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload  = () => resolve(reader.result as string)
-    reader.onerror = () => reject(new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
-}
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--ryu-surface-2)',
@@ -102,7 +94,7 @@ export default function EditSeriesPage() {
 
     let coverImageBase64: string | undefined
     try {
-      if (coverFile) coverImageBase64 = await fileToBase64(coverFile)
+      if (coverFile) coverImageBase64 = await compressImage(coverFile, { maxDimension: 1280 })
     } catch { toast.error('Failed to process images'); setSubmitting(false); return }
 
     const res  = await fetch(`/api/series/${id}`, {

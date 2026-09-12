@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight } from 'lucide-react'
+import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
 import { timeAgo } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
@@ -388,6 +388,10 @@ type LikeState =
   | { status: 'error' }
   | { status: 'loaded'; liked: boolean; count: number }
 
+// Drag-down distance (px) on the mobile comments-panel handle past which we
+// treat the gesture as "dismiss" rather than an aborted/accidental drag.
+const DRAG_CLOSE_THRESHOLD = 80
+
 export default function PostModal({ post, onClose }: Props) {
   const [likeState, setLikeState] = useState<LikeState>({ status: 'loading' })
   const [likeLoading, setLikeLoading] = useState(false)
@@ -397,6 +401,39 @@ export default function PostModal({ post, onClose }: Props) {
   const [submitError, setSubmitError] = useState('')
   const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
+
+  // Comments start hidden behind the like/comment/share rail on both
+  // desktop (slide-in drawer) and mobile (full-screen swap) — see the
+  // stage/panel layout in the JSX below.
+  const [commentsOpen, setCommentsOpen] = useState(false)
+
+  // Drag-to-dismiss for the mobile full-screen comments view. Only the
+  // handle bar at the top of the panel listens for touch — NOT the panel
+  // or the comment list itself — otherwise scrolling the comment list on
+  // mobile would fight with closing the panel on every vertical touch move.
+  const [dragOffset, setDragOffset] = useState(0)
+  const draggingRef = useRef(false)
+  const touchStartYRef = useRef<number | null>(null)
+
+  function handleTouchStart(e: React.TouchEvent) {
+    const touch = e.touches[0]
+    if (!touch) return
+    touchStartYRef.current = touch.clientY
+    draggingRef.current = true
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    if (!draggingRef.current || touchStartYRef.current === null) return
+    const touch = e.touches[0]
+    if (!touch) return
+    const delta = touch.clientY - touchStartYRef.current
+    if (delta > 0) setDragOffset(delta) // only track downward drags
+  }
+  function handleTouchEnd() {
+    if (dragOffset > DRAG_CLOSE_THRESHOLD) setCommentsOpen(false)
+    setDragOffset(0)
+    draggingRef.current = false
+    touchStartYRef.current = null
+  }
 
   // Which comments (across ALL posts) this browser owns — read once on mount.
   useEffect(() => {
@@ -463,14 +500,20 @@ export default function PostModal({ post, onClose }: Props) {
     loadComments()
   }, [post.id, loadComments])
 
-  // ESC to close
+  // ESC to close — closes the comments panel first if it's open, then the
+  // whole modal, so ESC mirrors what the back-chevron / drag handle does.
+  // (Reads commentsOpen directly rather than via a setState-updater side
+  // effect, which React 18 Strict Mode double-invokes in dev and would
+  // have called onClose() twice.)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key !== 'Escape') return
+      if (commentsOpen) setCommentsOpen(false)
+      else onClose()
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [onClose])
+  }, [onClose, commentsOpen])
 
   // Lock body scroll
   useEffect(() => {
@@ -491,6 +534,34 @@ export default function PostModal({ post, onClose }: Props) {
       setLikeState({ status: 'loaded', liked: newLiked, count })
     } catch {}
     setLikeLoading(false)
+  }
+
+  /**
+   * Native share sheet when available (mobile browsers), clipboard copy
+   * otherwise. There's no per-post deep link in this app yet (posts don't
+   * have their own route), so this shares the current page URL — good
+   * enough for "look what I found," not a permalink to this exact post.
+   */
+  async function handleShare() {
+    const url = typeof window !== 'undefined' ? window.location.href : ''
+    if (!url) return
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: post.title ?? 'Ryuwanshoy', text: post.description ?? undefined, url })
+        return
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url)
+        toast.success('Link copied!')
+      }
+    } catch (err) {
+      // AbortError fires when the user just dismisses the native share
+      // sheet — that's not a failure worth a toast.
+      if (err instanceof Error && err.name !== 'AbortError') {
+        toast.error('Could not share this post.')
+      }
+    }
   }
 
   async function handleSubmit() {
@@ -578,70 +649,112 @@ export default function PostModal({ post, onClose }: Props) {
       onClick={onClose}
     >
       <div
-        className="relative flex overflow-hidden post-modal-inner"
+        className="relative overflow-hidden post-modal-inner"
         style={{
           background: 'var(--ryu-surface-1)',
           borderRadius: 12,
-          width: 'min(960px, 96vw)',
-          maxHeight: '92vh',
+          width: 'min(1040px, 96vw)',
+          height: 'min(680px, 88vh)',
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Close button */}
+        {/* Always-visible close button — dismisses the whole modal, from
+            either the image stage or the comments panel. */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center post-modal-close"
+          className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full flex items-center justify-center post-modal-close"
           style={{ background: 'rgba(0,0,0,0.45)', color: '#fff', border: 'none' }}
         >
           <X size={16} />
         </button>
 
-        {/* Left: image */}
-        <div
-          className="flex items-center justify-center shrink-0 post-modal-image"
-          style={{
-            background: '#0d0d18',
-            width: 'clamp(280px, 55%, 560px)',
-            maxHeight: '92vh',
-          }}
-        >
-          <Image
-            src={post.image_url}
-            alt={post.title ?? 'Post'}
-            width={560}
-            height={700}
-            className="w-full h-auto block"
-            style={{ maxHeight: '92vh', objectFit: 'contain' }}
-          />
-        </div>
-
-        {/* Right: info + comments + input */}
-        <div
-          className="flex flex-col flex-1 min-w-0 min-h-0 post-modal-side"
-          style={{ borderLeft: '0.5px solid var(--ryu-border)', minWidth: 280 }}
-        >
-          {/* Post info header */}
-          <div
-            className="px-4 py-3 shrink-0"
-            style={{ borderBottom: '0.5px solid var(--ryu-border)' }}
-          >
-            {post.title && (
-              <p className="text-sm font-semibold leading-none post-modal-title" style={{ color: 'var(--ryu-text)', fontFamily: "var(--font-fredoka), sans-serif" }}>
-                {post.title}
-              </p>
-            )}
-            <p className="text-[10px] mt-1" style={{ color: 'var(--ryu-text-muted)' }}>
-              {formatDate(post.created_at)}
-            </p>
-            {post.description && (
-              <p className="text-xs mt-2 leading-relaxed post-modal-desc" style={{ color: 'var(--ryu-text-secondary)' }}>
-                {post.description}
-              </p>
-            )}
+        {/* Stage: flat image + floating like/comment/share rail + caption */}
+        <div className="post-modal-stage">
+          <div className="post-modal-image-wrap">
+            <Image
+              src={post.image_url}
+              alt={post.title ?? 'Post'}
+              fill
+              sizes="(max-width: 640px) 100vw, 1040px"
+              className="object-contain"
+            />
           </div>
 
-          {/* Comments list */}
+          {(post.title || post.description) && (
+            <div className="post-modal-caption">
+              {post.title && <p className="post-modal-caption-title">{post.title}</p>}
+              <p className="post-modal-caption-date">{formatDate(post.created_at)}</p>
+              {post.description && <p className="post-modal-caption-desc">{post.description}</p>}
+            </div>
+          )}
+
+          <div className="post-modal-rail">
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={likeLoading || likeState.status !== 'loaded'}
+              className="rail-btn"
+              aria-label={liked ? 'Unlike' : 'Like'}
+            >
+              <span className="rail-icon-bg">
+                <Heart size={22} fill={liked ? '#f43f5e' : 'none'} stroke={liked ? '#f43f5e' : '#fff'} strokeWidth={2} />
+              </span>
+              {likeCount > 0 && <span className="rail-count">{likeCount.toLocaleString()}</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setCommentsOpen(open => !open)}
+              className="rail-btn"
+              aria-label="Comments"
+            >
+              <span className="rail-icon-bg">
+                <MessageCircle size={22} color="#fff" />
+              </span>
+              <span className="rail-count">{comments.length}</span>
+            </button>
+
+            <button type="button" onClick={handleShare} className="rail-btn" aria-label="Share">
+              <span className="rail-icon-bg">
+                <Share2 size={20} color="#fff" />
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Comments panel — desktop: drawer sliding in from the right edge,
+            image stays visible behind it. Mobile: full-screen, replaces the
+            image entirely; drag the handle down (or tap it / the back
+            chevron) to return to the image. */}
+        <div
+          className={`post-modal-comments-panel ${commentsOpen ? 'open' : ''}`}
+          style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: 'none' } : undefined}
+        >
+          <div
+            className="comments-drag-handle"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={() => setCommentsOpen(false)}
+          >
+            <span className="drag-pill" />
+          </div>
+
+          <div className="comments-panel-header">
+            <button
+              type="button"
+              onClick={() => setCommentsOpen(false)}
+              className="comments-back-btn"
+              aria-label="Back to image"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="comments-panel-title">
+              Comments{comments.length > 0 ? ` (${comments.length})` : ''}
+            </span>
+          </div>
+
           <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
             {commentsState.status === 'loading' ? (
               <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
@@ -684,41 +797,10 @@ export default function PostModal({ post, onClose }: Props) {
             <div ref={commentsEndRef} />
           </div>
 
-          {/* Like bar + comment input */}
           <div
             className="shrink-0 px-4 py-3 flex flex-col gap-2"
             style={{ borderTop: '0.5px solid var(--ryu-border)' }}
           >
-            {/* Like button */}
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleLike}
-                disabled={likeLoading || likeState.status !== 'loaded'}
-                className="flex items-center gap-1.5 text-sm transition-all duration-150"
-                style={{
-                  background: 'none', border: 'none',
-                  color: liked ? '#f43f5e' : 'var(--ryu-text-muted)',
-                  fontFamily: "var(--font-fredoka), sans-serif", fontWeight: 600,
-                  cursor: (likeLoading || likeState.status !== 'loaded') ? 'not-allowed' : 'pointer',
-                }}
-              >
-                <Heart size={18} fill={liked ? '#f43f5e' : 'none'} stroke={liked ? '#f43f5e' : 'currentColor'} strokeWidth={2} />
-              </button>
-              {likeCount > 0 && (
-                <span className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>
-                  {likeCount.toLocaleString()} {likeCount === 1 ? 'like' : 'likes'}
-                </span>
-              )}
-              <div className="flex items-center gap-1 ml-1" style={{ color: 'var(--ryu-text-muted)' }}>
-                <MessageCircle size={16} strokeWidth={2} />
-                <span className="text-xs font-semibold" style={{ fontFamily: "var(--font-fredoka), sans-serif" }}>
-                  {comments.length}
-                </span>
-              </div>
-            </div>
-
-            {/* Comment input + send */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -758,38 +840,182 @@ export default function PostModal({ post, onClose }: Props) {
       </div>
 
       <style>{`
-        @media (max-width: 6
-        px) {
+        .post-modal-stage {
+          position: absolute;
+          inset: 0;
+          background: #0d0d18;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+        }
+        .post-modal-image-wrap {
+          position: relative;
+          width: 100%;
+          height: 100%;
+        }
+        .post-modal-caption {
+          position: absolute;
+          left: 14px;
+          right: 84px;
+          bottom: 14px;
+          z-index: 3;
+          background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));
+          padding: 30px 12px 10px;
+          border-radius: 8px;
+          pointer-events: none;
+        }
+        .post-modal-caption-title {
+          color: #fff;
+          font-weight: 600;
+          font-size: 14px;
+          margin: 0 0 2px;
+          font-family: var(--font-fredoka), sans-serif;
+        }
+        .post-modal-caption-date {
+          color: rgba(255,255,255,0.7);
+          font-size: 10px;
+          margin: 0 0 4px;
+        }
+        .post-modal-caption-desc {
+          color: rgba(255,255,255,0.92);
+          font-size: 12px;
+          line-height: 1.5;
+          margin: 0;
+          max-height: 4.5em;
+          overflow: hidden;
+        }
+        .post-modal-rail {
+          position: absolute;
+          right: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          align-items: center;
+          z-index: 4;
+        }
+        .rail-btn {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+        }
+        .rail-icon-bg {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: rgba(0,0,0,0.42);
+          transition: transform 0.12s ease;
+        }
+        .rail-btn:active .rail-icon-bg { transform: scale(0.9); }
+        .rail-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+        .rail-count {
+          font-size: 11px;
+          font-weight: 600;
+          color: #fff;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+        }
+        .post-modal-comments-panel {
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 380px;
+          max-width: 92vw;
+          display: flex;
+          flex-direction: column;
+          background: var(--ryu-surface-1);
+          border-left: 0.5px solid var(--ryu-border);
+          transform: translateX(100%);
+          transition: transform 0.28s ease;
+          z-index: 10;
+        }
+        .post-modal-comments-panel.open { transform: translateX(0); }
+        .comments-drag-handle { display: none; }
+        .comments-panel-header {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 14px;
+          border-bottom: 0.5px solid var(--ryu-border);
+          flex-shrink: 0;
+        }
+        .comments-back-btn {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: none;
+          border: none;
+          color: var(--ryu-text);
+          cursor: pointer;
+        }
+        .comments-panel-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: var(--ryu-text);
+          font-family: var(--font-fredoka), sans-serif;
+        }
+
+        @media (max-width: 640px) {
           .post-modal-inner {
-            flex-direction: column !important;
             width: 100vw !important;
             height: 100dvh !important;
             max-height: 100dvh !important;
             border-radius: 0 !important;
           }
-          .post-modal-image {
-            width: 100% !important;
-            height: 40vh !important;
-            max-height: 40vh !important;
-            overflow: hidden !important;
+          .post-modal-caption { right: 68px; }
+          .rail-icon-bg { width: 40px; height: 40px; }
+          .post-modal-rail { right: 10px; gap: 16px; }
+          .post-modal-close { width: 40px !important; height: 40px !important; }
+
+          .post-modal-comments-panel {
+            left: 0;
+            right: 0;
+            width: 100%;
+            max-width: 100%;
+            /* Leaves the top ~20% of the screen as a peek of the image
+               (rail included) behind the sheet, instead of covering the
+               whole viewport — same idea as Instagram's comment sheet:
+               comments never fully orphan you from what you're commenting
+               on. */
+            top: 20dvh;
+            border-left: none;
+            border-top: none;
+            border-radius: 20px 20px 0 0;
+            /* Without this the comments list's own scroll container still
+               has square corners and pokes past the sheet's rounded ones
+               at the top. */
+            overflow: hidden;
+            box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
+            transform: translateY(100%);
           }
-          .post-modal-image img {
-            width: auto !important;
-            height: 100% !important;
-            max-height: 100% !important;
-            max-width: 100% !important;
+          .post-modal-comments-panel.open { transform: translateY(0); }
+          .comments-drag-handle {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0 6px;
+            touch-action: none;
+            cursor: grab;
+            flex-shrink: 0;
           }
-          .post-modal-side {
-            border-left: none !important;
-            border-top: 0.5px solid var(--ryu-border) !important;
-            min-height: 0 !important;
+          .drag-pill {
+            width: 36px;
+            height: 4px;
+            border-radius: 999px;
+            background: var(--ryu-border);
           }
-          .post-modal-close {
-            width: 40px !important;
-            height: 40px !important;
-          }
-          .post-modal-title { font-size: 1rem !important; }
-          .post-modal-desc { font-size: 0.875rem !important; }
           .comment-avatar { width: 32px !important; height: 32px !important; font-size: 0.75rem !important; }
           .comment-name { font-size: 0.875rem !important; }
           .comment-time { font-size: 0.75rem !important; }

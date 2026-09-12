@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Search, Menu, X } from 'lucide-react'
 import SeriesCard from '@/components/admin/reader/SeriesCard'
 import type { Database } from '@/types/database'
-import BookmarkedSeriesDrawer from '@/components/shared/BookmarkedSeriesDrawer'
+import BookmarksNavLink from '@/components/shared/BookmarksNavLink'
 
 type Series = Database['public']['Tables']['series']['Row']
 type ChapterCounts = Record<string, number>
@@ -179,7 +179,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
 
           {/* Bookmarks + Sort */}
           <div className="flex items-center gap-3 shrink-0">
-            <BookmarkedSeriesDrawer allSeries={series} />
+            <BookmarksNavLink allSeries={series} />
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}

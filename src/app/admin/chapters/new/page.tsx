@@ -19,6 +19,7 @@ import {
   SortableContext, arrayMove, rectSortingStrategy, useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { compressImage } from '@/lib/image-compress'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -115,6 +116,7 @@ export default function NewChapterPage() {
   const [seriesList,       setSeriesList]       = useState<Series[]>([])
   const [loadingSeries,    setLoadingSeries]    = useState(true)
   const [selectedSeriesId, setSelectedSeriesId] = useState(preselectedId)
+  const [seriesIsPublished, setSeriesIsPublished] = useState<boolean | null>(null)
   const [chapterNumber,    setChapterNumber]    = useState('')
   const [existingNumbers,  setExistingNumbers]  = useState<number[]>([])
   const [chapterTitle,     setChapterTitle]     = useState('')
@@ -155,6 +157,7 @@ export default function NewChapterPage() {
     async function fetchNextChapter() {
       const res  = await fetch(`/api/series/${selectedSeriesId}`)
       const json = await res.json()
+      setSeriesIsPublished(json.data?.is_published ?? null)
       if (json.data?.chapters?.length) {
         const numbers: number[] = json.data.chapters.map((c: { chapter_number: number }) => c.chapter_number)
         setExistingNumbers(numbers)
@@ -167,15 +170,6 @@ export default function NewChapterPage() {
     }
     fetchNextChapter()
   }, [selectedSeriesId])
-
-  function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload  = () => resolve(reader.result as string)
-      reader.onerror = () => reject(new Error('Failed to read file'))
-      reader.readAsDataURL(file)
-    })
-  }
 
   function addFiles(files: File[]) {
     const imgs = files.filter(f => f.type.startsWith('image/'))
@@ -229,6 +223,19 @@ export default function NewChapterPage() {
     if (isDuplicateNumber) { toast.error(`Chapter ${chapterNum} already exists in this series`); return }
     setSubmitting(true)
     try {
+      if (mode === 'publish') {
+        const seriesRes  = await fetch(`/api/series/${selectedSeriesId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_published: true }),
+        })
+        const seriesJson = await seriesRes.json()
+        if (!seriesRes.ok || seriesJson.error) {
+          toast.error(seriesJson.error ?? 'Failed to publish series')
+          setSubmitting(false)
+          return
+        }
+      }
+
       const chRes  = await fetch('/api/chapters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: chapterTitle.trim() || null, is_early_access: isEarlyAccess, is_published: mode === 'publish',  is_draft: mode === 'draft', published_at: new Date().toISOString() }),
@@ -243,7 +250,7 @@ export default function NewChapterPage() {
         const page = pages[i]; if (!page) continue
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
         try {
-          const imageBase64 = await fileToBase64(page.file)
+          const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
           const pgRes  = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1, is_spread: page.isSpread }) })
           const pgJson = await pgRes.json()
           setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: pgRes.ok && !pgJson.error, error: (!pgRes.ok || pgJson.error) ? 'Upload failed' : null } : p))
@@ -252,7 +259,11 @@ export default function NewChapterPage() {
         }
       }
 
-      mode === 'draft' ? toast.success('Chapter saved as draft') : toast.success('Chapter published!')
+      if (mode === 'draft') {
+        toast.success('Chapter saved as draft')
+      } else {
+        toast.success(seriesIsPublished === false ? 'Series published!' : 'Chapter published!')
+      }
       router.push(mode === 'draft' ? '/admin/drafts' : '/admin/series')
     } catch { toast.error('Something went wrong'); setSubmitting(false) }
   }
@@ -463,7 +474,7 @@ export default function NewChapterPage() {
           <button disabled={submitting || !hasSeriesSelected || !hasChapterNumber || !hasPages || !isValidNumber || isDuplicateNumber} onClick={() => handleSubmit('publish')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 rgba(0,0,0,0.06)', opacity: (!hasSeriesSelected || !hasChapterNumber || !hasPages || !isValidNumber || isDuplicateNumber) ? 0.5 : 1 }}>
             {submitting && <Loader2 size={14} className="animate-spin" />}
-            Publish chapter
+            {seriesIsPublished === false ? 'Publish series' : 'Publish chapter'}
           </button>
         </div>
       </div>

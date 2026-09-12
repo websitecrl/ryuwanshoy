@@ -9,7 +9,8 @@ import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@d
 import { CSS } from '@dnd-kit/utilities'
 import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from '@/lib/constants'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, inputStyle, labelStyle, fileToBase64, getImageDimensions, type LocalPage } from './types'
+import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage } from './types'
+import { compressImage } from '@/lib/image-compress'
 
 // ── Sortable page card ─────────────────────────────────────────────────────
 
@@ -184,7 +185,9 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
       const page = pages[i]; if (!page) continue
       setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
       try {
-        const imageBase64 = await fileToBase64(page.file)
+        // Same fix as the standalone PageUploader — shrink before sending so
+        // the Worker never has to decode/hash a raw 2550x3300 original.
+        const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
         const res  = await fetch('/api/pages', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1, is_spread: page.is_spread ?? false }),

@@ -8,6 +8,7 @@ import LatestReleases from "@/components/admin/reader/LatestReleases";
 import SketchbookPreview from "@/components/admin/reader/SketchbookPreview";
 import Link from "next/link";
 import { SiKofi } from "react-icons/si";
+import SocialLinks from "@/components/shared/SocialLinks";
 
 type HeroSlide = {
   id: string;
@@ -41,6 +42,11 @@ type Settings = {
   creator_name: string | null;
   site_description: string | null;
   logo_url: string | null;
+  facebook_url: string | null;
+  instagram_url: string | null;
+  twitter_url: string | null;
+  tiktok_url: string | null;
+  youtube_url: string | null;
 } | null;
 
 type Props = {
@@ -60,6 +66,9 @@ export default function HomeClient({
   const [chapters, setChapters] = useState(initialChapters);
   const [posts, setPosts] = useState(initialPosts);
   const [maxAge, setMaxAge] = useState<number | null>(null);
+  // Same stale-logo-url guard as Navbar — falls back to the initial-letter
+  // avatar if settings.logo_url doesn't actually resolve.
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('ryu-age')
@@ -163,8 +172,13 @@ export default function HomeClient({
                     fontSize: 22, letterSpacing: '0.06em',
                 }}
                 >
-                {settings?.logo_url ? (
-                    <img src={settings.logo_url} alt={creatorName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {settings?.logo_url && !logoFailed ? (
+                    <img
+                        src={settings.logo_url}
+                        alt={creatorName}
+                        onError={() => setLogoFailed(true)}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                 ) : (
                     creatorName.charAt(0).toUpperCase()
                 )}
@@ -179,9 +193,16 @@ export default function HomeClient({
                 <p className="font-reader" style={{ fontSize: 11, color: 'var(--ryu-text-3)', marginBottom: 8 }}>
                 Writer · Artist · Letterer
                 </p>
-                <p className="font-reader" style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ryu-text-2)', margin: 0 }}>
+                <p className="font-reader" style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ryu-text-2)', margin: 0, marginBottom: 10 }}>
                 {siteDescription}
                 </p>
+                <SocialLinks
+                  facebookUrl={settings?.facebook_url}
+                  instagramUrl={settings?.instagram_url}
+                  twitterUrl={settings?.twitter_url}
+                  tiktokUrl={settings?.tiktok_url}
+                  youtubeUrl={settings?.youtube_url}
+                />
             </div>
             </div>
 

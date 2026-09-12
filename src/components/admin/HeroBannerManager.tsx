@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Eye, EyeOff, Trash2, Plus, GripVertical, Search, X, Monitor, Pencil } from 'lucide-react'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { compressImage } from '@/lib/image-compress'
 
 type HeroSlide = {
   id: string
@@ -159,12 +160,9 @@ export default function HeroBannerManager() {
       let imageUrl = ''
 
       if (newImageFile) {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload  = () => resolve(reader.result as string)
-          reader.onerror = reject
-          reader.readAsDataURL(newImageFile)
-        })
+        // Recommended 1920x1080 — cap a bit above that for retina without
+        // sending a multi-MB original straight to the Worker.
+        const base64 = await compressImage(newImageFile, { maxDimension: 2200 })
         const uploadRes = await fetch('/api/upload', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

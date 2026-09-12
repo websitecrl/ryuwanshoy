@@ -135,8 +135,9 @@ export default function PageUploader({
       const uploaded: Page[] = []
       for (const file of imgs) {
         // Shrink to a sane size BEFORE sending — the raw 2550x3300 originals
-        // are what were blowing the Worker's free-tier CPU limit.
-        const base64      = await compressImage(file)
+        // are what were blowing the Worker's free-tier CPU limit. Pages are
+        // full-bleed art with no transparency, so JPEG output is safe here.
+        const base64      = await compressImage(file, { maxDimension: 1600, forceJpeg: true })
         const page_number = pages.length + uploaded.length + 1
         const dim         = await getImageDimensionns(file)
         const is_spread   = dim.width > dim.height    // landscape = spread

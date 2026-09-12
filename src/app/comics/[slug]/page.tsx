@@ -130,7 +130,7 @@ export default async function SeriesDetailPage({
   const firstChapterNumber = chapters[0]?.chapter_number ?? 1
 
   return (
-    <main className="min-h-screen bg-[var(--background)] pt-16 animate-page-in">
+    <main className="min-h-screen bg-[var(--background)] animate-page-in">
       <SeriesHeader
         series={series}
         chapterCount={chapters.length}

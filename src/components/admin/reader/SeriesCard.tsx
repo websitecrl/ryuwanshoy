@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { Bookmark } from 'lucide-react'
+import { Bookmark, BookImage } from 'lucide-react'
 import type { Database } from '@/types/database'
 
 type Series = Database['public']['Tables']['series']['Row']
@@ -42,6 +42,8 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
   }
 
   const chapterLabel = chapterCount === 1 ? '1 chapter' : `${chapterCount} chapters`
+  const statusLabel = series.status === 'ongoing' ? 'Ongoing' : series.status === 'hiatus' ? 'Hiatus' : 'Completed'
+  const metaLine = [series.genre, statusLabel, chapterLabel].filter(Boolean).join(' · ')
 
   return (
     <Link
@@ -55,7 +57,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       {/* Cover */}
       <div
         className="relative overflow-hidden"
-        style={{ aspectRatio: '460/640', backgroundColor: '#1a1a2e' }}
+        style={{ aspectRatio: '460/640', backgroundColor: 'var(--ryu-surface-3)' }}
       >
         {series.cover_image ? (
           <Image
@@ -67,9 +69,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
-              No Cover
-            </span>
+            <BookImage size={32} strokeWidth={1.5} style={{ color: 'var(--ryu-text-3)' }} />
           </div>
         )}
 
@@ -107,71 +107,37 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           {series.title}
         </p>
 
-        {/* Badges row */}
-        <div className="flex flex-wrap gap-1.5 items-center">
-          {series.genre && (
+        {/* Age rating badge — kept as a pill since it's a warning signal, not descriptive metadata */}
+        {series.min_age != null && series.min_age > 0 && (
+          <div className="flex items-center">
             <span
-              className="text-[10px] font-semibold uppercase tracking-wide rounded-full px-2 py-0.5"
+              className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
               style={{
                 fontFamily: "var(--font-fredoka), sans-serif",
                 fontWeight: 600,
                 letterSpacing: '0.02em',
-                background: 'var(--ryu-surface-2)',
-                color: 'var(--ryu-text-secondary)',
+                background: series.min_age === 18
+                  ? '#A32D2D'
+                  : series.min_age === 16
+                  ? '#854F0B'
+                  : '#3B6D11',
+                color: '#fff',
               }}
             >
-              {series.genre}
+              {series.min_age}+
             </span>
-          )}
-          <span
-            className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
-            style={{
-              fontFamily: "var(--font-fredoka), sans-serif",
-              fontWeight: 600,
-              letterSpacing: '0.02em',
-              background:
-                series.status === 'completed'
-                  ? 'var(--ryu-surface-2)'
-                  : 'color-mix(in srgb, var(--ryu-primary) 15%, transparent)',
-              color:
-                series.status === 'completed'
-                  ? 'var(--ryu-text-secondary)'
-                  : 'var(--ryu-primary)',
-            }}
-          >
-            {series.status === 'ongoing' ? 'Ongoing' : 'Completed'}
-          </span>
-          
-        {/* Age rating badge */}
-            {series.min_age != null && series.min_age > 0 && (
-              <span
-                className="text-[10px] uppercase tracking-wide rounded-full px-2 py-0.5"
-                style={{
-                  fontFamily: "var(--font-fredoka), sans-serif",
-                  fontWeight: 600,
-                  letterSpacing: '0.02em',
-                  background: series.min_age === 18
-                    ? '#A32D2D'
-                    : series.min_age === 16
-                    ? '#854F0B'
-                    : '#3B6D11',
-                  color: '#fff',
-                }}
-              >
-                {series.min_age}+
-              </span>
-            )}
-        </div>
+          </div>
+        )}
 
-        {/* Chapter count */}
+        {/* Genre · status · chapter count — one consistent, plain-text treatment */}
         <p
-        className="text-xs font-semibold"
-        style={{
+          className="text-xs font-medium truncate"
+          style={{
             color: 'var(--ryu-text-2)',
             fontFamily: "var(--font-fredoka), sans-serif",
-        }}
+          }}
         >
-        {chapterLabel}
+          {metaLine}
         </p>
       </div>
     </Link>
