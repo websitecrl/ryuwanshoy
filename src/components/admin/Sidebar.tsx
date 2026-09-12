@@ -7,12 +7,12 @@ import { createClient } from '@/lib/supabase/client'
 import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit } from 'lucide-react'
 
 const navItems = [
-  { label: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Series',    href: '/admin/series',    icon: BookOpen },
-  { label: 'Chapters',  href: '/admin/chapters',  icon: BookMarked },
-  { label: 'Drafts',    href: '/admin/drafts',    icon: FileEdit},
-  { label: 'Posts',     href: '/admin/posts',     icon: Image },
-  { label: 'Settings',  href: '/admin/settings',  icon: Settings },
+  { label: 'Dashboard',     href: '/admin/dashboard', icon: LayoutDashboard },
+  { label: 'Series',        href: '/admin/series',    icon: BookOpen },
+  { label: 'Chapters',      href: '/admin/chapters',  icon: BookMarked },
+  { label: 'Illustration',  href: '/admin/posts',     icon: Image },
+  { label: 'Drafts',        href: '/admin/drafts',    icon: FileEdit},
+  { label: 'Settings',      href: '/admin/settings',  icon: Settings },
 ]
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
@@ -238,6 +238,17 @@ useEffect(() => {
                 style={{ color: active ? 'var(--ryu-primary-deep)' : 'var(--ryu-text-2)' }}
               />
               <span className="flex-1">{label}</span>
+              {label === 'Drafts' && draftCount > 0 && (
+                <span
+                  className="flex items-center justify-center font-mono-ryu text-[10px] font-bold rounded-full shrink-0"
+                  style={{
+                    minWidth: 18, height: 18, padding: '0 5px',
+                    background: 'var(--ryu-primary)', color: '#fff',
+                  }}
+                >
+                  {draftCount}
+                </span>
+              )}
             </Link>
           )
         })}

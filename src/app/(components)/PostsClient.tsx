@@ -38,8 +38,8 @@ export default function PostsClient({ initialPosts, activeType }: Props) {
     const url = activeType ? `/api/posts?type=${activeType}` : "/api/posts";
     const res = await fetch(url);
     if (!res.ok) return;
-    const json = await res.json() as { posts: Post[] };
-    setPosts(json.posts ?? []);
+    const json = await res.json() as { data: Post[] };
+    setPosts(json.data ?? []);
   }, [activeType]);
 
   useRealtimeSubscription({

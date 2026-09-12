@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
 import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
+import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly } from '@/lib/checklists'
 
 type Chapter = Tables<'chapters'>
 type Page    = Tables<'pages'>
@@ -118,19 +119,14 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const pagesOrderedCorrectly = pages.length > 0 &&
-    [...pages]
-      .sort((a, b) => a.page_number - b.page_number)
-      .every((p, i) => p.page_number === i + 1)
-
-  const checklist = [
-    { label: 'Chapter # set',                          done: Number(chapterNumber) > 0 },
-    { label: 'At least 1 page uploaded',                done: pages.length > 0 },
-    { label: 'Pages named/ordered correctly',           done: pagesOrderedCorrectly },
-    { label: 'Publish date set',                        done: publishedAt.trim().length > 0 },
-    { label: 'Parent series is published',              done: seriesPublished },
-    { label: 'Title set',                               done: title.trim().length > 0 },
-  ]
+  const checklist = getChapterChecklist({
+    chapterNumber: Number(chapterNumber),
+    pagesCount: pages.length,
+    pagesOrderedCorrectly: computePagesOrderedCorrectly(pages),
+    publishedAt,
+    seriesPublished,
+    title,
+  })
   const checklistDone = checklist.filter(c => c.done).length
 
   return (

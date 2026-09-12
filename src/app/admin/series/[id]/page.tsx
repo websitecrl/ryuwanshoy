@@ -13,6 +13,7 @@ import {
 import type { Tables } from '@/types/database'
 import { GENRES } from '../new/types'
 import { compressImage } from '@/lib/image-compress'
+import { getSeriesChecklist } from '@/lib/checklists'
 
 type Series = Tables<'series'>
 
@@ -113,12 +114,12 @@ export default function EditSeriesPage() {
 
   const activeCover = coverPreview ?? currentCover
 
-  const checklist = [
-    { label: 'Title set',      done: title.trim().length > 0 },
-    { label: 'Slug set',       done: slug.trim().length > 0 },
-    { label: 'Genre set',      done: genre.trim().length > 0 },
-    { label: 'Cover uploaded', done: !!activeCover },
-  ]
+  const checklist = getSeriesChecklist({
+    title,
+    slug,
+    genre,
+    coverImage: activeCover,
+  })
 
   if (loading) {
     return (

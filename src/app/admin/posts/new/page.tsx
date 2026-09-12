@@ -5,7 +5,22 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
 import { CloudUpload, X, Loader2, ImageIcon, CheckCircle2, Circle } from 'lucide-react'
+import {
+  Select, SelectContent, SelectItem,
+  SelectTrigger,
+} from '@/components/ui/select'
 import { compressImage } from '@/lib/image-compress'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type PostType = 'sketch' | 'drawing' | 'meme' | 'other'
+
+const POST_TYPES: { value: PostType; label: string }[] = [
+  { value: 'sketch',  label: 'Sketch' },
+  { value: 'drawing', label: 'Drawing' },
+  { value: 'meme',    label: 'Meme' },
+  { value: 'other',   label: 'Other' },
+]
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
@@ -28,6 +43,7 @@ export default function NewPostPage() {
 
   const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
+  const [postType,    setPostType]    = useState<PostType>('sketch')
   const [imageFile,   setImageFile]   = useState<File | null>(null)
   const [preview,     setPreview]     = useState<string | null>(null)
   const [dragOver,    setDragOver]    = useState(false)
@@ -38,7 +54,8 @@ export default function NewPostPage() {
   // ── Derived state ──────────────────────────────────────────────────────────
   const hasImage = imageFile !== null
   const hasTitle = title.trim().length > 0
-  const canSave  = hasImage && hasTitle
+  const hasType  = Boolean(postType)
+  const canSave  = hasImage && hasTitle && hasType
 
   // ── File handling ──────────────────────────────────────────────────────────
   function pickFile(file: File) {
@@ -85,7 +102,7 @@ export default function NewPostPage() {
         body: JSON.stringify({
           title:       title.trim() || null,
           description: description.trim() || null,
-          post_type:   'illustration',
+          post_type:   postType,
           imageBase64,
         }),
       })
@@ -152,6 +169,7 @@ export default function NewPostPage() {
                 {[
                   { label: 'Title added',       done: hasTitle  },
                   { label: 'Image uploaded',    done: hasImage  },
+                  { label: 'Type selected',     done: hasType   },
                 ].map(item => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
                     {item.done
@@ -166,6 +184,25 @@ export default function NewPostPage() {
               </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+              {/* Type */}
+              <div>
+                <label style={labelStyle}>Type <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
+                <Select value={postType} onValueChange={v => setPostType(v as PostType)}>
+                  <SelectTrigger>
+                    <span style={{ fontWeight: 600, color: 'var(--ryu-text)' }}>
+                      {POST_TYPES.find(t => t.value === postType)?.label}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {POST_TYPES.map(t => (
+                      <SelectItem key={t.value} value={t.value}>
+                        {t.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Title */}
               <div>

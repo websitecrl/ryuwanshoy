@@ -183,8 +183,13 @@ export default function PageUploader({
 
   // ── Delete ───────────────────────────────────────────────────────────────
 
+  // No confirmation dialog — this is treated as "remove," not "delete": a
+  // page in this uploader is still unpublished draft content the admin is
+  // actively arranging, not something a reader has ever seen. A native
+  // browser confirm() also looks unpolished (shows the raw workers.dev
+  // domain) and blocks the whole tab while open. The X button itself is
+  // the deliberate action; no extra gate needed on top of it.
   async function handleDelete(id: string) {
-    if (!confirm('Delete this page?')) return
     setDeletingId(id)
     try {
       const res = await fetch(`/api/pages/${id}`, { method: 'DELETE' })

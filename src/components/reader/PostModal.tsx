@@ -395,6 +395,9 @@ const DRAG_CLOSE_THRESHOLD = 80
 export default function PostModal({ post, onClose }: Props) {
   const [likeState, setLikeState] = useState<LikeState>({ status: 'loading' })
   const [likeLoading, setLikeLoading] = useState(false)
+  const [justLiked, setJustLiked] = useState(false)
+  const likeRequestInFlightRef = useRef(false)
+  const [reduceMotion, setReduceMotion] = useState(false)
   const [commentsState, setCommentsState] = useState<CommentsState>({ status: 'loading' })
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -521,19 +524,62 @@ export default function PostModal({ post, onClose }: Props) {
     return () => { document.body.style.overflow = '' }
   }, [])
 
+  // WCAG 2.3.3 — skip the like button's scale/particle animation for users
+  // who've asked their OS for reduced motion; the heart still toggles state
+  // instantly either way.
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduceMotion(mq.matches)
+    const onChange = (e: MediaQueryListEvent) => setReduceMotion(e.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+
+  /**
+   * Optimistic like/unlike: flips the visual state immediately (Instagram/
+   * TikTok-style) instead of waiting on the network, then reconciles with
+   * whatever the server actually recorded. A ref (not just `likeLoading`
+   * state) guards re-entrancy so a fast double-tap can't fire two
+   * conflicting toggle requests before the first render commits.
+   */
   async function handleLike() {
-    if (likeLoading || likeState.status !== 'loaded') return
+    if (likeState.status !== 'loaded' || likeRequestInFlightRef.current) return
+    likeRequestInFlightRef.current = true
+
+    const previous = likeState
+    const nextLiked = !previous.liked
+    const nextCount = Math.max(0, previous.count + (nextLiked ? 1 : -1))
+
+    setLikeState({ status: 'loaded', liked: nextLiked, count: nextCount })
     setLikeLoading(true)
+
+    // Blown-heart pulse only plays on like, never unlike, and never for
+    // reduced-motion users — they still get the instant filled/outline swap.
+    if (nextLiked && !reduceMotion) {
+      setJustLiked(true)
+      setTimeout(() => setJustLiked(false), 320)
+    }
+
     try {
       const res = await fetch('/api/likes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ post_id: post.id, like_token: getLikeToken() }),
       })
-      const { liked: newLiked, count } = await res.json() as { liked: boolean; count: number }
-      setLikeState({ status: 'loaded', liked: newLiked, count })
-    } catch {}
-    setLikeLoading(false)
+      if (!res.ok) throw new Error('Failed to update like.')
+      const { liked: serverLiked, count: serverCount } = await res.json() as { liked: boolean; count: number }
+      // Server is the source of truth — reconcile in case another tab/
+      // request changed things in between.
+      setLikeState({ status: 'loaded', liked: serverLiked, count: serverCount })
+    } catch {
+      // Never leave the UI showing a like the server doesn't have — revert
+      // and say so, rather than fail silently.
+      setLikeState(previous)
+      toast.error('Could not update like — please try again.')
+    } finally {
+      setLikeLoading(false)
+      likeRequestInFlightRef.current = false
+    }
   }
 
   /**
@@ -695,12 +741,21 @@ export default function PostModal({ post, onClose }: Props) {
               onClick={handleLike}
               disabled={likeLoading || likeState.status !== 'loaded'}
               className="rail-btn"
-              aria-label={liked ? 'Unlike' : 'Like'}
+              aria-label={liked ? 'Unlike this post' : 'Like this post'}
             >
-              <span className="rail-icon-bg">
+              <span className={`rail-icon-bg${justLiked ? ' rail-icon-pop' : ''}`}>
                 <Heart size={22} fill={liked ? '#f43f5e' : 'none'} stroke={liked ? '#f43f5e' : '#fff'} strokeWidth={2} />
+                {justLiked && (
+                  <span className="like-particles" aria-hidden="true">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <span key={i} className="like-particle" style={{ '--angle': `${i * 60}deg` } as React.CSSProperties} />
+                    ))}
+                  </span>
+                )}
               </span>
-              {likeCount > 0 && <span className="rail-count">{likeCount.toLocaleString()}</span>}
+              {/* Visible on desktop/web; hidden only in the compact mobile
+                  icon-rail view (see the max-width: 640px block below). */}
+              {likeCount > 0 && <span className="rail-count rail-count-like">{likeCount.toLocaleString()}</span>}
             </button>
 
             <button
@@ -907,6 +962,7 @@ export default function PostModal({ post, onClose }: Props) {
           padding: 0;
         }
         .rail-icon-bg {
+          position: relative;
           width: 44px;
           height: 44px;
           border-radius: 50%;
@@ -918,6 +974,35 @@ export default function PostModal({ post, onClose }: Props) {
         }
         .rail-btn:active .rail-icon-bg { transform: scale(0.9); }
         .rail-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+        .rail-icon-pop { animation: rail-like-pop 300ms ease; }
+        @keyframes rail-like-pop {
+          0%   { transform: scale(1); }
+          35%  { transform: scale(1.3); }
+          100% { transform: scale(1); }
+        }
+        .like-particles {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
+        .like-particle {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #f43f5e;
+          transform: translate(-50%, -50%) rotate(var(--angle)) translateY(0) scale(1);
+          opacity: 1;
+          animation: like-particle-burst 400ms ease-out forwards;
+        }
+        @keyframes like-particle-burst {
+          to {
+            transform: translate(-50%, -50%) rotate(var(--angle)) translateY(-20px) scale(0);
+            opacity: 0;
+          }
+        }
         .rail-count {
           font-size: 11px;
           font-weight: 600;
@@ -977,6 +1062,9 @@ export default function PostModal({ post, onClose }: Props) {
           }
           .post-modal-caption { right: 68px; }
           .rail-icon-bg { width: 40px; height: 40px; }
+          /* Compact icon-rail view on mobile only — count stays visible on
+             desktop/web. */
+          .rail-count-like { display: none; }
           .post-modal-rail { right: 10px; gap: 16px; }
           .post-modal-close { width: 40px !important; height: 40px !important; }
 

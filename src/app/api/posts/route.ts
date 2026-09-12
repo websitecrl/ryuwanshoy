@@ -8,13 +8,23 @@ export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
+const POST_TYPES = ['sketch', 'drawing', 'meme', 'other']
+
 // ─── GET /api/posts ───────────────────────────────────────────────────────────
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const { data, error } = await supabaseAdmin
+    const type = req.nextUrl.searchParams.get('type')
+
+    let query = supabaseAdmin
       .from('posts')
       .select('id, title, image_url, post_type, created_at')
       .order('created_at', { ascending: false })
+
+    if (type && POST_TYPES.includes(type)) {
+      query = query.eq('post_type', type)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
@@ -23,7 +33,7 @@ export async function GET() {
     console.error('GET /api/posts error:', err)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
   }
-} 
+}
 
 // ─── POST /api/posts ──────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FileEdit, BookOpen, Plus, AlertTriangle } from 'lucide-react'
 import DeleteAllDraftsButton from './DeleteAllDraftsButton'
 import DeleteDraftRowButton from './DeleteDraftRowButton'
+import { getChapterChecklist, getSeriesChecklist, pagesOrderedCorrectly, checklistSummary } from '@/lib/checklists'
 
 type ChapterRow = {
   id: string
@@ -14,15 +15,18 @@ type ChapterRow = {
 }
 
 type ChapterDraft = {
-  id: string 
+  id: string
   title: string | null
   chapter_number: number
   is_published: boolean
   created_at: string | null
+  published_at: string | null
+  pages: { id: string; page_number: number }[]
   series: {
-    id: string 
-    title: string 
+    id: string
+    title: string
     slug: string
+    is_published: boolean
   }
 }
 
@@ -30,6 +34,8 @@ type DraftSeries = {
   id: string
   title: string
   slug: string
+  genre: string | null
+  cover_image: string | null
   created_at: string | null
   chapters: ChapterRow[]
 }
@@ -42,6 +48,8 @@ async function getDrafts(): Promise<DraftSeries[]> {
       id,
       title,
       slug,
+      genre,
+      cover_image,
       created_at,
       chapters (
         id,
@@ -67,15 +75,21 @@ async function getChapterDrafts(): Promise<ChapterDraft[]> {
       chapter_number,
       is_published,
       created_at,
+      published_at,
+      pages (
+        id,
+        page_number
+      ),
       series (
         id,
         title,
-        slug
+        slug,
+        is_published
       )
     `)
-    .eq('is_published', false)    
+    .eq('is_published', false)
     .order('created_at', { ascending: false })
-  
+
 
   return (data as ChapterDraft[]) ?? []
 }
@@ -131,7 +145,16 @@ export default async function DraftsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {drafts.map(draft => (
+          {drafts.map(draft => {
+            const seriesChecklist = getSeriesChecklist({
+              title:      draft.title,
+              slug:       draft.slug,
+              genre:      draft.genre,
+              coverImage: draft.cover_image,
+            })
+            const { completedCount, totalCount } = checklistSummary(seriesChecklist)
+            const missingCount = totalCount - completedCount
+            return (
             <div
               key={draft.id}
               className="rounded-xl overflow-hidden"
@@ -170,6 +193,17 @@ export default async function DraftsPage() {
                     })}
                   </div>
                 </div>
+                {/* Badge is derived from the same series checklist shown on
+                    the Series edit page, so the two can never disagree. */}
+                {missingCount > 0 && (
+                  <span
+                    className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
+                    style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                    title="Missing from the series checklist"
+                  >
+                    <AlertTriangle size={11} /> {missingCount} missing
+                  </span>
+                )}
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
                     href={`/admin/series/${draft.id}`}
@@ -187,9 +221,9 @@ export default async function DraftsPage() {
                   </Link>
                   <DeleteDraftRowButton kind="series" id={draft.id} label={draft.title} />
                 </div>
-              </div> 
+              </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
@@ -201,7 +235,18 @@ export default async function DraftsPage() {
           </p>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
             <div className="divide-y" style={{ borderColor: 'var(--ryu-border-soft)' }}>
-              {chapterDrafts.map(ch => (
+              {chapterDrafts.map(ch => {
+                const chapterChecklist = getChapterChecklist({
+                  chapterNumber:         ch.chapter_number,
+                  pagesCount:            ch.pages.length,
+                  pagesOrderedCorrectly: pagesOrderedCorrectly(ch.pages),
+                  publishedAt:           ch.published_at,
+                  seriesPublished:       ch.series.is_published,
+                  title:                 ch.title,
+                })
+                const { completedCount, totalCount } = checklistSummary(chapterChecklist)
+                const missingCount = totalCount - completedCount
+                return (
                 <div key={ch.id} className="flex items-center gap-4 px-5 py-3">
                   <div
                     className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold shrink-0 font-mono-ryu"
@@ -218,16 +263,15 @@ export default async function DraftsPage() {
                       {ch.series.title}
                     </p>
                   </div>
-                  {/* A titleless chapter is easy to forget about once buried
-                      in a long draft list — call it out so it doesn't get
-                      published untitled by accident. */}
-                  {!ch.title && (
+                  {/* Badge is derived from the same checklist shown on the
+                      Chapter edit page, so the two can never disagree. */}
+                  {missingCount > 0 && (
                     <span
                       className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
                       style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
-                      title="This chapter has no title yet"
+                      title="Missing from the chapter checklist"
                     >
-                      <AlertTriangle size={11} /> No title
+                      <AlertTriangle size={11} /> {missingCount} missing
                     </span>
                   )}
                   <span
@@ -249,7 +293,7 @@ export default async function DraftsPage() {
                     label={`Chapter ${ch.chapter_number}${ch.title ? ` — ${ch.title}` : ''}`}
                   />
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         </div>
