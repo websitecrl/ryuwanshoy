@@ -11,10 +11,14 @@ import NotificationBell from '@/components/admin/NotificationBell'
 async function getDashboardData() {
   const supabase = await createClient()
 
-  const [seriesRes, draftsRes] = await Promise.all([
+  const [seriesRes, draftsRes, draftSeriesRes] = await Promise.all([
     supabase
       .from('series')
+      // Dashboard's "Series" box is the published-list preview — drafts
+      // belong only in the Drafts box below. Without this, a draft series
+      // (like "sdad") showed up here too, indistinguishable from live ones.
       .select('id, title, slug, genre, status, cover_image, created_at')
+      .eq('is_published', true)
       .order('created_at', { ascending: false })
       .limit(6),
     supabase
@@ -29,11 +33,21 @@ async function getDashboardData() {
       .eq('is_draft', true)
       .order('created_at', { ascending: false })
       .limit(5),
+    // Draft series (not yet published at all) belong in the Drafts box
+    // too — they were previously missing from the dashboard entirely
+    // once excluded from the Series box above.
+    supabase
+      .from('series')
+      .select('id, title, created_at')
+      .eq('is_published', false)
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   return {
     series: seriesRes.data ?? [],
     drafts: draftsRes.data ?? [],
+    draftSeries: draftSeriesRes.data ?? [],
   }
 }
 
@@ -42,7 +56,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/admin')
 
-  const { series, drafts } = await getDashboardData()
+  const { series, drafts, draftSeries } = await getDashboardData()
 
   return (
     <div className="p-8 space-y-6 animate-page-in">
@@ -169,6 +183,10 @@ export default async function DashboardPage() {
           title:          d.title,
           chapter_number: d.chapter_number,
           series:         d.series as { title: string; slug: string } | null,
+        }))}
+        draftSeries={draftSeries.map(s => ({
+          id:    s.id,
+          title: s.title,
         }))}
       />
 

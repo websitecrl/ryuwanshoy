@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { FileEdit, BookOpen, Plus } from 'lucide-react'
+import { FileEdit, BookOpen, Plus, AlertTriangle } from 'lucide-react'
 import DeleteAllDraftsButton from './DeleteAllDraftsButton'
+import DeleteDraftRowButton from './DeleteDraftRowButton'
 
 type ChapterRow = {
   id: string
@@ -184,6 +185,7 @@ export default async function DraftsPage() {
                   >
                     <Plus size={13} /> Add chapter
                   </Link>
+                  <DeleteDraftRowButton kind="series" id={draft.id} label={draft.title} />
                 </div>
               </div> 
             </div>
@@ -216,6 +218,18 @@ export default async function DraftsPage() {
                       {ch.series.title}
                     </p>
                   </div>
+                  {/* A titleless chapter is easy to forget about once buried
+                      in a long draft list — call it out so it doesn't get
+                      published untitled by accident. */}
+                  {!ch.title && (
+                    <span
+                      className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
+                      style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                      title="This chapter has no title yet"
+                    >
+                      <AlertTriangle size={11} /> No title
+                    </span>
+                  )}
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
                     style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
@@ -229,6 +243,11 @@ export default async function DraftsPage() {
                   >
                     <FileEdit size={11} /> Edit
                   </Link>
+                  <DeleteDraftRowButton
+                    kind="chapter"
+                    id={ch.id}
+                    label={`Chapter ${ch.chapter_number}${ch.title ? ` — ${ch.title}` : ''}`}
+                  />
                 </div>
               ))}
             </div>

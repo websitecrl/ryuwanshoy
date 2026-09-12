@@ -19,12 +19,19 @@ type Draft = {
   series: { title: string; slug: string } | null
 }
 
+type DraftSeries = {
+  id: string
+  title: string
+}
+
 type Props = {
   series: Series[]
   drafts: Draft[]
+  draftSeries: DraftSeries[]
 }
 
-export default function DashboardContent({ series, drafts }: Props) {
+export default function DashboardContent({ series, drafts, draftSeries }: Props) {
+  const totalDrafts = drafts.length + draftSeries.length
   return (
     <div className="grid grid-cols-2 gap-6">
 
@@ -165,7 +172,7 @@ export default function DashboardContent({ series, drafts }: Props) {
                 className="ml-2 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
                 style={{ background: 'var(--ryu-primary-soft)', color: '#9A3412' }}
               >
-                {drafts.length}
+                {totalDrafts}
               </span>
             </div>
           </div>
@@ -178,12 +185,47 @@ export default function DashboardContent({ series, drafts }: Props) {
           </Link>
         </div>
 
-        {drafts.length === 0 ? (
+        {totalDrafts === 0 ? (
           <div className="px-5 py-10 text-center text-sm" style={{ color: 'var(--ryu-text-3)' }}>
             No drafts — all caught up!
           </div>
         ) : (
-          drafts.map((draft, i) => (
+          <>
+          {draftSeries.map((s, i) => (
+            <div
+              key={s.id}
+              className="flex items-center gap-3 px-5 py-3.5 transition-colors duration-100"
+              style={{
+                borderBottom: (i < draftSeries.length - 1 || drafts.length > 0) ? '1px solid var(--ryu-border-soft)' : 'none',
+              }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--ryu-surface-2)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-mono-ryu text-[8px] font-bold tracking-wider"
+                style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+              >
+                DRAFT
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
+                  {s.title}
+                </div>
+                <div className="text-xs mt-0.5" style={{ color: 'var(--ryu-text-2)' }}>
+                  Series
+                </div>
+              </div>
+              <Link
+                href={`/admin/series/${s.id}`}
+                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
+                style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text-2)' }}
+              >
+                <FileEdit size={11} />
+                Edit
+              </Link>
+            </div>
+          ))}
+          {drafts.map((draft, i) => (
             <div
               key={draft.id}
               className="flex items-center gap-3 px-5 py-3.5 transition-colors duration-100"
@@ -226,7 +268,8 @@ export default function DashboardContent({ series, drafts }: Props) {
                 Edit
               </Link>
             </div>
-          ))
+          ))}
+          </>
         )}
       </div>
     </div>

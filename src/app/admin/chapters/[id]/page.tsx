@@ -129,6 +129,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     { label: 'Pages named/ordered correctly',           done: pagesOrderedCorrectly },
     { label: 'Publish date set',                        done: publishedAt.trim().length > 0 },
     { label: 'Parent series is published',              done: seriesPublished },
+    { label: 'Title set',                               done: title.trim().length > 0 },
   ]
   const checklistDone = checklist.filter(c => c.done).length
 

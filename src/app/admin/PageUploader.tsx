@@ -70,21 +70,25 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           P{String(page.page_number).padStart(2, '0')}
         </span>
 
-        {/* Delete button */}
+        {/* Delete button — always visible (was hover-only, so it never
+            showed up on touch devices and wasn't obvious on desktop
+            either) */}
         <button
           onClick={() => onDelete(page.id)}
           disabled={isDeleting}
           style={{
             position: 'absolute', top: 4, right: 4, zIndex: 20,
-            width: 20, height: 20, borderRadius: 99,
-            background: 'rgba(220,38,38,0.85)', color: '#fff',
-            border: 'none', display: 'flex', alignItems: 'center',
+            width: 22, height: 22, borderRadius: 99,
+            background: 'rgba(220,38,38,0.9)', color: '#fff',
+            border: '1.5px solid rgba(255,255,255,0.9)',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer',
-            opacity: 0, transition: 'opacity 150ms ease',
+            opacity: isDeleting ? 0.6 : 1, transition: 'transform 100ms ease',
           }}
-          className="group-hover:opacity-100 disabled:cursor-not-allowed"
+          className="hover:scale-110 disabled:cursor-not-allowed"
         >
-          <X size={10} />
+          <X size={11} strokeWidth={2.5} />
         </button>
       </div>
     </div>

@@ -210,7 +210,7 @@
 }
 
 /* ─── Smooth theme transitions ──────────────────────────────────────────── */
-body, button, input, textarea, select {
+*, *::before, *::after {
   transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
 }
 
