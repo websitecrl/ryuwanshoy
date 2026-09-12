@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('chapters')
-      .select('*')
+      .select('*, series:series_id(title)')
       .order('chapter_number', { ascending: true })
 
     if (error) throw error
