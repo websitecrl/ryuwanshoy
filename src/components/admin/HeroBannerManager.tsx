@@ -456,7 +456,7 @@ return (
                   style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
                   title={slide.is_visible ? 'Hide' : 'Show'}
                 >
-                  {slide.is_visible ? <EyeOff size={15} /> : <Eye size={15} />}
+                  {slide.is_visible ? <Eye size={15} /> : <EyeOff size={15} />}
                 </button>
 
                 {/* Delete */}
@@ -595,11 +595,13 @@ return (
               <div className="relative w-full rounded-xl overflow-hidden flex items-end"
                 style={{
                   height: 320,
-                  background: previewSlide.banner_image
-                    ? `url(${previewSlide.banner_image}) center/cover`
-                    : 'linear-gradient(135deg, #1C1917, #44170A)',
+                  background: 'var(--ryu-surface-3)',
                   border: '1px solid var(--ryu-border)',
                 }}>
+                {previewSlide.banner_image
+                  ? <img src={previewSlide.banner_image} alt={previewSlide.headline ?? 'Slide preview'} className="absolute inset-0 w-full h-full object-contain" />
+                  : <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1C1917, #44170A)' }} />
+                }
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }} />
                 <div className="relative px-6 pb-5">
                   {previewSlide.headline && <div className="text-white font-bold text-xl leading-tight">{previewSlide.headline}</div>}

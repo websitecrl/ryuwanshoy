@@ -22,4 +22,5 @@ Files/paths Claude Code must never modify in this project without explicit appro
 - `.git/`
 
 ---
+
 Add new entries here as the project grows.
