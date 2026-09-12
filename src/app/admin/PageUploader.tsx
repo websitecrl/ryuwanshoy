@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { CloudUpload, X, AlertCircle } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
@@ -96,11 +96,13 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
 interface PageUploaderProps {
   chapterId: string
   initialPages?: Page[]
+  onPagesChange?: (pages: Page[]) => void
 }
 
 export default function PageUploader({
   chapterId,
   initialPages = [],
+  onPagesChange,
 }: PageUploaderProps) {
   const [pages,      setPages]      = useState<Page[]>(initialPages)
   const [uploading,  setUploading]  = useState(false)
@@ -108,6 +110,11 @@ export default function PageUploader({
   const [dragOver,   setDragOver]   = useState(false)
   const [error,      setError]      = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    onPagesChange?.(pages)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages])
 
   const sensors = useSensors(useSensor(PointerSensor))
 

@@ -21,7 +21,7 @@ export async function GET(
 
     const { data, error } = await supabaseAdmin
       .from('chapters')
-      .select('*, pages(*)')
+      .select('*, pages(*), series(is_published)')
       .eq('id', id)
       .order('page_number', { referencedTable: 'pages', ascending: true })
       .single()

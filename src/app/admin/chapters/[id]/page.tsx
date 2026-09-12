@@ -7,7 +7,7 @@ import {
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
 import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
 
@@ -29,16 +29,18 @@ const labelStyle: React.CSSProperties = {
 export default function EditChapterPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
 
-  const [chapter,       setChapter]       = useState<Chapter | null>(null)
-  const [chapterNumber, setChapterNumber] = useState('')
-  const [title,         setTitle]         = useState('')
-  const [isEarlyAccess, setIsEarlyAccess] = useState(false)
-  const [publishedAt,   setPublishedAt]   = useState('')
-  const [loading,       setLoading]       = useState(false)
-  const [fetching,      setFetching]      = useState(true)
-  const [deleteOpen,    setDeleteOpen]    = useState(false)
-  const [error,         setError]         = useState<string | null>(null)
-  const [chapterId,     setChapterId]     = useState<string | null>(null)
+  const [chapter,         setChapter]         = useState<Chapter | null>(null)
+  const [chapterNumber,   setChapterNumber]   = useState('')
+  const [title,           setTitle]           = useState('')
+  const [isEarlyAccess,   setIsEarlyAccess]   = useState(false)
+  const [publishedAt,     setPublishedAt]     = useState('')
+  const [loading,         setLoading]         = useState(false)
+  const [fetching,        setFetching]        = useState(true)
+  const [deleteOpen,      setDeleteOpen]      = useState(false)
+  const [error,           setError]           = useState<string | null>(null)
+  const [chapterId,       setChapterId]       = useState<string | null>(null)
+  const [pages,           setPages]           = useState<Page[]>([])
+  const [seriesPublished, setSeriesPublished] = useState(false)
 
   useEffect(() => {
     async function init() {
@@ -54,6 +56,8 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         setTitle(c.title ?? '')
         setIsEarlyAccess(c.is_early_access ?? false)
         setPublishedAt(c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : '')
+        setPages((c as unknown as { pages?: Page[] }).pages ?? [])
+        setSeriesPublished((c as unknown as { series?: { is_published: boolean | null } }).series?.is_published ?? false)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
       } finally { setFetching(false) }
@@ -113,6 +117,20 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
       </div>
     )
   }
+
+  const pagesOrderedCorrectly = pages.length > 0 &&
+    [...pages]
+      .sort((a, b) => a.page_number - b.page_number)
+      .every((p, i) => p.page_number === i + 1)
+
+  const checklist = [
+    { label: 'Chapter # set',                          done: Number(chapterNumber) > 0 },
+    { label: 'At least 1 page uploaded',                done: pages.length > 0 },
+    { label: 'Pages named/ordered correctly',           done: pagesOrderedCorrectly },
+    { label: 'Publish date set',                        done: publishedAt.trim().length > 0 },
+    { label: 'Parent series is published',              done: seriesPublished },
+  ]
+  const checklistDone = checklist.filter(c => c.done).length
 
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -208,6 +226,25 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
+          {/* Checklist card */}
+          <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Checklist</div>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 7px', borderRadius: 6, background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)', border: '1px solid var(--ryu-border)' }}>
+                {checklistDone} / {checklist.length}
+              </span>
+            </div>
+            {checklist.map(item => (
+              <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
+                {item.done
+                  ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, #16A34A)', flexShrink: 0 }} />
+                  : <Circle       size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
+                }
+                <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
+
           {/* 02 Early Access card */}
           {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 18 }}>
@@ -277,6 +314,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
               <PageUploader
                 chapterId={chapterId ?? ''}
                 initialPages={chapter ? (chapter as unknown as { pages?: Page[] }).pages ?? [] : []}
+                onPagesChange={setPages}
               />
             </div>
 
