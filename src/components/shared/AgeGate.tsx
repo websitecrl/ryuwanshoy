@@ -69,11 +69,23 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
 
         {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-          <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="50" cy="50" r="47" stroke="var(--destructive)" strokeWidth="6" fill="var(--ryu-surface-1)"/>
-            <text x="48" y="49" textAnchor="middle" dominantBaseline="central" fontSize="80" fontWeight="bold" fill="var(--destructive)" fontFamily="var(--font-fredoka), sans-serif">18</text>
-            <line x1="14" y1="14" x2="90" y2="86" stroke="var(--destructive)" strokeWidth="6" strokeLinecap="round"/>
-          </svg>
+          <div style={{
+            width: 72, height: 72, borderRadius: '50%',
+            background: 'var(--destructive)',
+            border: '3px solid var(--ryu-text)',
+            boxShadow: '4px 4px 0 var(--ryu-text)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-fredoka), sans-serif',
+              fontWeight: 700,
+              fontSize: 22,
+              letterSpacing: '0.01em',
+              color: 'var(--ryu-surface-1)',
+            }}>
+              18+
+            </span>
+          </div>
         </div>
 
         {/* Heading */}
@@ -169,9 +181,7 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
         <p style={{
           fontSize: 11, color: 'var(--ryu-text-3)', margin: '14px 0 0',
           fontFamily: "var(--font-fredoka), sans-serif",
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>
-          <span style={{ fontSize: 13 }}>☐</span>
           Self-reported · remembered on this device · asked only once
         </p>
       </div>
