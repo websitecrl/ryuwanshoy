@@ -104,7 +104,13 @@ export default function ReaderShell({
   }, [chapter.id])
 
   // Write reading progress
+  //
+  // Guarded on currentPage > 1: without this, the effect fires the instant
+  // the page mounts — at page 1, before any real scrolling or page-turning —
+  // so simply opening a chapter link got recorded as "reading progress"
+  // identically to someone who actually read it.
   useEffect(() => {
+    if (currentPage <= 1) return
     try {
       localStorage.setItem(
         `reading-progress-${series.id}`,
@@ -128,7 +134,13 @@ export default function ReaderShell({
   }, [currentPage, pages.length, chapter.id])
 
   // Save continue reading (includes currentPage so resume works)
+  //
+  // Same guard, same reason as above: this used to fire on mount at page 1,
+  // so the Home page's "Continue reading" card showed up the instant a
+  // chapter link was opened, not only once someone had actually started
+  // reading it.
   useEffect(() => {
+    if (currentPage <= 1) return
     try {
       localStorage.setItem(
         CONTINUE_KEY,
