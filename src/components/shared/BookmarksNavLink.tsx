@@ -20,9 +20,11 @@ function getBookmarkMap(): Record<string, boolean> {
 
 interface Props {
   allSeries: Series[];
+  /** Extra layout classes from the parent (e.g. flex-grow inside a toolbar row). */
+  className?: string;
 }
 
-export default function BookmarksNavLink({ allSeries }: Props) {
+export default function BookmarksNavLink({ allSeries, className = "" }: Props) {
   const [bookmarkMap, setBookmarkMap] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
 
@@ -46,7 +48,7 @@ export default function BookmarksNavLink({ allSeries }: Props) {
   return (
     <Link
       href="/bookmarks"
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 outline-none"
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all duration-200 outline-none ${className}`}
       style={{
         fontFamily: "'Quicksand', system-ui, sans-serif",
         background: "color-mix(in srgb, var(--ryu-primary) 15%, transparent)",

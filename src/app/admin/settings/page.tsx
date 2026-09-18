@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useEffect, useState, useRef } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Settings, HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2 } from 'lucide-react'
+import { Settings, HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2, BookOpen } from 'lucide-react'
 import { compressImage } from '@/lib/image-compress'
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
@@ -252,7 +253,11 @@ export default function SettingsPage() {
           <div style={{ height: 1, background: 'var(--ryu-border)', margin: '8px 4px 12px' }} />
           <div style={{ padding: '4px 12px', fontSize: 12, color: 'var(--ryu-text-2)' }}>
             <div style={{ fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 4 }}>Need help?</div>
-            <div>Settings docs are in the help center.</div>
+            <div style={{ marginBottom: 10 }}>Settings docs are in the help center.</div>
+            <Link href="/admin/help" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', color: 'var(--ryu-primary-deep)', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
+              <BookOpen size={13} />
+              View docs
+            </Link>
           </div>
         </div>
 

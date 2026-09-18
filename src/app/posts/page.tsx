@@ -110,7 +110,10 @@ export default async function PostsPage({
         </div>
       </div>
 
-      <PostsClient initialPosts={posts} activeType={type} />
+      {/* Keyed by type: PostsClient seeds its state from initialPosts once, so
+          without a key a pill click changes the URL and the highlighted pill
+          but leaves the previous type's grid on screen. */}
+      <PostsClient key={type ?? 'all'} initialPosts={posts} activeType={type} />
     </main>
   )
 }

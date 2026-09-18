@@ -105,7 +105,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
         className="border-b"
         style={{ borderColor: 'var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
       >
-        <div className="max-w-[1600px] mx-auto px-12 py-5 flex items-center gap-6 flex-wrap">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-5 flex items-center gap-6 flex-wrap">
           <div className="relative flex-1 max-w-[520px]">
             <Search
               size={14}
@@ -134,7 +134,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
         className="sticky top-[52px] z-30 border-b"
         style={{ background: '#ffffff', borderColor: 'var(--ryu-border)' }}
       >
-        <div className="max-w-[1600px] mx-auto px-12 py-3 flex items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-3 flex items-center justify-between gap-2 sm:gap-4">
           {/* Pills — desktop */}
           <div className="hidden sm:flex items-center gap-2 flex-wrap">
             {pills.map(pill => (
@@ -164,26 +164,33 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
             ))}
           </div>
 
-          {/* Burger — mobile only */}
+          {/* Burger — mobile only. The button is the 44×44 tap target; the
+              32×32 span inside is what you see. -ml-1.5 pulls the visible edge
+              flush with the search bar's inset, and -my-1.5 keeps the taller
+              hit area from making the sticky row any taller. */}
           <button
             onClick={() => setFilterSheetOpen(true)}
-            className="sm:hidden flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold"
-            style={{
-              border: '0.5px solid var(--ryu-border)',
-              color: 'var(--ryu-text-secondary)',
-              fontFamily: "var(--font-fredoka), sans-serif",
-            }}
+            aria-label="Filter comics"
+            className="sm:hidden -ml-1.5 -my-1.5 w-11 h-11 shrink-0 flex items-center justify-center"
+            style={{ color: 'var(--ryu-text-secondary)' }}
           >
-            <Menu size={15} />
+            <span
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ border: '0.5px solid var(--ryu-border)' }}
+            >
+              <Menu size={15} />
+            </span>
           </button>
 
-          {/* Bookmarks + Sort */}
-          <div className="flex items-center gap-3 shrink-0">
-            <BookmarksNavLink allSeries={series} />
+          {/* Bookmarks + Sort — on mobile they split whatever width the burger
+              leaves over; the select can shrink toward its min-width but never
+              below what "Sort: Recent" needs. */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 sm:flex-none sm:shrink-0">
+            <BookmarksNavLink allSeries={series} className="grow shrink-0 justify-center sm:grow-0" />
             <select
               value={sort}
               onChange={e => setSort(e.target.value)}
-              className="shrink-0 h-8 px-3 rounded-lg text-[11px] outline-none cursor-pointer"
+              className="grow min-w-[6.75rem] sm:grow-0 sm:min-w-0 sm:shrink-0 h-8 px-3 rounded-lg text-[11px] outline-none cursor-pointer"
               style={{
                 border: '0.5px solid var(--ryu-border)',
                 background: 'var(--ryu-bg)',
@@ -260,7 +267,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
       )}
 
       {/* ── Grid ─────────────────────────────────────────────────── */}
-      <div className="max-w-[1600px] mx-auto px-12 py-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-6">
         {maxAge === null ? null : filtered.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center py-24 gap-3 rounded-xl border"
