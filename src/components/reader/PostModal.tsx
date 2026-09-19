@@ -190,7 +190,7 @@ function CommentRow({
       <div className="flex gap-2">
         <div
           className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5 uppercase comment-avatar"
-          style={{ background: 'var(--ryu-primary)', color: '#fff' }}
+          style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)' }}
         >
           {comment.name.charAt(0)}
         </div>
@@ -878,7 +878,7 @@ export default function PostModal({ post, onClose }: Props) {
                 disabled={submitting || !content.trim()}
                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 post-comment-send"
                 style={{
-                  background: 'var(--ryu-primary)', color: '#fff', border: 'none',
+                  background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: 'none',
                   opacity: (submitting || !content.trim()) ? 0.4 : 1,
                   cursor: (submitting || !content.trim()) ? 'not-allowed' : 'pointer',
                 }}

@@ -232,9 +232,9 @@ export default function HomeClient({
                 style={{
                   height: 36, borderRadius: 8,
                   background: '#D4537E', color: '#fff',
-                  border: '2.5px solid #1E1E1E',
+                  border: '2.5px solid var(--ryu-text)',
                   fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase',
-                  boxShadow: '4px 4px 0 #1E1E1E',
+                  boxShadow: '4px 4px 0 var(--ryu-text)',
                 }}
               >
                 <SiKofi size={14} color="#fff" /> Buy me a Ko-fi
@@ -245,9 +245,9 @@ export default function HomeClient({
                   style={{
                     height: 36, borderRadius: 8,
                     background: '#E85B46', color: '#fff',
-                    border: '2.5px solid #1E1E1E',
+                    border: '2.5px solid var(--ryu-text)',
                     fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase',
-                    boxShadow: '4px 4px 0 #1E1E1E',
+                    boxShadow: '4px 4px 0 var(--ryu-text)',
                   }}                 
                 >
                   🅿 Become a Patreon

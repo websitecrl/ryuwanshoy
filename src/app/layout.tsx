@@ -5,6 +5,7 @@ import ConditionalLayout from "@/components/shared/ConditionalLayout";
 import AgeGate from "@/components/shared/AgeGate";
 import { createClient } from "@/lib/supabase/server";
 import { Toaster } from 'sonner'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
 
 export const revalidate = 0
 
@@ -47,10 +48,16 @@ export default async function RootLayout({ children,}: Readonly<{
 
   const settings = await getSiteSettings()
   return (
+    // suppressHydrationWarning: THEME_INIT_SCRIPT adds `dark` to <html> before
+    // React hydrates, so the class list intentionally differs from the server's.
     <html
       lang="en"
       className={`${fredoka.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         <AgeGate>
           <ConditionalLayout

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import ThemeToggle from '@/components/shared/ThemeToggle'
 import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit } from 'lucide-react'
 
 const navItems = [
@@ -31,8 +32,6 @@ export default function Sidebar() {
   const [siteTitle, setSiteTitle] = useState<string>('')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [savedSection, setSavedSection] = useState<string | null>(null)
-  // ── Theme toggle ───────────────────────────────────────────────────────
-  const [isDark, setIsDark] = useState(false)
   const [draftCount, setDraftCount] = useState<number>(0)
 
 useEffect(() => {
@@ -58,15 +57,6 @@ useEffect(() => {
     .subscribe()
 
   return () => { supabase.removeChannel(channel) }
-}, [])
-
-// Theme — runs once on mount
-useEffect(() => {
-  const saved = localStorage.getItem('ryu-theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const startDark = saved ? saved === 'dark' : prefersDark
-  setIsDark(startDark)
-  document.documentElement.classList.toggle('dark', startDark)
 }, [])
 
 // R2 storage — runs once on mount
@@ -95,13 +85,6 @@ useEffect(() => {
     window.addEventListener('settings-updated', loadSettings)
     return () => window.removeEventListener('settings-updated', loadSettings)
   }, [])
-
-  function toggleTheme() {
-    const next = !isDark
-    setIsDark(next)
-    document.documentElement.classList.toggle('dark', next)
-    localStorage.setItem('ryu-theme', next ? 'dark' : 'light')
-  }
 
   // ── Nav helpers ────────────────────────────────────────────────────────
   function isActive(href: string) {
@@ -169,42 +152,7 @@ useEffect(() => {
           Workspace
         </span>
 
-        {/* Sun / Moon pill */}
-        <button
-          onClick={toggleTheme}
-          title={isDark ? 'Switch to light' : 'Switch to dark'}
-          className="flex items-center rounded-full p-0.75 cursor-pointer"
-          style={{
-            background: 'var(--ryu-surface-1)',
-            border: '1px solid var(--ryu-border)',
-          }}
-        >
-          {/* Sun */}
-          <span
-            className="w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-200"
-            style={{
-              background: !isDark ? 'var(--ryu-primary)' : 'transparent',
-              color:      !isDark ? '#fff' : 'var(--ryu-text-2)',
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="4"/>
-              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-            </svg>
-          </span>
-          {/* Moon */}
-          <span
-            className="w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-200"
-            style={{
-              background: isDark ? 'var(--ryu-accent)' : 'transparent',
-              color:      isDark ? '#713F12' : 'var(--ryu-text-2)',
-            }}
-          >
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
-            </svg>
-          </span>
-        </button>
+        <ThemeToggle />
       </div>
 
       {/* ── Nav items ─────────────────────────────────────────────────── */}

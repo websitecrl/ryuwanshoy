@@ -152,7 +152,7 @@ export default function SeriesHeader({
             {updatedLabel && (
               <span
                 className="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide
-                           bg-[var(--ryu-primary)] text-white"
+                           bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]"
               >
                 {updatedLabel}
               </span>
@@ -209,7 +209,7 @@ export default function SeriesHeader({
           <Link
             href={ctaHref}
             className="font-comic flex items-center gap-1 px-4
-              bg-[var(--ryu-accent)] text-[var(--ryu-text)]
+              bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)]
               border-2 border-[var(--ryu-text)] rounded-lg
               text-sm uppercase tracking-wide
               shadow-[4px_4px_0px_var(--ryu-text)]
@@ -250,7 +250,7 @@ export default function SeriesHeader({
               hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
               transition-all duration-100 ${
                 bookmarked
-                  ? 'bg-[var(--ryu-accent)] text-[var(--ryu-text)]'
+                  ? 'bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)]'
                   : 'bg-[var(--ryu-surface-3)] text-[var(--ryu-text)]'
               }`}
             style={{ height: '36px' }}

@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import HTMLFlipBook from 'react-pageflip'
 import type { Tables } from '@/types/database'
-import { type ReaderTheme } from './ReaderTopBar'
 
 type Page = Tables<'pages'>
 
@@ -22,7 +21,6 @@ type Props = {
   onToggleUI: () => void
   currentPage: number
   onPageChange: (page: number) => void
-  theme: ReaderTheme
 }
 
 type FlipBookRef = {
@@ -47,7 +45,6 @@ export default function FlipReader({
   onToggleUI,
   currentPage,
   onPageChange,
-  theme,
 }: Props) {
   const bookRef    = useRef<FlipBookRef>(null)
   const didSyncRef = useRef(false)
@@ -134,11 +131,6 @@ export default function FlipReader({
     : `Page ${Math.min(comicPage, pages.length)} – ${Math.min(comicPage + 1, pages.length)} / ${pages.length}`
   const progress = Math.min(100, Math.round((Math.min(comicPage, pages.length) / pages.length) * 100))
 
-
-  const bg = theme === 'light' ? 'bg-[#FFFBF5]' : 'bg-[#0a0a0a]'
-
-  
-
   type DisplayPage = Page & { spreadSide: 'left' | 'right' | null }
 
   const displayPages: DisplayPage[] = useMemo(() =>
@@ -154,7 +146,7 @@ export default function FlipReader({
   // ── Reader ───────────────────────────────────────────────────────────────
   return (
     <div
-      className={`relative flex items-center justify-center select-none overflow-hidden ${bg}`}
+      className="relative flex items-center justify-center select-none overflow-hidden bg-background"
       style={{ minHeight: 'calc(100vh - 48px)' }}
       onClick={onToggleUI}
     >
@@ -163,12 +155,9 @@ export default function FlipReader({
         onClick={e => { e.stopPropagation(); goPrev() }}
         disabled={atStart}
         aria-label="Previous page"
-        className={`absolute left-2 z-10 p-2 md:p-3 transition-colors
-                   disabled:opacity-20 disabled:cursor-not-allowed ${
-                     theme === 'light'
-                       ? 'text-[var(--ryu-text-3)] hover:text-[var(--ryu-text)]'
-                       : 'text-neutral-600 hover:text-white'
-                   }`}
+        className="absolute left-2 z-10 p-2 md:p-3 transition-colors
+                   disabled:opacity-20 disabled:cursor-not-allowed
+                   text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
       >
         <ChevronLeft size={isMobile ? 22 : 28} />
       </button>
@@ -178,7 +167,9 @@ export default function FlipReader({
         onClick={e => e.stopPropagation()}
         style={{ position: 'relative' }}
       >
-        {/* Center spine line — desktop spread only, subtle divider between pages */}
+        {/* Center spine line — desktop spread only, subtle divider between pages.
+            --ryu-text is near-black in light and cream in dark, so a low opacity
+            gives the same soft crease in both without a theme branch. */}
         {!isMobile && (
           <div
             style={{
@@ -188,9 +179,8 @@ export default function FlipReader({
               bottom:        0,
               width:         '2px',
               transform:     'translateX(-50%)',
-              background:    theme === 'light'
-                ? 'rgba(0,0,0,0.10)'
-                : 'rgba(255,255,255,0.07)',
+              background:    'var(--ryu-text)',
+              opacity:       0.1,
               zIndex:        10,
               pointerEvents: 'none',
             }}
@@ -319,11 +309,8 @@ export default function FlipReader({
         <Link
           href={nextHref}
           onClick={e => e.stopPropagation()}
-          className={`absolute right-2 z-10 flex items-center gap-1 text-sm transition-colors ${
-            theme === 'light'
-              ? 'text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]'
-              : 'text-neutral-400 hover:text-white'
-          }`}
+          className="absolute right-2 z-10 flex items-center gap-1 text-sm transition-colors
+                     text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
         >
           Next <ChevronRight size={isMobile ? 22 : 28} />
         </Link>
@@ -332,12 +319,9 @@ export default function FlipReader({
           onClick={e => { e.stopPropagation(); goNext() }}
           disabled={atEnd}
           aria-label="Next page"
-          className={`absolute right-2 z-10 p-2 md:p-3 transition-colors
-                     disabled:opacity-20 disabled:cursor-not-allowed ${
-                       theme === 'light'
-                         ? 'text-[var(--ryu-text-3)] hover:text-[var(--ryu-text)]'
-                         : 'text-neutral-600 hover:text-white'
-                     }`}
+          className="absolute right-2 z-10 p-2 md:p-3 transition-colors
+                     disabled:opacity-20 disabled:cursor-not-allowed
+                     text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
         >
           <ChevronRight size={isMobile ? 22 : 28} />
         </button>
@@ -347,17 +331,13 @@ export default function FlipReader({
       <div className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300
         ${uiVisible ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="flex justify-center pb-1">
-          <span className={`text-xs tabular-nums ${
-            theme === 'light' ? 'text-[var(--ryu-text-3)]' : 'text-neutral-500'
-          }`}>
+          <span className="text-xs tabular-nums text-[var(--ryu-text-2)]">
             {pageLabel}
           </span>
         </div>
-        <div className={`h-1 ${theme === 'light' ? 'bg-[var(--ryu-border)]' : 'bg-neutral-800'}`}>
+        <div className="h-1 bg-[var(--ryu-border)]">
           <div
-            className={`h-full transition-all duration-300 ${
-              theme === 'light' ? 'bg-[var(--ryu-primary)]' : 'bg-white'
-            }`}
+            className="h-full transition-all duration-300 bg-[var(--ryu-primary)]"
             style={{ width: `${progress}%` }}
           />
         </div>

@@ -98,8 +98,8 @@ function ChapterRow({
   }
 
   const btn = {
-    unread:  { label: 'READ →',     cls: 'font-comic bg-[var(--ryu-accent)] text-[var(--ryu-text)] border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
-    reading: { label: 'CONTINUE →', cls: 'font-comic bg-[var(--ryu-primary)] text-white border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
+    unread:  { label: 'READ →',     cls: 'font-comic bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)] border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
+    reading: { label: 'CONTINUE →', cls: 'font-comic bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)] border-2 border-[var(--ryu-text)] shadow-[3px_3px_0px_var(--ryu-text)] hover:shadow-[3px_5px_0px_var(--ryu-text)] hover:-translate-y-0.5' },
     read:    { label: 'RE-READ →',  cls: 'font-comic bg-[var(--ryu-surface-1)] text-[var(--ryu-text-2)] border-2 border-[var(--ryu-border)] shadow-[3px_3px_0px_var(--ryu-border)] hover:shadow-[3px_5px_0px_var(--ryu-border)] hover:-translate-y-0.5' },
   }[readState.state]
 

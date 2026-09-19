@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Menu, X, Heart } from 'lucide-react'
+import ThemeToggle from './ThemeToggle'
 
 const navLinks = [
   { label: 'Home',       href: '/' },
@@ -102,7 +103,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                 style={{
                   fontSize: 15,
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? '#000000' : 'var(--ryu-text-2)',
+                  color: isActive ? 'var(--ryu-text)' : 'var(--ryu-text-2)',
                 }}
               >
                 {link.label}
@@ -111,49 +112,55 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
           })}
         </nav>
 
-        {/* Support CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/donate"
-            className="font-comic flex items-center gap-1"
-            style={{
-              height: 30,
-              padding: '0 14px',
-              background: '#a67aec',
-              color: '#ffffff',
-              border: '2.5px solid #1E1E1E',
-              borderRadius: 8,
-              fontSize: 13,
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase',
-              boxShadow: '4px 4px 0 #1E1E1E',
-              transition: 'transform .12s, box-shadow .12s',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget as HTMLElement
-              el.style.transform = 'translate(2px,2px)'
-              el.style.boxShadow = '2px 2px 0 #1E1E1E'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget as HTMLElement
-              el.style.transform = ''
-              el.style.boxShadow = '4px 4px 0 #1E1E1E'
-            }}
-          >
-            <Heart size={12} />
-            Support
-          </Link>
-        </div>
+        {/* Right cluster: theme toggle, then Support (desktop) or hamburger (mobile).
+            Toggle sits in the same row on every breakpoint so it's on every public page. */}
+        <div className="flex items-center gap-1 md:gap-4">
+          <ThemeToggle className="h-11 px-1" />
 
-        {/* Mobile hamburger */}
-        <button
-          className="md:hidden transition-colors"
-          style={{ color: 'var(--ryu-text-2)' }}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
-        >
-          {menuOpen ? <X size={22} /> : <Menu size={22} />}
-        </button>
+          <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/donate"
+              className="font-comic flex items-center gap-1"
+              style={{
+                height: 30,
+                padding: '0 14px',
+                background: 'var(--ryu-accent)',
+                color: 'var(--ryu-on-accent)',
+                border: '2.5px solid var(--ryu-text)',
+                borderRadius: 8,
+                fontSize: 13,
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase',
+                boxShadow: '4px 4px 0 var(--ryu-text)',
+                transition: 'transform .12s, box-shadow .12s',
+              }}
+              onMouseEnter={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = 'translate(2px,2px)'
+                el.style.boxShadow = '2px 2px 0 var(--ryu-text)'
+              }}
+              onMouseLeave={e => {
+                const el = e.currentTarget as HTMLElement
+                el.style.transform = ''
+                el.style.boxShadow = '4px 4px 0 var(--ryu-text)'
+              }}
+            >
+              <Heart size={12} />
+              Support
+            </Link>
+          </div>
+
+          {/* Mobile hamburger — 44px hit area (icon stays 22px) */}
+          <button
+            className="md:hidden flex h-11 w-11 items-center justify-center transition-colors"
+            style={{ color: 'var(--ryu-text-2)' }}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+            aria-expanded={menuOpen}
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -176,7 +183,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                   style={{
                     fontSize: 13,
                     fontWeight: isActive ? 700 : 500,
-                    color: isActive ? '#000000' : 'var(--ryu-text-2)',
+                    color: isActive ? 'var(--ryu-text)' : 'var(--ryu-text-2)',
                   }}
                 >
                   {link.label}
@@ -189,14 +196,14 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
               className="font-comic mt-2 flex items-center justify-center gap-2"
               style={{
                 height: 36,
-                background: '#4D2C7B',
-                color: '#fff',
-                border: '2.5px solid #1E1E1E',
+                background: 'var(--ryu-accent)',
+                color: 'var(--ryu-on-accent)',
+                border: '2.5px solid var(--ryu-text)',
                 borderRadius: 8,
                 fontSize: 13,
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                boxShadow: '4px 4px 0 #1E1E1E',
+                boxShadow: '4px 4px 0 var(--ryu-text)',
               }}
             >
               <Heart size={13} />

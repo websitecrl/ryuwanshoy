@@ -68,10 +68,10 @@ export default function ContinueReading() {
           className="font-comic inline-flex items-center gap-1"
           style={{
             height: 34, padding: '0 14px',
-            background: 'var(--ryu-accent)', color: 'var(--ryu-text)',
-            border: '2.5px solid #1E1E1E', borderRadius: 8,
+            background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)',
+            border: '2.5px solid var(--ryu-text)', borderRadius: 8,
             fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase',
-            boxShadow: '4px 4px 0 #1E1E1E',
+            boxShadow: '4px 4px 0 var(--ryu-text)',
           }}
         >
           Continue →

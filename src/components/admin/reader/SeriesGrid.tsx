@@ -132,7 +132,7 @@ export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridP
       {/* ── Filter pills (desktop) + burger (mobile) + Bookmarks + Sort ──────────────────────────────────── */}
       <div
         className="sticky top-[52px] z-30 border-b"
-        style={{ background: '#ffffff', borderColor: 'var(--ryu-border)' }}
+        style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-3 flex items-center justify-between gap-2 sm:gap-4">
           {/* Pills — desktop */}

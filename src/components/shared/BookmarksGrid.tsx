@@ -85,7 +85,7 @@ export default function BookmarksGrid({ series, chapterCounts }: Props) {
               marginTop: 8,
               borderColor: 'var(--ryu-text)',
               background: 'var(--ryu-accent)',
-              color: 'var(--ryu-text)',
+              color: 'var(--ryu-on-accent)',
             }}
           >
             Browse Comics

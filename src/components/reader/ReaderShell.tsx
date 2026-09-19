@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import type { Tables } from '@/types/database'
 import ScrollReader from './ScrollReader'
 import FlipReader from './FlipReader'
-import ReaderTopBar, { type ReaderTheme } from './ReaderTopBar'
+import ReaderTopBar from './ReaderTopBar'
 
 type Page = Tables<'pages'>
 
@@ -39,7 +39,6 @@ type ReadMode = 'scroll' | 'flip'
 const MODE_KEY     = 'ryu.reader.mode'
 const BOOKMARK_KEY = 'ryu.reader.bookmarks'
 const CONTINUE_KEY = 'continueReading'
-const THEME_KEY    = 'ryu.reader.theme'
 
 export default function ReaderShell({
   series,
@@ -53,20 +52,6 @@ export default function ReaderShell({
   const [bookmarked,  setBookmarked]  = useState(false)
   const [uiVisible,   setUiVisible]   = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [theme,       setTheme]       = useState<ReaderTheme>('dark')
-
-  // Restore theme
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(THEME_KEY)
-      if (saved === 'light' || saved === 'dark') setTheme(saved)
-    } catch {}
-  }, [])
-
-  // Persist theme
-  useEffect(() => {
-    try { localStorage.setItem(THEME_KEY, theme) } catch {}
-  }, [theme])
 
   // Restore mode = URL param takes priority over localStorage
   useEffect(() => {
@@ -182,12 +167,7 @@ export default function ReaderShell({
     : `Chapter ${chapter.chapter_number}`
 
   return (
-    <div
-      suppressHydrationWarning
-      className={`min-h-screen flex flex-col ${
-        theme === 'light' ? 'bg-[#FFFBF5]' : 'bg-[#0a0a0a]'
-      }`}
-    >
+    <div className="min-h-screen flex flex-col bg-background">
       <ReaderTopBar
         seriesTitle={series.title}
         seriesSlug={series.slug}
@@ -201,8 +181,6 @@ export default function ReaderShell({
         prevHref={prevHref}
         nextHref={nextHref}
         totalPages={pages.length}
-        theme={theme}
-        onThemeChange={setTheme}
       />
 
       <main className="flex-1">
@@ -214,7 +192,6 @@ export default function ReaderShell({
             onToggleUI={() => setUiVisible((v) => !v)}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
-            theme={theme}
           />
         ) : (
           <FlipReader
@@ -229,7 +206,6 @@ export default function ReaderShell({
             onToggleUI={() => setUiVisible((v) => !v)}
             currentPage={currentPage}
             onPageChange={setCurrentPage}
-            theme={theme}
           />
         )}
       </main>

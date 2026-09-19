@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import type { Tables } from '@/types/database'
-import { type ReaderTheme } from './ReaderTopBar'
 
 type Page = Tables<'pages'>
 
@@ -14,7 +13,6 @@ type Props = {
   onToggleUI: () => void
   currentPage: number
   onPageChange: (page: number) => void
-  theme: ReaderTheme
 }
 
 export default function ScrollReader({
@@ -24,7 +22,6 @@ export default function ScrollReader({
   onToggleUI,
   currentPage,
   onPageChange,
-  theme,
 }: Props) {
   const pageRefs    = useRef<(HTMLDivElement | null)[]>([])
   const didScrollRef = useRef(false)
@@ -75,35 +72,24 @@ useEffect(() => {
   }, [pages, onPageChange])
 
   const progress = totalPages > 0 ? Math.min(100, Math.round((currentPage / totalPages) * 100)) : 0
-  const isLight   = theme === 'light'
 
   return (
     <div className="relative">
 
-      {/* Progress bar — fixed at bottom, theme-aware */}
+      {/* Progress bar — fixed at bottom, follows the site-wide theme via tokens */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${
           uiVisible ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
         <div className="flex justify-center pb-1">
-          <span
-            className={`text-xs tabular-nums ${
-              isLight ? 'text-[var(--ryu-text-3)]' : 'text-[var(--ryu-text-3)]'
-            }`}
-          >
+          <span className="text-xs tabular-nums text-[var(--ryu-text-2)]">
             {currentPage} / {totalPages}
           </span>
         </div>
-        <div
-          className={`h-1 ${
-            isLight ? 'bg-[var(--ryu-border)]' : 'bg-[var(--ryu-surface-3)]'
-          }`}
-        >
+        <div className="h-1 bg-[var(--ryu-border)]">
           <div
-            className={`h-full transition-all duration-300 ${
-              isLight ? 'bg-[var(--ryu-primary)]' : 'bg-[var(--ryu-text)]'
-            }`}
+            className="h-full transition-all duration-300 bg-[var(--ryu-primary)]"
             style={{ width: `${progress}%` }}
           />
         </div>

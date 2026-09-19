@@ -115,7 +115,7 @@ function ReplyForm({
           onClick={handleSubmit}
           disabled={submitting || !content.trim()}
           className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md
-                     bg-[var(--ryu-primary)] text-white
+                     bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]
                      disabled:opacity-40 hover:opacity-80 transition-opacity"
         >
           <Send size={11} />
@@ -188,7 +188,7 @@ function CommentRow({
         {/* Avatar */}
         <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
                         text-xs font-bold uppercase select-none
-                        bg-[var(--ryu-primary)] text-white">
+                        bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]">
           {comment.name.charAt(0)}
         </div>
 
@@ -224,7 +224,7 @@ function CommentRow({
                   onClick={submitEdit}
                   disabled={saving || !draft.trim()}
                   className="px-3 py-1 text-xs font-semibold rounded-md
-                             bg-[var(--ryu-primary)] text-white
+                             bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]
                              disabled:opacity-50 hover:opacity-80 transition-opacity"
                 >
                   {saving ? 'Saving…' : 'Save'}
@@ -470,7 +470,7 @@ export default function SeriesComments({ seriesId }: Props) {
           onClick={handleSubmit}
           disabled={submitting || !content.trim()}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold
-                    bg-[var(--ryu-primary)] text-white
+                    bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]
                     hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
           <Send size={14} />

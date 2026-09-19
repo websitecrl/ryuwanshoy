@@ -53,8 +53,10 @@
   --color-ryu-primary: var(--ryu-primary);
   --color-ryu-primary-deep: var(--ryu-primary-deep);
   --color-ryu-primary-soft: var(--ryu-primary-soft);
+  --color-ryu-on-primary: var(--ryu-on-primary);
   --color-ryu-accent: var(--ryu-accent);
   --color-ryu-accent-deep: var(--ryu-accent-deep);
+  --color-ryu-on-accent: var(--ryu-on-accent);
   --color-ryu-sidebar: var(--ryu-sidebar);
   --color-ryu-surface-1: var(--ryu-surface-1);
   --color-ryu-surface-2: var(--ryu-surface-2);
@@ -68,12 +70,16 @@
 
 /* ─── Light mode (warm cream) ───────────────────────────────────────────── */
 :root {
+  color-scheme: light;
+
   /* Ryuwanshoy design tokens */
   --ryu-primary: #F97316;
   --ryu-primary-deep: #EA580C;
   --ryu-primary-soft: #FFEDD5;
+  --ryu-on-primary: #1C1917; /* text/icons on --ryu-primary; white only reaches 2.8:1 on the orange */
   --ryu-accent: #FEF08A;
   --ryu-accent-deep: #FACC15;
+  --ryu-on-accent: #1C1917; /* text/icons on --ryu-accent; --ryu-text flips to cream in dark */
   --ryu-sidebar: #FFF7ED;
   --ryu-surface-1: #FFFFFF;
   --ryu-surface-2: #FFFCF7;
@@ -84,39 +90,40 @@
   --ryu-text-2: #78716C;
   --ryu-text-3: #A8A29E;
 
-  /* shadcn tokens — remapped to warm palette */
+  /* shadcn tokens — remapped to warm palette.
+     The primary/accent family aliases the --ryu-* tokens so the two systems can't drift. */
   --background: #FFFBF5;
   --foreground: #1C1917;
   --card: #FFFFFF;
   --card-foreground: #1C1917;
   --popover: #FFFFFF;
   --popover-foreground: #1C1917;
-  --primary: #F97316;
-  --primary-foreground: #FFFFFF;
+  --primary: var(--ryu-primary);
+  --primary-foreground: var(--ryu-on-primary);
   --secondary: #FFF7ED;
   --secondary-foreground: #1C1917;
   --muted: #FFF7ED;
   --muted-foreground: #78716C;
-  --accent: #FFEDD5;
-  --accent-foreground: #EA580C;
+  --accent: var(--ryu-primary-soft);
+  --accent-foreground: var(--ryu-primary-deep);
   --destructive: #DC2626;
   --border: #FED7AA;
   --input: #FFF7ED;
-  --ring: #F97316;
+  --ring: var(--ryu-primary);
   --radius: 0.625rem;
 
   /* Sidebar tokens */
   --sidebar: #FFF7ED;
   --sidebar-foreground: #1C1917;
-  --sidebar-primary: #F97316;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #FFEDD5;
-  --sidebar-accent-foreground: #EA580C;
+  --sidebar-primary: var(--ryu-primary);
+  --sidebar-primary-foreground: var(--ryu-on-primary);
+  --sidebar-accent: var(--ryu-primary-soft);
+  --sidebar-accent-foreground: var(--ryu-primary-deep);
   --sidebar-border: #FED7AA;
-  --sidebar-ring: #F97316;
+  --sidebar-ring: var(--ryu-primary);
 
   /* Charts */
-  --chart-1: #F97316;
+  --chart-1: var(--ryu-primary);
   --chart-2: #FACC15;
   --chart-3: #16A34A;
   --chart-4: #EA580C;
@@ -125,12 +132,20 @@
 
 /* ─── Dark mode (warm charcoal) ─────────────────────────────────────────── */
 .dark {
+  color-scheme: dark;
+
   /* Ryuwanshoy dark tokens */
-  --ryu-primary: #F97316;
+  /* Same hue as light (#F97316), nudged ~4 points lighter and ~5 less saturated so it
+     doesn't glare on charcoal. #1C1917 on it is 6.7:1. */
+  --ryu-primary: #F4812F;
   --ryu-primary-deep: #FB923C;
-  --ryu-primary-soft: rgba(249, 115, 22, 0.16);
-  --ryu-accent: #FEF08A;
+  --ryu-primary-soft: rgba(244, 129, 47, 0.16);
+  --ryu-on-primary: #1C1917;
+  /* Same gold family as light (#FEF08A) but much lower lightness — the pale yellow blew out
+     against charcoal. Still clearly distinct from the orange primary; #1C1917 on it is 7.4:1. */
+  --ryu-accent: #D4A017;
   --ryu-accent-deep: #FACC15;
+  --ryu-on-accent: #1C1917;
   --ryu-sidebar: #1B1714;
   --ryu-surface-1: #2A2521;
   --ryu-surface-2: #1F1B18;
@@ -141,38 +156,38 @@
   --ryu-text-2: #BFB1A0;
   --ryu-text-3: #8A7A6B;
 
-  /* shadcn tokens — remapped to warm dark palette */
+  /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
   --background: #14110F;
   --foreground: #FFFBF5;
   --card: #221E1A;
   --card-foreground: #FFFBF5;
   --popover: #221E1A;
   --popover-foreground: #FFFBF5;
-  --primary: #F97316;
-  --primary-foreground: #FFFFFF;
+  --primary: var(--ryu-primary);
+  --primary-foreground: var(--ryu-on-primary);
   --secondary: #2A2521;
   --secondary-foreground: #FFFBF5;
   --muted: #2A2521;
   --muted-foreground: #BFB1A0;
-  --accent: rgba(249, 115, 22, 0.16);
-  --accent-foreground: #FB923C;
+  --accent: var(--ryu-primary-soft);
+  --accent-foreground: var(--ryu-primary-deep);
   --destructive: #F87171;
   --border: #3D2F22;
   --input: #2A2521;
-  --ring: #F97316;
+  --ring: var(--ryu-primary);
 
   /* Sidebar tokens */
   --sidebar: #1B1714;
   --sidebar-foreground: #FFFBF5;
-  --sidebar-primary: #F97316;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: rgba(249, 115, 22, 0.16);
-  --sidebar-accent-foreground: #FB923C;
+  --sidebar-primary: var(--ryu-primary);
+  --sidebar-primary-foreground: var(--ryu-on-primary);
+  --sidebar-accent: var(--ryu-primary-soft);
+  --sidebar-accent-foreground: var(--ryu-primary-deep);
   --sidebar-border: #3D2F22;
-  --sidebar-ring: #F97316;
+  --sidebar-ring: var(--ryu-primary);
 
   /* Charts */
-  --chart-1: #F97316;
+  --chart-1: var(--ryu-primary);
   --chart-2: #FACC15;
   --chart-3: #4ADE80;
   --chart-4: #FB923C;

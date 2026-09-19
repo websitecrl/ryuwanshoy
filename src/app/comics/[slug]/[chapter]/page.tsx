@@ -133,9 +133,9 @@ export default async function ChapterReaderPage({
 
   if (data.pages.length === 0) {
     return (
-      <main className="min-h-screen bg-neutral-950 flex items-center justify-center">
+      <main className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-neutral-400 text-sm">This chapter has no pages yet.</p>
+          <p className="text-[var(--ryu-text-2)] text-sm">This chapter has no pages yet.</p>
         </div>
       </main>
     )
