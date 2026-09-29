@@ -14,7 +14,6 @@ type Post = {
   created_at: string | null;
 };
 
-const POST_TYPES = ["sketch", "drawing", "meme", "other"];
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return "";

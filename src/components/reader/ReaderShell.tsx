@@ -37,7 +37,6 @@ type Props = {
 type ReadMode = 'scroll' | 'flip'
 
 const MODE_KEY     = 'ryu.reader.mode'
-const BOOKMARK_KEY = 'ryu.reader.bookmarks'
 const CONTINUE_KEY = 'continueReading'
 
 export default function ReaderShell({
@@ -49,7 +48,6 @@ export default function ReaderShell({
   nextChapter,
 }: Props) {
   const [mode,        setMode]        = useState<ReadMode>('scroll')
-  const [bookmarked,  setBookmarked]  = useState(false)
   const [uiVisible,   setUiVisible]   = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
@@ -78,15 +76,6 @@ export default function ReaderShell({
     const page = parseInt(params.get('page') ?? '1', 10)
     if (!isNaN(page) && page > 1) setCurrentPage(page)
   }, [])
-
-  // Check bookmark state
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(BOOKMARK_KEY)
-      const bookmarks: string[] = raw ? JSON.parse(raw) : []
-      setBookmarked(bookmarks.includes(chapter.id))
-    } catch {}
-  }, [chapter.id])
 
   // Write reading progress
   //
@@ -140,19 +129,6 @@ export default function ReaderShell({
       )
     } catch {}
   }, [series, chapter, currentPage])            // ← currentPage added here
-
-  function toggleBookmark() {
-    try {
-      const raw = localStorage.getItem(BOOKMARK_KEY)
-      const bookmarks: string[] = raw ? JSON.parse(raw) : []
-      const exists  = bookmarks.includes(chapter.id)
-      const updated = exists
-        ? bookmarks.filter((id) => id !== chapter.id)
-        : [...bookmarks, chapter.id]
-      localStorage.setItem(BOOKMARK_KEY, JSON.stringify(updated))
-      setBookmarked(!exists)
-    } catch {}
-  }
 
   const prevHref = prevChapter
     ? `/comics/${series.slug}/${prevChapter.chapter_number}`

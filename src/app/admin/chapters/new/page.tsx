@@ -120,7 +120,7 @@ export default function NewChapterPage() {
   const [chapterNumber,    setChapterNumber]    = useState('')
   const [existingNumbers,  setExistingNumbers]  = useState<number[]>([])
   const [chapterTitle,     setChapterTitle]     = useState('')
-  const [isEarlyAccess,    setIsEarlyAccess]    = useState(false)
+  const [isEarlyAccess]    = useState(false)
   const [pages,            setPages]            = useState<PageFile[]>([])
   const [dragOver,         setDragOver]         = useState(false)
   const [submitting,       setSubmitting]       = useState(false)

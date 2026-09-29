@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { CloudUpload, X, Loader2, ImageIcon, AlertCircle } from 'lucide-react'
+import { X, Loader2, ImageIcon, AlertCircle } from 'lucide-react'
 import {
   Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
+  SelectTrigger,
 } from '@/components/ui/select'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -62,7 +62,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   // Image replacement
   const [newImageFile,   setNewImageFile]   = useState<File | null>(null)
   const [newPreview,     setNewPreview]     = useState<string | null>(null)
-  const [dragOver,       setDragOver]       = useState(false)
 
   const [submitting,  setSubmitting]  = useState(false)
 
@@ -100,14 +99,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     const file = e.target.files?.[0]
     if (file) pickFile(file)
     e.target.value = ''
-  }
-
-  function handleDragOver(e: React.DragEvent)  { e.preventDefault(); setDragOver(true) }
-  function handleDragLeave()                    { setDragOver(false) }
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault(); setDragOver(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file) pickFile(file)
   }
 
   function clearNewImage() { setNewImageFile(null); setNewPreview(null) }

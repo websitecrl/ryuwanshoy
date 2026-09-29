@@ -23,7 +23,7 @@ interface SeriesGridProps {
 
 const STATUS_FILTERS = ['all', 'ongoing', 'completed', 'new']
 
-export default function SeriesGrid({ series, chapterCounts, stats }: SeriesGridProps) {
+export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [search, setSearch] = useState('')

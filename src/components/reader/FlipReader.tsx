@@ -35,11 +35,9 @@ type FlipBookRef = {
 
 export default function FlipReader({
   pages,
-  seriesSlug,
   seriesTitle,
   coverImage,
   chapterNumber,
-  prevHref,
   nextHref,
   uiVisible,
   onToggleUI,
@@ -49,7 +47,7 @@ export default function FlipReader({
   const bookRef    = useRef<FlipBookRef>(null)
   const didSyncRef = useRef(false)
 
-  const [totalPages, setTotalPages] = useState(0)
+  const [, setTotalPages] = useState(0)
   const [isMobile,   setIsMobile]   = useState(false)
   const [bookDims,   setBookDims]   = useState({ width: 400, height: 560 })
 

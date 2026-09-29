@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Settings, HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2, BookOpen } from 'lucide-react'
+import { HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2, BookOpen } from 'lucide-react'
 import { compressImage } from '@/lib/image-compress'
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
@@ -38,6 +38,48 @@ const labelStyle: React.CSSProperties = {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return <div><label style={labelStyle}>{label}</label>{children}</div>
+}
+
+function SaveRow({
+  onClick, saving, sectionKey, label, danger, savedSection,
+}: {
+  onClick: () => void
+  saving: boolean
+  sectionKey: string
+  label: string
+  danger?: boolean
+  savedSection: string | null
+}) {
+  const isError  = savedSection === 'error:' + sectionKey
+  const isSaved  = savedSection === sectionKey
+  const bg       = danger ? '#FEE2E2' : 'var(--ryu-primary)'
+  const color    = danger ? '#DC2626' : '#fff'
+  const border   = danger ? '1px solid #FECACA' : '1px solid var(--ryu-primary-deep)'
+
+  return (
+    <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <button
+        onClick={onClick}
+        disabled={saving}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: bg, color, border, fontSize: 13.5, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
+      >
+        <Save size={14} />
+        {saving ? 'Saving...' : label}
+      </button>
+
+      {(isSaved || isError) && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          fontSize: 13, fontWeight: 600,
+          color: isError ? '#DC2626' : '#16A34A',
+          animation: 'fadeIn 0.2s ease',
+        }}>
+          <CheckCircle2 size={15} />
+          {isError ? 'Failed to save' : 'Saved'}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function SettingsPage() {
@@ -171,47 +213,6 @@ export default function SettingsPage() {
     finally { setSavingPassword(false) }
   }
 
-  function SaveRow({
-    onClick, saving, sectionKey, label, danger,
-  }: {
-    onClick: () => void
-    saving: boolean
-    sectionKey: string
-    label: string
-    danger?: boolean
-  }) {
-    const isError  = savedSection === 'error:' + sectionKey
-    const isSaved  = savedSection === sectionKey
-    const bg       = danger ? '#FEE2E2' : 'var(--ryu-primary)'
-    const color    = danger ? '#DC2626' : '#fff'
-    const border   = danger ? '1px solid #FECACA' : '1px solid var(--ryu-primary-deep)'
-
-    return (
-      <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
-        <button
-          onClick={onClick}
-          disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: bg, color, border, fontSize: 13.5, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
-        >
-          <Save size={14} />
-          {saving ? 'Saving...' : label}
-        </button>
-
-        {(isSaved || isError) && (
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            fontSize: 13, fontWeight: 600,
-            color: isError ? '#DC2626' : '#16A34A',
-            animation: 'fadeIn 0.2s ease',
-          }}>
-            <CheckCircle2 size={15} />
-            {isError ? 'Failed to save' : 'Saved'}
-          </div>
-        )}
-      </div>
-    )
-  }
-
   if (loading) {
     return (
       <div className="p-8 space-y-4">
@@ -301,6 +302,7 @@ export default function SettingsPage() {
               </div>
 
               <SaveRow
+                savedSection={savedSection}
                 onClick={() => handleSave({ site_title: settings.site_title, creator_name: settings.creator_name, site_description: settings.site_description, logo_url: settings.logo_url }, setSavingSite, 'site')}
                 saving={savingSite}
                 sectionKey="site"
@@ -343,6 +345,7 @@ export default function SettingsPage() {
               </div>
 
               <SaveRow
+                savedSection={savedSection}
                 onClick={() => handleSave({ kofi_url: settings.kofi_url, patreon_url: settings.patreon_url, donation_message: settings.donation_message }, setSavingDonation, 'donations')}
                 saving={savingDonation}
                 sectionKey="donations"
@@ -377,6 +380,7 @@ export default function SettingsPage() {
               </div>
 
               <SaveRow
+                savedSection={savedSection}
                 onClick={() => handleSave({ facebook_url: settings.facebook_url, instagram_url: settings.instagram_url, twitter_url: settings.twitter_url, tiktok_url: settings.tiktok_url, youtube_url: settings.youtube_url }, setSavingSocials, 'social')}
                 saving={savingSocials}
                 sectionKey="social"
@@ -396,6 +400,7 @@ export default function SettingsPage() {
                 <Field label="Subtext"><textarea style={{ ...inputStyle, resize: 'vertical' }} rows={2} value={settings.ea_subtext ?? ''} onChange={e => setSettings(p => ({ ...p, ea_subtext: e.target.value }))} placeholder="Sign up to read chapters before anyone else." /></Field>
               </div>
               <SaveRow
+                savedSection={savedSection}
                 onClick={() => handleSave({ ea_headline: settings.ea_headline, ea_subtext: settings.ea_subtext }, setSavingEA, 'early')}
                 saving={savingEA}
                 sectionKey="early"

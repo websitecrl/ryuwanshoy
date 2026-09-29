@@ -2,7 +2,6 @@ import 'server-only'
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
-import { error } from 'console'
 
 // GET — get like count + check if token already liked
 export async function GET(req: NextRequest) {

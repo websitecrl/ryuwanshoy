@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { Fredoka } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";

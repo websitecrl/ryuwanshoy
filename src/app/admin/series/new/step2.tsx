@@ -104,7 +104,7 @@ interface Step2Props {
 export default function Step2({ seriesId, existingChapterId, initialPages = [], onBack, onNext }: Step2Props) {
   const chapterNumber = 1
   const [chapterTitle, setChapterTitle] = useState('')
-  const [isEA,         setIsEA]         = useState(false)
+  const [isEA]         = useState(false)
   const [pages,        setPages]        = useState<LocalPage[]>(initialPages) // ← seeded from parent
   const [dragOver,     setDragOver]     = useState(false)
   const [submitting,   setSubmitting]   = useState(false)

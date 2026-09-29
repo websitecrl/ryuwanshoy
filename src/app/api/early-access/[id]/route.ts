@@ -1,6 +1,5 @@
 import 'server-only'
 import { NextRequest, NextResponse } from "next/server";
-import type { Database } from "@/types/database";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
 

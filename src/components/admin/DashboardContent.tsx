@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { BookOpen, BookMarked, Image, FileEdit, ExternalLink } from 'lucide-react'
+import { BookOpen, FileEdit } from 'lucide-react'
 
 type Series = {
   id: string

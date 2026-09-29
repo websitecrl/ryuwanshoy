@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import ThemeToggle from '@/components/shared/ThemeToggle'
@@ -20,7 +20,6 @@ const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
 
 export default function Sidebar() {
   const pathname = usePathname()
-  const router   = useRouter()
   const supabase = createClient()
 
   const [storage, setStorage] = useState<{
@@ -31,7 +30,6 @@ export default function Sidebar() {
 
   const [siteTitle, setSiteTitle] = useState<string>('')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
-  const [savedSection, setSavedSection] = useState<string | null>(null)
   const [draftCount, setDraftCount] = useState<number>(0)
 
 useEffect(() => {

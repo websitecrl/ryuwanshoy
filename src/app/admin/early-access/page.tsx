@@ -13,8 +13,6 @@ export default function EarlyAccessPage() {
   const [loading, setLoading]     = useState(true)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
-  useEffect(() => { fetchEntries() }, [])
-
   async function fetchEntries() {
     try {
       const res  = await fetch('/api/early-access')
@@ -23,6 +21,8 @@ export default function EarlyAccessPage() {
     } catch (err) { console.error('Failed to fetch entries:', err) }
     finally { setLoading(false) }
   }
+
+  useEffect(() => { fetchEntries() }, [])
 
   const filtered = entries.filter(e => e.email.toLowerCase().includes(search.toLowerCase()))
 

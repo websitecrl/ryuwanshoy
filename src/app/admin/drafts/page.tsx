@@ -42,7 +42,7 @@ type DraftSeries = {
 
 async function getDrafts(): Promise<DraftSeries[]> {
   const supabase = await createClient()
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('series')
     .select(`
       id,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Eye, EyeOff, ArrowRight, AtSign, Lock } from 'lucide-react'
+import Link from 'next/link'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -274,9 +275,9 @@ export default function AdminLoginPage() {
           >
             <span>
               Not staff?{' '}
-              <a href="/" style={{ fontWeight: 600, color: 'var(--ryu-primary-deep)' }}>
+              <Link href="/" style={{ fontWeight: 600, color: 'var(--ryu-primary-deep)' }}>
                 Read at ryuwanshoy.com →
-              </a>
+              </Link>
             </span>
           </div>
 

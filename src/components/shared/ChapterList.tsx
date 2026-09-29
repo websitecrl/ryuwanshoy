@@ -80,7 +80,7 @@ function ChapterRow({
   const href = `/comics/${seriesSlug}/${chapter.chapter_number}`
   const chapterLabel = chapter.title ?? `Chapter ${chapter.chapter_number}`
 
-  function SubLabel() {
+  function renderSubLabel() {
     if (readState.state === 'reading' && readState.currentPage && readState.totalPages) {
       return (
         <span className="text-xs text-[var(--ryu-primary)]">
@@ -128,7 +128,7 @@ function ChapterRow({
           {chapterLabel}
         </p>
         <div className="mt-0.5">
-          <SubLabel />
+          {renderSubLabel()}
         </div>
       </div>
 

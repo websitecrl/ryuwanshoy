@@ -47,7 +47,6 @@ function getReadingProgress(seriesId: string): ReadingProgress | null {
 export default function SeriesHeader({
   series,
   chapterCount,
-  totalPages,
   lastPublishedAt,
   firstChapterNumber,
 }: Props) {
