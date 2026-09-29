@@ -5,7 +5,7 @@ import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
-  serverExternalPackages:["sharp", "@img/sharp-wasm32",  "@aws-sdk/client-s3"],
+  serverExternalPackages:["sharp", "@img/sharp-wasm32"],
   images: {
     // TEMPORARY STOPGAP: unoptimized in all environments, not just dev.
     // Next's built-in optimizer on Cloudflare Workers (via OpenNext) routes
@@ -55,13 +55,6 @@ const nextConfig: NextConfig = {
     ]
   },
   poweredByHeader: false,
-  webpack: (config) => {
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true
-    }
-    return config
-  }
 };
 
 export default withSentryConfig(nextConfig, {
