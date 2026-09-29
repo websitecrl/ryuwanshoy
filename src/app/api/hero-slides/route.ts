@@ -13,8 +13,8 @@ export async function GET() {
     .select(`
       id, headline, banner_image, is_visible,
       order_index, series_id, chapter_id,
-      series ( title, slug, min_age ),
-      chapter:chapter_id ( id, chapter_number )
+      series ( title, slug, min_age, is_published ),
+      chapter:chapter_id ( id, chapter_number, is_published, is_draft )
     `)
     .order('order_index', { ascending: true })
 
@@ -28,7 +28,22 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  if (isAdmin) return NextResponse.json(data)
+
+  // The service-role client bypasses RLS, so apply the same visibility the
+  // anon client gets: unpublished series and unpublished/draft chapters are
+  // nulled out, matching the home page's server-rendered hero query.
+  const visible = (data ?? []).map(({ series, chapter, ...slide }) => ({
+    ...slide,
+    series: series?.is_published
+      ? { title: series.title, slug: series.slug, min_age: series.min_age }
+      : null,
+    chapter: chapter?.is_published && chapter.is_draft === false
+      ? { id: chapter.id, chapter_number: chapter.chapter_number }
+      : null,
+  }))
+
+  return NextResponse.json(visible)
 }
 
 // ─── POST — admin only ────────────────────────────────────────────────────────

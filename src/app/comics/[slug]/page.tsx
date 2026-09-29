@@ -41,6 +41,7 @@ chapters (
           chapter_number,
           is_early_access,
           is_published,
+          is_draft,
           published_at,
           created_at,
           pages (count)
@@ -57,7 +58,7 @@ chapters (
 
 // Filter drafts server-side — only pass published chapters to the client
     const chapters: ChapterWithPageCount[] = (raw.chapters ?? [])
-      .filter(ch => ch.is_published === true)
+      .filter(ch => ch.is_published === true && ch.is_draft === false)
       .map(ch => ({
         ...ch,
         page_count: Number(ch.pages?.[0]?.count ?? 0),

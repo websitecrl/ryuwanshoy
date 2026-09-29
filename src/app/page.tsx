@@ -78,7 +78,7 @@ async function getLatestChapters() {
         is_early_access,
         published_at,
         is_published,
-        series:series_id (
+        series:series_id!inner (
           title,
           slug,
           cover_image,
@@ -87,16 +87,13 @@ async function getLatestChapters() {
         )
       `)
       .eq('is_published', true)
+      .eq('is_draft', false)
+      .eq('series.is_published', true)
       .order('published_at', { ascending: false })
       .limit(6)
 
     if (error) throw error
-
-    // Also filter out chapters whose series is unpublished
-    return (data ?? []).filter(ch => {
-      const series = ch.series as unknown as { is_published: boolean } | null
-      return series?.is_published === true
-    })
+    return data ?? []
   } catch {
     return []
   }
