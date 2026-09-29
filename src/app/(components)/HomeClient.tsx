@@ -78,22 +78,23 @@ export default function HomeClient({
   const fetchHeroSlides = useCallback(async () => {
     const res = await fetch("/api/hero-slides");
     if (!res.ok) return;
-    const json = await res.json() as { slides: HeroSlide[] };
-    setHeroSlides(json.slides ?? []);
+    // Route returns a bare array; admins also get hidden slides, so re-filter.
+    const json = await res.json() as HeroSlide[];
+    setHeroSlides((json ?? []).filter(s => s.is_visible));
   }, []);
 
   const fetchChapters = useCallback(async () => {
-    const res = await fetch("/api/chapters?limit=6");
+    const res = await fetch("/api/chapters/latest?limit=6");
     if (!res.ok) return;
-    const json = await res.json() as { chapters: Chapter[] };
-    setChapters(json.chapters ?? []);
+    const json = await res.json() as { data: Chapter[] };
+    setChapters(json.data ?? []);
   }, []);
 
   const fetchPosts = useCallback(async () => {
     const res = await fetch("/api/posts?limit=4");
     if (!res.ok) return;
-    const json = await res.json() as { posts: Post[] };
-    setPosts(json.posts ?? []);
+    const json = await res.json() as { data: Post[] };
+    setPosts(json.data ?? []);
   }, []);
 
   const handleComicsChange = useCallback(() => {

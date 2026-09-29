@@ -1,73 +1,83 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import ReaderShell from '@/components/reader/ReaderShell'
-import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 type AdjacentChapter = { chapter_number: number } | null
 
-async function getChapterData(slug: string, chapterNumber: number) {
+// cache() dedupes the call between generateMetadata and the page render.
+const getChapterData = cache(async (slug: string, chapterNumber: number) => {
   const supabase = await createClient()
 
-  // 1. Series
+  // 1. Series (published only)
   const { data: series, error: seriesError } = await supabase
     .from('series')
     .select('id, title, slug, cover_image, status')
     .eq('slug', slug)
+    .eq('is_published', true)
     .single()
 
   if (seriesError || !series) return null
 
-  // 2. Chapter
-  const { data: chapter, error: chapterError } = await supabase
-    .from('chapters')
-    .select('id, title, chapter_number, is_early_access, is_published, is_draft, published_at, series_id')
-    .eq('series_id', series.id)
-    .eq('chapter_number', chapterNumber)
-    .eq('is_published', true)
-    .eq('is_draft', false)
-    .single()
+  // 2. Chapter, prev, next, and all chapters only depend on the series
+  const [
+    { data: chapter, error: chapterError },
+    { data: prevChapter },
+    { data: nextChapter },
+    { data: allChapters },
+  ] = await Promise.all([
+    supabase
+      .from('chapters')
+      .select('id, title, chapter_number, is_early_access, is_published, is_draft, published_at, series_id')
+      .eq('series_id', series.id)
+      .eq('chapter_number', chapterNumber)
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .single(),
+
+    supabase
+      .from('chapters')
+      .select('chapter_number')
+      .eq('series_id', series.id)
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .lt('chapter_number', chapterNumber)
+      .order('chapter_number', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+
+    supabase
+      .from('chapters')
+      .select('chapter_number')
+      .eq('series_id', series.id)
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .gt('chapter_number', chapterNumber)
+      .order('chapter_number', { ascending: true })
+      .limit(1)
+      .maybeSingle(),
+
+    // For the chapter picker in the top bar
+    supabase
+      .from('chapters')
+      .select('id, chapter_number, title, is_early_access')
+      .eq('series_id', series.id)
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .order('chapter_number', { ascending: true }),
+  ])
 
   if (chapterError || !chapter) return null
 
   // 3. Pages
-  const { data: pages } = await supabaseAdmin
+  const { data: pages } = await supabase
     .from('pages')
     .select('id, image_url, page_number, chapter_id, is_spread')
     .eq('chapter_id', chapter.id)
     .order('page_number', { ascending: true })
-  // 4. Prev chapter
-  const { data: prevChapter } = await supabase
-    .from('chapters')
-    .select('chapter_number')
-    .eq('series_id', series.id)
-    .eq('is_published', true)
-    .lt('chapter_number', chapterNumber)
-    .order('chapter_number', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  // 5. Next chapter
-  const { data: nextChapter } = await supabase
-    .from('chapters')
-    .select('chapter_number')
-    .eq('series_id', series.id)
-    .eq('is_published', true)
-    .gt('chapter_number', chapterNumber)
-    .order('chapter_number', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  // 6. All chapters — for the chapter picker in the top bar
-  const { data: allChapters } = await supabase
-    .from('chapters')
-    .select('id, chapter_number, title, is_early_access')
-    .eq('series_id', series.id)
-    .eq('is_published', true)
-    .eq('is_draft', false)
-    .order('chapter_number', { ascending: true })
 
   return {
     series,
@@ -77,7 +87,7 @@ async function getChapterData(slug: string, chapterNumber: number) {
     prevChapter: prevChapter as AdjacentChapter,
     nextChapter: nextChapter as AdjacentChapter,
   }
-}
+})
 
 export async function generateMetadata({
   params,

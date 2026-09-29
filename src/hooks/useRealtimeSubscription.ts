@@ -15,13 +15,17 @@ export function useRealtimeSubscription({
     tables,
     onChange,
 }: Options) {
+    // Callers pass a fresh array literal each render; key on its contents
+    // so the channel only resubscribes when the table list actually changes.
+    const tablesKey = tables.join(',');
+
     useEffect(() => {
         const supabase = createClient();
 
         //Build the channel - chain .on() for each table dynamically
         let channel = supabase.channel(channelName);
 
-        for (const table of tables) {
+        for (const table of tablesKey.split(',').filter(Boolean)) {
             channel = channel.on( "postgres_changes", { event: '*', schema: 'public', table }, onChange);
         }
 
@@ -31,5 +35,5 @@ export function useRealtimeSubscription({
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [channelName, tables, onChange]);
+    }, [channelName, tablesKey, onChange]);
 }

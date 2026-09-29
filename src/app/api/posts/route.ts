@@ -24,6 +24,11 @@ export async function GET(req: NextRequest) {
       query = query.eq('post_type', type)
     }
 
+    const limit = Number(req.nextUrl.searchParams.get('limit'))
+    if (Number.isInteger(limit) && limit > 0) {
+      query = query.limit(Math.min(limit, 100))
+    }
+
     const { data, error } = await query
 
     if (error) throw error

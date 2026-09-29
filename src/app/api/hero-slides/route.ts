@@ -13,7 +13,8 @@ export async function GET() {
     .select(`
       id, headline, banner_image, is_visible,
       order_index, series_id, chapter_id,
-      series ( title, slug )
+      series ( title, slug, min_age ),
+      chapter:chapter_id ( id, chapter_number )
     `)
     .order('order_index', { ascending: true })
 
