@@ -1,15 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import HomeClient from './(components)/HomeClient'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getSettings } from '@/lib/settings'
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata() {
   try {
-    const { data } = await supabaseAdmin
-      .from('settings')
-      .select('site_title, site_description, logo_url')
-      .single()
+    const data = await getSettings()
 
     const title = data?.site_title ?? 'Ryuwanshoy'
     const description = data?.site_description ?? 'A Filipino webcomic by Ryu'
@@ -121,21 +118,6 @@ async function getRecentPosts() {
     return []
   }
 }
-
-async function getSettings() {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('settings')
-      .select('site_title, creator_name, site_description, logo_url, facebook_url, instagram_url, twitter_url, tiktok_url, youtube_url')
-      .single()
-
-    if ( error ) throw error
-    return data 
-  } catch {
-    return null
-  }
-}
-
 
 export default async function HomePage() {
   const [heroSlides, latestChapters, recentPosts, settings] = await Promise.all([

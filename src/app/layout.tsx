@@ -3,37 +3,11 @@ import { Fredoka } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";
 import AgeGate from "@/components/shared/AgeGate";
-import { createClient } from "@/lib/supabase/server";
+import { getSettings } from "@/lib/settings";
 import { Toaster } from 'sonner'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 
-export const revalidate = 0
-
-async function getSiteTitle(): Promise<string | null> {
-  try {
-    const supabase = await createClient()
-    const { data } = await supabase 
-      .from('settings')
-      .select('site_title')
-      .single()
-    return data?.site_title ?? null
-  }catch {
-    return null
-  }
-}
-
-async function getSiteSettings() {
-  try {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from('settings')
-      .select('site_title, logo_url, facebook_url, instagram_url, twitter_url, youtube_url, tiktok_url')
-      .single()
-    return data
-  } catch {
-    return null
-  }
-}
+export const dynamic = 'force-dynamic'
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
@@ -46,7 +20,7 @@ export default async function RootLayout({ children,}: Readonly<{
   children: React.ReactNode;
 }>) {
 
-  const settings = await getSiteSettings()
+  const settings = await getSettings()
   return (
     // suppressHydrationWarning: THEME_INIT_SCRIPT adds `dark` to <html> before
     // React hydrates, so the class list intentionally differs from the server's.

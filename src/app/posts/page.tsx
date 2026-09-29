@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Random drawings, WIPs, memes, and everything in between.',
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 const POST_TYPES = ['sketch', 'drawing', 'meme', 'other']
 

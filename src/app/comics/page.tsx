@@ -21,7 +21,7 @@ export async function generateMetadata() {
   }
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
 
 export default async function ComicsPage() {
   const supabase = await createClient()

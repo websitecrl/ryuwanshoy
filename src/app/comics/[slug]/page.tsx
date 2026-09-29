@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
@@ -19,12 +20,13 @@ type RawSeries = Tables<'series'> & {
   chapters: RawChapter[]
 }
 
-async function getSeriesBySlug(slug: string): Promise<{
+// cache() dedupes the call between generateMetadata and the page render.
+const getSeriesBySlug = cache(async (slug: string): Promise<{
   series: Tables<'series'>
   chapters: ChapterWithPageCount[]
   totalPages: number
   lastPublishedAt: string | null
-} | null> {
+} | null> => {
   try {
     const supabase = await createClient()
 
@@ -81,7 +83,7 @@ chapters (
   } catch {
     return null
   }
-}
+})
 
 export async function generateMetadata({
   params,
