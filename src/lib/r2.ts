@@ -103,13 +103,19 @@ export async function uploadToR2(
   const ext = contentType.split('/')[1] ?? 'jpg'
   const key = `${folder}/${filename ?? uuidv4()}.${ext}`
 
-  const res = await client.fetch(`${endpoint}/${bucket}/${key}`, {
+  const signed = await client.sign(`${endpoint}/${bucket}/${key}`, {
     method: 'PUT',
     body: buffer,
     headers: {
       'Content-Type':  contentType,
       'Cache-Control': 'public, max-age=31536000, immutable', // cache for 1 year
     },
+  })
+
+  const res = await fetch(signed.url, {
+    method: 'PUT',
+    headers: signed.headers,
+    body: buffer,
   })
 
   // Unlike the AWS SDK's client.send(), plain fetch() does NOT throw on a
@@ -259,11 +265,17 @@ export async function uploadToEAR2(
   const ext          = contentType.split('/')[1] ?? 'jpg'
   const key          = `${folder}/${filename ?? uuidv4()}.${ext}`
 
-  const res = await client.fetch(`${endpoint}/${eaBucket}/${key}`, {
+  const signed = await client.sign(`${endpoint}/${eaBucket}/${key}`, {
     method: 'PUT',
     body: buffer,
     headers: { 'Content-Type': contentType },
     // No Cache-Control here — these aren't meant to be cached publicly.
+  })
+
+  const res = await fetch(signed.url, {
+    method: 'PUT',
+    headers: signed.headers,
+    body: buffer,
   })
 
   if (!res.ok) {
