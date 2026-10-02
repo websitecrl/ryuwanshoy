@@ -439,6 +439,10 @@ CREATE POLICY "Admin can read all chapters" ON "public"."chapters" FOR SELECT TO
 
 
 
+CREATE POLICY "Admin can read all pages" ON "public"."pages" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = '190ec053-21ae-42bd-90de-fb0cd7e4f915'::"uuid"));
+
+
+
 CREATE POLICY "Admin can read all series" ON "public"."series" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = '190ec053-21ae-42bd-90de-fb0cd7e4f915'::"uuid"));
 
 
