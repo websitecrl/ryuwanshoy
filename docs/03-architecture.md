@@ -100,7 +100,7 @@ Practical implications for contributors:
 
 ## Images
 
-`next/image` is used throughout but with `unoptimized: true`, so it emits plain `<img>` with the original URL. Remote images must be on an allowed host: `next.config.ts` `remotePatterns` and the CSP `img-src` both list the R2 public host (currently hard-coded — see [Known issues](./14-known-issues-and-roadmap.md#hard-coded-r2-hostname)).
+`next/image` is used throughout but with `unoptimized: true`, so it emits plain `<img>` with the original URL. Remote images must be on an allowed host: `next.config.ts` `remotePatterns` and the CSP `img-src` both list the R2 public host, set once by the `R2_HOST` constant at the top of `next.config.ts` (`img.ryuwanshoy.com`). It must match the origin in `R2_PUBLIC_URL`; changing one without the other blocks every image. `LEGACY_R2_HOST` (the old `*.r2.dev` origin) is still allowed while pre-switch URLs are phased out, and `src/lib/r2.ts` has a matching `LEGACY_PUBLIC_URLS` so `deleteFromR2` still recognises them.
 
 ## Error, loading and not-found UI
 

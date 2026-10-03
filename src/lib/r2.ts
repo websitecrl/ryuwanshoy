@@ -139,28 +139,46 @@ export async function uploadToR2(
   return `${publicUrl}/${key}?v=${Date.now()}`
 }
 
+// Public origins the same bucket was served from before R2_PUBLIC_URL moved
+// to the custom domain. Rows written before the switch still carry these, and
+// without this list deleteFromR2 would skip them as "not an R2 URL" and
+// orphan the object. Remove once no stored URL uses them (see the
+// 20261003130000_rewrite_r2_public_urls migration and next.config.ts).
+const LEGACY_PUBLIC_URLS = ['https://pub-5657faa0f50f468797255fb5df45f6ae.r2.dev']
+
+/**
+ * Returns the object key for a public URL served from this bucket — via the
+ * current R2_PUBLIC_URL or a legacy origin — or null if it isn't one.
+ * Strips the "?v=..." cache-busting suffix uploadToR2 appends; the actual R2
+ * object Key never includes it, only the returned URL does.
+ */
+function keyFromPublicUrl(url: string, publicUrl: string): string | null {
+  for (const origin of [publicUrl, ...LEGACY_PUBLIC_URLS]) {
+    // Match on "origin/" so a look-alike host (origin + ".evil.example")
+    // can't pass as ours.
+    const prefix = `${origin.replace(/\/$/, '')}/`
+    if (url.startsWith(prefix)) {
+      return url.slice(prefix.length).split('?')[0] || null
+    }
+  }
+  return null
+}
+
 /**
  * Deletes a file from Cloudflare R2 by its public URL.
  * Extracts the key from the URL and issues a DELETE.
  *
  * @param url - the full public URL of the file to delete
- * @throws if the URL's key can't be extracted, or the DELETE to R2 fails
+ * @throws if the DELETE to R2 fails
  */
 export async function deleteFromR2(url: string): Promise<void> {
   const { client, bucket, endpoint, publicUrl } = getR2()
 
   // Skip if not an R2 URL — could be a leftover Cloudinary URL
-  if (!url.startsWith(publicUrl)) {
+  const key = keyFromPublicUrl(url, publicUrl)
+  if (!key) {
     console.warn('Skipping delete — not an R2 URL:', url)
     return
-  }
-
-  // Strip the "?v=..." cache-busting suffix uploadToR2 appends — the actual
-  // R2 object Key never includes it, only the returned URL does.
-  const key = url.replace(`${publicUrl}/`, '').split('?')[0]
-
-  if (!key || key === url) {
-    throw new Error(`Could not extract key from URL: ${url}`)
   }
 
   const res = await client.fetch(`${endpoint}/${bucket}/${key}`, {
@@ -182,7 +200,7 @@ export async function deleteFromR2(url: string): Promise<void> {
  */
 export function extractR2Key(url: string): string {
   const { publicUrl } = getR2()
-  return url.replace(`${publicUrl}/`, '').split('?')[0] ?? ''
+  return keyFromPublicUrl(url, publicUrl) ?? ''
 }
 
 /**
