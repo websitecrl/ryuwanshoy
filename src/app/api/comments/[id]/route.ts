@@ -84,7 +84,10 @@ export async function DELETE(
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const isAdmin = user?.id === process.env.ADMIN_USER_ID
+  // Both sides must be set: undefined === undefined would make an anonymous
+  // caller "admin" if ADMIN_USER_ID were missing from the environment.
+  const adminId = process.env.ADMIN_USER_ID
+  const isAdmin = !!user && !!adminId && user.id === adminId
 
   if (!isAdmin) {
     let edit_token: string | undefined
