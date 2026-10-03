@@ -6,6 +6,7 @@ import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2,
 import { timeAgo } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
+import { toastRateLimited } from '@/lib/rate-limit-toast'
 
 type Post = {
   id: string
@@ -82,7 +83,7 @@ function getToken(commentId: string): string | null {
  * promise rejection instead of a toast).
  *
  * `status` is attached to the thrown error so callers that need to special-
- * case a status code (handleSubmit's 429 rate-limit message) still can.
+ * case a status code (429 → isRateLimitError) still can.
  */
 async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init)
@@ -97,6 +98,11 @@ async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
     throw error
   }
   return data as T
+}
+
+/** True when fetchJson threw because a Workers rate limiter returned 429. */
+function isRateLimitError(err: unknown): boolean {
+  return err instanceof Error && (err as Error & { status?: number }).status === 429
 }
 
 // ─── Single comment row (top-level or reply) ─────────────────────────────────
@@ -157,6 +163,7 @@ function CommentRow({
       setEditing(false)
       toast.success('Comment updated.')
     } catch (err) {
+      if (isRateLimitError(err)) { toastRateLimited(); return }
       toast.error(err instanceof Error ? err.message : 'Failed to update comment.')
     } finally {
       setSaving(false)
@@ -179,6 +186,7 @@ function CommentRow({
       setShowReply(false)
       toast.success('Reply posted!')
     } catch (err) {
+      if (isRateLimitError(err)) { toastRateLimited(); return }
       toast.error(err instanceof Error ? err.message : 'Failed to post reply.')
     } finally {
       setReplySubmitting(false)
@@ -566,6 +574,11 @@ export default function PostModal({ post, onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ post_id: post.id, like_token: getLikeToken() }),
       })
+      if (res.status === 429) {
+        setLikeState(previous)
+        toastRateLimited()
+        return
+      }
       if (!res.ok) throw new Error('Failed to update like.')
       const { liked: serverLiked, count: serverCount } = await res.json() as { liked: boolean; count: number }
       // Server is the source of truth — reconcile in case another tab/
@@ -632,12 +645,8 @@ export default function PostModal({ post, onClose }: Props) {
       setContent('')
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     } catch (err) {
-      const status = err instanceof Error ? (err as Error & { status?: number }).status : undefined
-      setSubmitError(
-        status === 429
-          ? 'One comment per minute — try again shortly.'
-          : err instanceof Error ? err.message : 'Something went wrong.'
-      )
+      if (isRateLimitError(err)) { toastRateLimited(); return }
+      setSubmitError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
       setSubmitting(false)
     }
@@ -659,6 +668,7 @@ export default function PostModal({ post, onClose }: Props) {
       await refetchComments()
       toast.success('Comment deleted.')
     } catch (err) {
+      if (isRateLimitError(err)) { toastRateLimited(); return }
       toast.error(err instanceof Error ? err.message : 'Failed to delete comment.')
     }
   }
