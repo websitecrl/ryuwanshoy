@@ -10,6 +10,19 @@
 --
 -- After applying, regenerate src/types/database.ts with the Supabase CLI.
 
+-- Stop the pg_cron job that cleaned up rate_limits rows. In production this
+-- was unscheduled by hand before the drops below; recorded here so the file
+-- matches what ran. Guarded so it's a no-op if pg_cron or the job is absent.
+DO $$
+BEGIN
+  IF to_regclass('cron.job') IS NOT NULL THEN
+    IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'cleanup-rate-limits') THEN
+      PERFORM cron.unschedule('cleanup-rate-limits');
+    END IF;
+  END IF;
+END
+$$;
+
 -- Function first: it writes to rate_limits.
 DROP FUNCTION IF EXISTS public.check_rate_limit(text, integer, integer);
 
