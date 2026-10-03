@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ReCAPTCHA from "react-google-recaptcha";
 import type { Database } from "@/types/database";
+import { toastRateLimited } from "@/lib/rate-limit-toast";
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -161,6 +162,15 @@ export default function EarlyAccessPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email.trim(), recaptchaToken }),
       });
+
+      if (res.status === 429) {
+        // Rate limited before reCAPTCHA was verified. The token may expire
+        // during the wait, so reset it and let them try again after the toast.
+        toastRateLimited();
+        setFormState({ status: "idle" });
+        recaptchaRef.current?.reset();
+        return;
+      }
 
       const json = (await res.json()) as {
         message?: string;
