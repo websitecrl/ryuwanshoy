@@ -149,13 +149,12 @@ export default function PageUploader({
         // are what were blowing the Worker's free-tier CPU limit. Pages are
         // full-bleed art with no transparency, so JPEG output is safe here.
         const base64      = await compressImage(file, { maxDimension: 1600, forceJpeg: true })
-        const page_number = pages.length + uploaded.length + 1
         const dim         = await getImageDimensionns(file)
         const is_spread   = dim.width > dim.height    // landscape = spread
         const res  = await fetch('/api/pages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64: base64, page_number, is_spread }),
+          body: JSON.stringify({ chapter_id: chapterId, imageBase64: base64, is_spread }),
         })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Upload failed')
@@ -167,7 +166,7 @@ export default function PageUploader({
     } finally {
       setUploading(false)
     }
-  }, [chapterId, pages.length])
+  }, [chapterId])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     uploadFiles(Array.from(e.target.files ?? []))

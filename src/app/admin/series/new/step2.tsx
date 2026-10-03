@@ -190,7 +190,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
         const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
         const res  = await fetch('/api/pages', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1, is_spread: page.is_spread ?? false }),
+          body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.is_spread ?? false }),
         })
         const json = await res.json()
         setPages(prev => prev.map(p => p.id === page.id
