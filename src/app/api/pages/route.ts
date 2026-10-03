@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2 } from '@/lib/r2'
+import { deleteFromR2, uploadToR2 } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -35,12 +35,35 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    if (body.page_number === undefined || typeof body.page_number !== 'number') {
+    // Check the chapter before uploading so a bad id doesn't leave an
+    // orphaned object in R2.
+    const { data: chapter, error: chapterError } = await supabaseAdmin
+      .from('chapters')
+      .select('id')
+      .eq('id', body.chapter_id)
+      .maybeSingle()
+
+    if (chapterError) throw chapterError
+    if (!chapter) {
       return NextResponse.json(
-        { data: null, error: 'page_number is required' },
-        { status: 400 }
+        { data: null, error: 'Chapter not found' },
+        { status: 404 }
       )
     }
+
+    // page_number is assigned here (append = max + 1), never taken from the
+    // client — a client-computed number goes stale after a delete/reorder.
+    // Callers upload sequentially, so this preserves their intended order.
+    const { data: last, error: lastError } = await supabaseAdmin
+      .from('pages')
+      .select('page_number')
+      .eq('chapter_id', body.chapter_id)
+      .order('page_number', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (lastError) throw lastError
+    const pageNumber = (last?.page_number ?? 0) + 1
 
     let imageUrl: string
     try {
@@ -50,11 +73,11 @@ export async function POST(req: NextRequest) {
       // in progress) are currently broken on this Workers deployment.
       // Revisit once either is resolved — see src/lib/image-processing.ts
       // for full history of what's been tried.
-      imageUrl = await uploadToR2(
-        body.imageBase64,
-        'pages',
-        `chapter-${body.chapter_id}-page-${body.page_number}`
-      )
+      //
+      // No filename → uploadToR2 generates a UUID key. The old
+      // `chapter-{id}-page-{n}` key was tied to position, so after a delete
+      // renumbered the chapter, the next upload overwrote another page's image.
+      imageUrl = await uploadToR2(body.imageBase64, 'pages')
     } catch (err) {
       console.error('POST /api/pages upload error:', err)
       return NextResponse.json(
@@ -67,13 +90,22 @@ export async function POST(req: NextRequest) {
       .insert({
         chapter_id:  body.chapter_id,
         image_url:   imageUrl,
-        page_number: body.page_number,
+        page_number: pageNumber,
         is_spread:   body.is_spread ?? false,
       })
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      // UUID keys are never reused, so an object without a row would sit in
+      // the bucket forever — remove it before reporting the failure.
+      try {
+        await deleteFromR2(imageUrl)
+      } catch (cleanupErr) {
+        console.error('POST /api/pages orphan cleanup failed for:', imageUrl, cleanupErr)
+      }
+      throw error
+    }
 
     return NextResponse.json({ data, error: null }, { status: 201 })
   } catch (error) {
