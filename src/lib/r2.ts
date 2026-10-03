@@ -206,7 +206,8 @@ const xmlEscape = (s: string) =>
  * only 50 subrequests per request, so a single 40+ page chapter would hit
  * the cap partway through and leave the rest orphaned.
  *
- * Accepts public URLs (public bucket) and "ea:" keys (private EA bucket).
+ * Accepts public URLs (public bucket, current or legacy origin) and "ea:"
+ * keys (private EA bucket).
  * Anything else (e.g. a leftover Cloudinary URL) is skipped with a warning.
  * Never throws for a failed delete — it returns the refs that weren't
  * removed so the caller can log and report them; it does throw if R2 is
@@ -222,10 +223,12 @@ export async function deleteManyFromR2(refs: string[]): Promise<{ failed: string
   for (const ref of new Set(refs)) {
     if (ref.startsWith('ea:')) {
       byBucket.get(eaBucket)!.set(ref.slice(3), ref)
-    } else if (ref.startsWith(`${publicUrl}/`)) {
-      // Strip the "?v=..." cache-busting suffix uploadToR2 appends.
-      const key = ref.slice(publicUrl.length + 1).split('?')[0]
-      if (key) byBucket.get(bucket)!.set(key, ref)
+      continue
+    }
+    // Same matching as deleteFromR2 — current or legacy origin, "?v=" stripped.
+    const key = keyFromPublicUrl(ref, publicUrl)
+    if (key) {
+      byBucket.get(bucket)!.set(key, ref)
     } else {
       console.warn('Skipping delete — not an R2 URL:', ref)
     }
