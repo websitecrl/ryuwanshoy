@@ -1,7 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
-import { checkRateLimit, getClientIp } from "@/lib/rate-limit"
+import { rateLimit } from "@/lib/rate-limit-cf"
 
 // GET — get like count + check if token already liked
 export async function GET(req: NextRequest) {
@@ -34,15 +34,9 @@ export async function GET(req: NextRequest) {
 
 // POST — toggle like
 export async function POST(req: NextRequest) {
-  const ip = getClientIp(req)
-
-  // Check if the Ip made more than 20likes or unlikes in the last 60 seconds 
-  if (!(await checkRateLimit(`like:${ip}`, 20, 60_000))) {
-    return NextResponse.json(
-      { error: 'Too many requests. Please slow down.'},
-      { status: 429 }
-    )
-  }
+  // Max 20 likes or unlikes per IP per 60 seconds (LIKE_LIMITER in wrangler.jsonc)
+  const limited = await rateLimit(req, 'LIKE_LIMITER')
+  if (limited) return limited
 
   const { post_id, like_token } = await req.json()
 
