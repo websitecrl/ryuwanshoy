@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Pencil, Trash2, Send, MessageSquare, CornerDownRight } from 'lucide-react'
 import { toast } from 'sonner'
+import { toastRateLimited } from '@/lib/rate-limit-toast'
 import { timeAgo } from '@/lib/time'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ function ReplyForm({
           content:   trimContent,
         }),
       })
+      if (res.status === 429) { toastRateLimited(); return }
       const data = await res.json() as Comment & { edit_token?: string; error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Failed to post reply.')
 
@@ -168,6 +170,7 @@ function CommentRow({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: trimmed, edit_token: token }),
       })
+      if (res.status === 429) { toastRateLimited(); return }
       if (!res.ok) {
         const { error } = await res.json() as { error: string }
         throw new Error(error ?? 'Failed to update')
@@ -362,6 +365,7 @@ export default function SeriesComments({ seriesId }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ series_id: seriesId, name: 'Anonymous', content: trimContent }),
       })
+      if (res.status === 429) { toastRateLimited(); return }
       const data = await res.json() as Comment & { edit_token?: string; error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Failed to post comment.')
 
@@ -390,6 +394,7 @@ export default function SeriesComments({ seriesId }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ edit_token: token }),
       })
+      if (res.status === 429) { toastRateLimited(); return }
       if (!res.ok) {
         const { error } = await res.json() as { error: string }
         throw new Error(error ?? 'Delete failed.')
