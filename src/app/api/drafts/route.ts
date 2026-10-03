@@ -1,65 +1,57 @@
 import 'server-only'
-import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
+import { deleteConfirmedDrafts, getDraftPreview } from '@/lib/drafts'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
 // ─── GET /api/drafts ──────────────────────────────────────────────────────────
-// Admin only — returns count of unpublished series and chapters
+// Admin only — what "Delete all drafts" would remove right now. `count` feeds
+// the sidebar badge; the lists feed the confirm dialog. Same rule as DELETE
+// (see src/lib/drafts.ts), so the badge always matches what gets deleted.
 export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
   try {
-    const [{ count: seriesCount }, { count: chaptersCount }] = await Promise.all([
-      supabaseAdmin
-        .from('series')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_published', false),
-      supabaseAdmin
-        .from('chapters')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_published', false)
-    ])
-
-    const count = (seriesCount ?? 0) + (chaptersCount ?? 0)
-
-    return NextResponse.json({ count })
+    return NextResponse.json(await getDraftPreview())
   } catch (err) {
-    console.error('GET /api/drafts error:', err )
-    return NextResponse.json({ count: 0 })
+    console.error('GET /api/drafts error:', err)
+    return NextResponse.json({ error: 'Failed to load drafts' }, { status: 500 })
   }
 }
 
 // ─── DELETE /api/drafts ───────────────────────────────────────────────────────
-// Admin only — deletes all unpublished series and chapters
-export async function DELETE() {
+// Admin only — body: { seriesIds: string[], chapterIds: string[] }, the ids the
+// confirm dialog showed. Deletes only those that still match the draft rule;
+// never a published chapter, never a series with a published chapter.
+export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
+  let body: unknown
   try {
-    const { error: seriesError } = await supabaseAdmin
-      .from('series')
-      .delete()
-      .eq('is_published', false)
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
 
-    if (seriesError) throw seriesError
+  const isIdList = (v: unknown): v is string[] =>
+    Array.isArray(v) && v.every(id => typeof id === 'string')
+  const { seriesIds, chapterIds } = (body ?? {}) as Record<string, unknown>
 
-    const { error: chaptersError } = await supabaseAdmin
-      .from('chapters')
-      .delete()
-      .eq('is_published', false)
+  if (!isIdList(seriesIds) || !isIdList(chapterIds)) {
+    return NextResponse.json(
+      { error: 'seriesIds and chapterIds must be string arrays' },
+      { status: 400 }
+    )
+  }
 
-    if (chaptersError) throw chaptersError
-
-    return NextResponse.json({ success: true })
+  try {
+    return NextResponse.json(await deleteConfirmedDrafts({ seriesIds, chapterIds }))
   } catch (err) {
     console.error('DELETE /api/drafts error:', err)
-    return NextResponse.json(
-      { error: 'Failed to delete drafts' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete drafts' }, { status: 500 })
   }
 }
