@@ -1,5 +1,6 @@
 import 'server-only'
 import { AwsClient } from 'aws4fetch'
+import { createHash } from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
 
 // R2 is S3-compatible, so we talk to it with SigV4-signed HTTP requests.
@@ -192,6 +193,88 @@ export async function deleteFromR2(url: string): Promise<void> {
   if (!res.ok) {
     throw new Error(`R2 delete failed (${res.status}): ${await res.text()}`)
   }
+}
+
+const xmlEscape = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
+/**
+ * Deletes many objects with S3 DeleteObjects — one request per 1000 keys.
+ *
+ * Use this instead of looping deleteFromR2 for bulk deletes: every
+ * deleteFromR2 call is its own fetch(), and the Workers free plan allows
+ * only 50 subrequests per request, so a single 40+ page chapter would hit
+ * the cap partway through and leave the rest orphaned.
+ *
+ * Accepts public URLs (public bucket) and "ea:" keys (private EA bucket).
+ * Anything else (e.g. a leftover Cloudinary URL) is skipped with a warning.
+ * Never throws for a failed delete — it returns the refs that weren't
+ * removed so the caller can log and report them; it does throw if R2 is
+ * misconfigured (via getR2()).
+ *
+ * @returns failed - refs that could not be deleted
+ */
+export async function deleteManyFromR2(refs: string[]): Promise<{ failed: string[] }> {
+  const { client, bucket, eaBucket, endpoint, publicUrl } = getR2()
+
+  // bucket name → (key → original ref, for reporting)
+  const byBucket = new Map<string, Map<string, string>>([[bucket, new Map()], [eaBucket, new Map()]])
+  for (const ref of new Set(refs)) {
+    if (ref.startsWith('ea:')) {
+      byBucket.get(eaBucket)!.set(ref.slice(3), ref)
+    } else if (ref.startsWith(`${publicUrl}/`)) {
+      // Strip the "?v=..." cache-busting suffix uploadToR2 appends.
+      const key = ref.slice(publicUrl.length + 1).split('?')[0]
+      if (key) byBucket.get(bucket)!.set(key, ref)
+    } else {
+      console.warn('Skipping delete — not an R2 URL:', ref)
+    }
+  }
+
+  const failed: string[] = []
+
+  for (const [bucketName, keys] of byBucket) {
+    const entries = [...keys.entries()]
+    for (let i = 0; i < entries.length; i += 1000) {
+      const chunk = entries.slice(i, i + 1000)
+      const body =
+        '<?xml version="1.0" encoding="UTF-8"?><Delete><Quiet>true</Quiet>' +
+        chunk.map(([key]) => `<Object><Key>${xmlEscape(key)}</Key></Object>`).join('') +
+        '</Delete>'
+
+      try {
+        const res = await client.fetch(`${endpoint}/${bucketName}?delete`, {
+          method: 'POST',
+          body,
+          headers: {
+            'Content-Type': 'application/xml',
+            'Content-MD5':  createHash('md5').update(body).digest('base64'),
+          },
+        })
+        const xml = await res.text()
+
+        // Same as deleteFromR2 — fetch() doesn't throw on a non-2xx.
+        if (!res.ok) {
+          console.error(`R2 DeleteObjects failed (${res.status}) on ${bucketName}:`, xml)
+          failed.push(...chunk.map(([, ref]) => ref))
+          continue
+        }
+
+        // A 200 can still carry per-key <Error> entries (Quiet mode lists
+        // only failures). Deleting a missing key is NOT an error.
+        for (const m of xml.matchAll(/<Error>[\s\S]*?<Key>([\s\S]*?)<\/Key>[\s\S]*?<\/Error>/g)) {
+          const ref = keys.get(m[1] ?? '')
+          console.error('R2 DeleteObjects per-key error:', m[0])
+          failed.push(ref ?? m[1] ?? '')
+        }
+      } catch (err) {
+        console.error(`R2 DeleteObjects request failed on ${bucketName}:`, err)
+        failed.push(...chunk.map(([, ref]) => ref))
+      }
+    }
+  }
+
+  return { failed }
 }
 
 /**
