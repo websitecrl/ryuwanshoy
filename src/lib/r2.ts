@@ -127,8 +127,7 @@ export async function uploadToR2(
     throw new Error(`R2 upload failed (${res.status}): ${await res.text()}`)
   }
 
-  // Callers that pass a fixed `filename` (site logo, series covers, chapter
-  // pages) reuse the exact same key on every re-upload. Combined with the
+  // Callers that pass a fixed `filename` (site logo, series covers) reuse the exact same key on every re-upload. Combined with the
   // "immutable" Cache-Control above, that means the FIRST response any
   // browser or CDN ever saw for that URL — a 404, if the upload happened to
   // fail or land in the wrong place that one time — can get cached for a

@@ -244,14 +244,15 @@ export default function NewChapterPage() {
       if (!chRes.ok || chJson.error) { toast.error(chJson.error ?? 'Failed to create chapter'); setSubmitting(false); return }
       const chapterId = chJson.data.id
 
-      // pages[] reflects the current (possibly reordered) sequence, so
-      // page_number here always matches what's shown on screen.
+      // pages[] reflects the current (possibly reordered) sequence. The server
+      // assigns page_number as max+1, so uploading strictly one at a time, in
+      // order, is what keeps the saved order matching what's shown on screen.
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i]; if (!page) continue
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
         try {
           const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
-          const pgRes  = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chapter_id: chapterId, imageBase64, page_number: i + 1, is_spread: page.isSpread }) })
+          const pgRes  = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.isSpread }) })
           const pgJson = await pgRes.json()
           setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: pgRes.ok && !pgJson.error, error: (!pgRes.ok || pgJson.error) ? 'Upload failed' : null } : p))
         } catch {
