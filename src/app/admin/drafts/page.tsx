@@ -5,6 +5,7 @@ import { FileEdit, BookOpen, Plus, AlertTriangle } from 'lucide-react'
 import DeleteAllDraftsButton from './DeleteAllDraftsButton'
 import DeleteDraftRowButton from './DeleteDraftRowButton'
 import { getChapterChecklist, getSeriesChecklist, pagesOrderedCorrectly, checklistSummary } from '@/lib/checklists'
+import { getDraftPreview } from '@/lib/drafts'
 
 type ChapterRow = {
   id: string
@@ -101,6 +102,9 @@ export default async function DraftsPage() {
 
   const drafts = await getDrafts()
   const chapterDrafts = await getChapterDrafts()
+  // Same rule as the bulk delete, so the button shows exactly when there is
+  // something it would delete (including draft chapters with no draft series).
+  const { count: deletableCount } = await getDraftPreview()
 
   return (
     <div className="p-8 space-y-6 animate-page-in" style={{ minHeight: '100vh' }}>
@@ -125,7 +129,7 @@ export default async function DraftsPage() {
             {drafts.length + chapterDrafts.length} unpublished item{(drafts.length + chapterDrafts.length) !== 1 ? 's' : ''}
           </p>
         </div>
-        <DeleteAllDraftsButton count={drafts.length} />
+        <DeleteAllDraftsButton count={deletableCount} />
       </div>
       </div>
 
