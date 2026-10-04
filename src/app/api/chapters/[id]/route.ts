@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { deleteFromR2 } from '@/lib/r2'
+import { deleteManyFromR2 } from '@/lib/r2'
 import type { TablesUpdate } from '@/types/database'
 
 type ChapterUpdate = TablesUpdate<'chapters'>
@@ -119,10 +119,16 @@ export async function DELETE(
 
     if (error) throw error
 
-    // Clean up R2 after DB delete succeeds — fire and forget
+    // Clean up R2 after DB delete succeeds. Awaited, not fire-and-forget:
+    // Workers can cut off promises still pending after the response is sent.
+    // One batched request also stays under the per-request subrequest cap.
     const pages = (chapter as { pages: Array<{ image_url: string }> }).pages ?? []
-    for (const page of pages) {
-      if (page.image_url) deleteFromR2(page.image_url).catch(console.error)
+    const imageRefs = pages.map(p => p.image_url).filter(Boolean)
+    if (imageRefs.length) {
+      const { failed } = await deleteManyFromR2(imageRefs)
+      if (failed.length) {
+        console.error(`DELETE /api/chapters/${id}: ${failed.length} R2 object(s) not deleted:`, failed)
+      }
     }
 
     return NextResponse.json({ data: null, error: null })

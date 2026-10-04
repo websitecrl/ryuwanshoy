@@ -3,7 +3,7 @@ import type { TablesUpdate } from '@/types/database'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { deleteFromR2 } from '@/lib/r2'
+import { deleteManyFromR2 } from '@/lib/r2'
 
 // ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(
@@ -80,11 +80,13 @@ export async function DELETE(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Clean up R2 after DB delete succeeds
+  // Clean up R2 after DB delete succeeds. Awaited — Workers can cut off
+  // promises still pending after the response is sent.
   if (slide.banner_image) {
-    deleteFromR2(slide.banner_image).catch(err =>
-      console.warn('[DELETE /api/hero-slides] R2 delete warning:', err)
-    )
+    const { failed } = await deleteManyFromR2([slide.banner_image])
+    if (failed.length) {
+      console.error('[DELETE /api/hero-slides] R2 object not deleted:', failed)
+    }
   }
 
   return NextResponse.json({ success: true })

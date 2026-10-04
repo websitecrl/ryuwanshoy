@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteFromR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2 } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
 
 type Series = Tables<'series'>
@@ -175,13 +175,20 @@ export async function DELETE(
 
     if (error) throw error
 
-    if (existing.cover_image) deleteFromR2(existing.cover_image).catch(console.error)
-    if (existing.banner_image) deleteFromR2(existing.banner_image).catch(console.error)
-
+    // Awaited, not fire-and-forget: Workers can cut off promises still
+    // pending after the response is sent, orphaning the files. One batched
+    // request also stays under the per-request subrequest cap.
     const chapters = (existing as SeriesWithChapters).chapters ?? []
-    for (const chapter of chapters) {
-      for (const page of chapter.pages ?? []) {
-        if (page.image_url) deleteFromR2(page.image_url).catch(console.error)
+    const imageRefs = [
+      existing.cover_image,
+      existing.banner_image,
+      ...chapters.flatMap(c => (c.pages ?? []).map(p => p.image_url)),
+    ].filter((ref): ref is string => !!ref)
+
+    if (imageRefs.length) {
+      const { failed } = await deleteManyFromR2(imageRefs)
+      if (failed.length) {
+        console.error(`DELETE /api/series/${id}: ${failed.length} R2 object(s) not deleted:`, failed)
       }
     }
 
