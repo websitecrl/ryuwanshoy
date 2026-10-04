@@ -9,11 +9,25 @@ type SeriesInsert = TablesInsert<'series'>
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const auth = await requireAdmin()
+    const isAdmin = !(auth instanceof NextResponse)
+
+    let query = supabaseAdmin
       .from('series')
       .select('*, chapters(count)')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
+
+    // Public chapter_count only counts chapters readers can open (same rule
+    // as the reader pages). The admin lists use this route too and need
+    // every chapter counted.
+    if (!isAdmin) {
+      query = query
+        .eq('chapters.is_published', true)
+        .eq('chapters.is_draft', false)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 

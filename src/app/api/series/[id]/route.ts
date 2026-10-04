@@ -26,7 +26,7 @@ export async function GET(
 
     const chaptersSelect = `
       id, series_id, title, chapter_number,
-      is_early_access, published_at, created_at, is_published
+      is_early_access, published_at, created_at, is_published, is_draft
     `
 
     const query = supabaseAdmin
@@ -48,8 +48,11 @@ export async function GET(
       )
     }
 
+    // Same visibility rule as the public reader pages.
     if (!isAdmin) {
-      data.chapters = (data.chapters ?? []).filter(c => c.is_published === true)
+      data.chapters = (data.chapters ?? []).filter(
+        c => c.is_published === true && c.is_draft === false
+      )
     }
 
     return NextResponse.json({ data, error: null })
