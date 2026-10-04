@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Fredoka } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "@/components/shared/ConditionalLayout";
@@ -7,6 +8,23 @@ import { Toaster } from 'sonner'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 
 export const dynamic = 'force-dynamic'
+
+// metadataBase turns relative image URLs (/og-default.png) into absolute
+// ones — Facebook and X ignore relative og:image URLs.
+// The openGraph/twitter images are the share-card fallback for any page
+// that doesn't set its own. Next merges metadata shallowly: a page that
+// defines `openGraph` replaces this whole object, so it must list its own
+// images.
+export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'),
+  openGraph: {
+    images: [{ url: '/og-default.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og-default.png'],
+  },
+}
 
 const fredoka = Fredoka({
   variable: "--font-fredoka",
