@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteManyFromR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -52,6 +52,9 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ url: imageUrl })
   } catch (error) {
+    if (error instanceof InvalidImageError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error('POST /api/upload-logo error:', error)
     return NextResponse.json({ error: 'Failed to upload image' }, { status: 500 })
   }

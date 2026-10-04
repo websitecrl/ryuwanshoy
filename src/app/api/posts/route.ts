@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2 } from '@/lib/r2'
+import { InvalidImageError, uploadToR2 } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
         // currently broken on this deployment. See src/lib/image-processing.ts.
         imageUrl = await uploadToR2(body.imageBase64, 'posts')
       } catch (uploadErr) {
+        if (uploadErr instanceof InvalidImageError) {
+          return NextResponse.json({ error: uploadErr.message }, { status: 400 })
+        }
         console.error('R2 upload error:', uploadErr)
         return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })
       }

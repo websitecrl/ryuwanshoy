@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteManyFromR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
 
 type SeriesInsert = TablesInsert<'series'>
@@ -83,6 +83,9 @@ export async function POST(req: NextRequest) {
         // currently broken on this deployment. See src/lib/image-processing.ts.
         payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
       } catch (err) {
+        if (err instanceof InvalidImageError) {
+          return NextResponse.json({ error: err.message }, { status: 400 })
+        }
         console.error('POST /api/series cover upload error:', err)
         return NextResponse.json(
           { error: 'Cover image upload failed' },

@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteManyFromR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -86,7 +86,11 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
         // currently broken on this deployment. See src/lib/image-processing.ts.
         update.image_url = await uploadToR2(body.imageBase64, 'posts')
-      } catch {
+      } catch (uploadErr) {
+        if (uploadErr instanceof InvalidImageError) {
+          return NextResponse.json({ error: uploadErr.message }, { status: 400 })
+        }
+        console.error('[PATCH /api/posts/[id]] R2 upload error:', uploadErr)
         return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })
       }
 

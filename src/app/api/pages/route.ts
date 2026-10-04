@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { deleteFromR2, uploadToR2 } from '@/lib/r2'
+import { deleteFromR2, InvalidImageError, uploadToR2 } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -79,6 +79,9 @@ export async function POST(req: NextRequest) {
       // renumbered the chapter, the next upload overwrote another page's image.
       imageUrl = await uploadToR2(body.imageBase64, 'pages')
     } catch (err) {
+      if (err instanceof InvalidImageError) {
+        return NextResponse.json({ data: null, error: err.message }, { status: 400 })
+      }
       console.error('POST /api/pages upload error:', err)
       return NextResponse.json(
         { data: null, error: 'Image upload failed' },
