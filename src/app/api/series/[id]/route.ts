@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { filterUnsharedCovers } from '@/lib/series-covers'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
 
@@ -11,21 +12,6 @@ type SeriesUpdate = TablesUpdate<'series'>
 
 interface SeriesWithChapters extends Series {
   chapters: Chapter[]
-}
-
-/**
- * Covers used to be keyed cover-{slug} (and cover-undefined whenever PATCH
- * ran without a slug), so one legacy file can still back several series.
- * True if any series other than `seriesId` points at the same object. A
- * failed check counts as shared: orphaning a file beats breaking a live cover.
- */
-async function isCoverShared(coverUrl: string, seriesId: string): Promise<boolean> {
-  const { count, error } = await supabaseAdmin
-    .from('series')
-    .select('id', { count: 'exact', head: true })
-    .like('cover_image', `${coverUrl.split('?')[0]}%`)
-    .neq('id', seriesId)
-  return !!error || (count ?? 0) > 0
 }
 
 export async function GET(
@@ -144,10 +130,13 @@ export async function PATCH(
 
     // A new cover replaces the old file once the row points at it; if the
     // update failed, the new upload is the unreferenced one instead.
+    // A legacy old cover may still back other series (see series-covers.ts).
     if (payload.cover_image) {
-      const orphan = error ? payload.cover_image : existing.cover_image
-      if (orphan && (error || !(await isCoverShared(orphan, id)))) {
-        const { failed } = await deleteManyFromR2([orphan])
+      const orphans = error
+        ? [payload.cover_image]
+        : existing.cover_image ? await filterUnsharedCovers([existing.cover_image], id) : []
+      if (orphans.length) {
+        const { failed } = await deleteManyFromR2(orphans)
         if (failed.length) console.error(`PATCH /api/series/${id}: old cover not deleted:`, failed)
       }
     }
@@ -206,11 +195,9 @@ export async function DELETE(
     // pending after the response is sent, orphaning the files. One batched
     // request also stays under the per-request subrequest cap.
     const chapters = (existing as SeriesWithChapters).chapters ?? []
-    const cover = existing.cover_image && !(await isCoverShared(existing.cover_image, id))
-      ? existing.cover_image
-      : null
+    const covers = existing.cover_image ? await filterUnsharedCovers([existing.cover_image]) : []
     const imageRefs = [
-      cover,
+      ...covers,
       existing.banner_image,
       ...chapters.flatMap(c => (c.pages ?? []).map(p => p.image_url)),
     ].filter((ref): ref is string => !!ref)
