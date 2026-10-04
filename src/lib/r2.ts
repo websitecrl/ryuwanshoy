@@ -117,18 +117,21 @@ function parseImageDataUri(base64: string): { buffer: Buffer<ArrayBuffer>; conte
  *
  * @param base64    - base64 data URI (e.g. "data:image/png;base64,...")
  * @param folder    - folder inside the bucket (e.g. "covers", "pages")
- * @param filename  - optional stable filename; if omitted, generates a UUID
  * @throws InvalidImageError if the data isn't an allowed image; Error if the PUT to R2 fails
  */
 export async function uploadToR2(
   base64: string,
-  folder: string,
-  filename?: string
+  folder: string
 ): Promise<string> {
   const { client, bucket, endpoint, publicUrl } = getR2()
 
   const { buffer, contentType, ext } = parseImageDataUri(base64)
-  const key = `${folder}/${filename ?? uuidv4()}.${ext}`
+  // Always a fresh UUID key — never a stable name. Stable keys (the old
+  // cover-{slug}, site-logo, pages/chapter-{id}-page-{n}) let one row's
+  // upload overwrite, or its delete remove, another row's file, and
+  // combined with the immutable Cache-Control below they could keep a stale
+  // response cached for a year.
+  const key = `${folder}/${uuidv4()}.${ext}`
 
   const signed = await client.sign(`${endpoint}/${bucket}/${key}`, {
     method: 'PUT',
@@ -153,16 +156,7 @@ export async function uploadToR2(
     throw new Error(`R2 upload failed (${res.status}): ${await res.text()}`)
   }
 
-  // Callers that pass a fixed `filename` (site logo, series covers) reuse the exact same key on every re-upload. Combined with the
-  // "immutable" Cache-Control above, that means the FIRST response any
-  // browser or CDN ever saw for that URL — a 404, if the upload happened to
-  // fail or land in the wrong place that one time — can get cached for a
-  // year and keep being served even after a later upload succeeds, because
-  // the URL string never changed. A `?v=` query string doesn't affect which
-  // R2 object gets served (the Key above has no query string in it), but it
-  // does make every upload return a distinct URL, so a stale cached response
-  // for the old URL is never in the way of the new one.
-  return `${publicUrl}/${key}?v=${Date.now()}`
+  return `${publicUrl}/${key}`
 }
 
 // Public origins the same bucket was served from before R2_PUBLIC_URL moved
@@ -175,8 +169,8 @@ const LEGACY_PUBLIC_URLS = ['https://pub-5657faa0f50f468797255fb5df45f6ae.r2.dev
 /**
  * Returns the object key for a public URL served from this bucket — via the
  * current R2_PUBLIC_URL or a legacy origin — or null if it isn't one.
- * Strips the "?v=..." cache-busting suffix uploadToR2 appends; the actual R2
- * object Key never includes it, only the returned URL does.
+ * Strips the "?v=..." cache-busting suffix older uploads carry in their
+ * stored URL; the actual R2 object Key never includes it.
  */
 function keyFromPublicUrl(url: string, publicUrl: string): string | null {
   for (const origin of [publicUrl, ...LEGACY_PUBLIC_URLS]) {

@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2 } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
 
 type SeriesInsert = TablesInsert<'series'>
@@ -81,11 +81,7 @@ export async function POST(req: NextRequest) {
         // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
         // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
         // currently broken on this deployment. See src/lib/image-processing.ts.
-        payload.cover_image = await uploadToR2(
-          body.coverImageBase64,
-          'covers',
-          `cover-${payload.slug}`
-        )
+        payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
       } catch (err) {
         console.error('POST /api/series cover upload error:', err)
         return NextResponse.json(
@@ -100,6 +96,12 @@ export async function POST(req: NextRequest) {
       .insert(payload)
       .select()
       .single()
+
+    if (error && payload.cover_image) {
+      // The row was never created, so nothing references the new cover.
+      const { failed } = await deleteManyFromR2([payload.cover_image])
+      if (failed.length) console.error('POST /api/series: orphaned cover not deleted:', failed)
+    }
 
     if (error) {
       if (error.code === '23505') {
