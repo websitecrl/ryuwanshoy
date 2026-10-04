@@ -10,7 +10,9 @@ export async function generateMetadata() {
 
     const title = data?.site_title ?? 'Ryuwanshoy'
     const description = data?.site_description ?? 'A Filipino webcomic by Ryu'
-    const image = data?.logo_url ?? '/og-default.png'
+    // Not logo_url: the logo is small and not 1200×630, so share cards
+    // cropped or rejected it.
+    const image = '/og-default.png'
 
     return {
       title, 
