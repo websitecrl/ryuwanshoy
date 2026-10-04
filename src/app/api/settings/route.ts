@@ -2,8 +2,19 @@ import 'server-only'
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
+import type { TablesUpdate } from "@/types/database";
 
 export const dynamic = 'force-dynamic'
+
+// Columns the admin may edit. Everything else in the body (id, updated_at,
+// unknown keys) is ignored rather than written — spreading the raw body
+// into the update let a caller set any column.
+const EDITABLE_FIELDS = [
+  'creator_name', 'donation_message', 'ea_headline', 'ea_subtext',
+  'facebook_url', 'instagram_url', 'kofi_url', 'logo_url', 'patreon_url',
+  'paypal_url', 'site_description', 'site_title', 'tiktok_url',
+  'twitter_url', 'youtube_url',
+] as const satisfies ReadonlyArray<keyof TablesUpdate<'settings'>>
 
 // ─── GET /api/settings ────────────────────────────────────────────────────────
 // Public — donate page and early-access page need this without auth
@@ -44,10 +55,26 @@ export async function PATCH(req: NextRequest) {
   try {
   const body = await req.json() as Record<string, unknown>
 
-    const payload = {
-      ...body,
-      updated_at: new Date().toISOString(),
-    };
+    const payload: TablesUpdate<'settings'> = {}
+    for (const field of EDITABLE_FIELDS) {
+      if (!(field in body)) continue
+      const value = body[field]
+      if (value !== null && typeof value !== 'string') {
+        return NextResponse.json(
+          { error: `${field} must be a string or null.` },
+          { status: 400 }
+        );
+      }
+      payload[field] = value
+    }
+
+    if (Object.keys(payload).length === 0) {
+      return NextResponse.json(
+        { error: "No editable fields provided." },
+        { status: 400 }
+      );
+    }
+    payload.updated_at = new Date().toISOString()
 
     const { data: existing } = await supabaseAdmin
       .from("settings")

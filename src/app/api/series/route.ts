@@ -2,18 +2,32 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
 
 type SeriesInsert = TablesInsert<'series'>
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const auth = await requireAdmin()
+    const isAdmin = !(auth instanceof NextResponse)
+
+    let query = supabaseAdmin
       .from('series')
       .select('*, chapters(count)')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
+
+    // Public chapter_count only counts chapters readers can open (same rule
+    // as the reader pages). The admin lists use this route too and need
+    // every chapter counted.
+    if (!isAdmin) {
+      query = query
+        .eq('chapters.is_published', true)
+        .eq('chapters.is_draft', false)
+    }
+
+    const { data, error } = await query
 
     if (error) throw error
 
@@ -67,12 +81,11 @@ export async function POST(req: NextRequest) {
         // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
         // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
         // currently broken on this deployment. See src/lib/image-processing.ts.
-        payload.cover_image = await uploadToR2(
-          body.coverImageBase64,
-          'covers',
-          `cover-${payload.slug}`
-        )
+        payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
       } catch (err) {
+        if (err instanceof InvalidImageError) {
+          return NextResponse.json({ error: err.message }, { status: 400 })
+        }
         console.error('POST /api/series cover upload error:', err)
         return NextResponse.json(
           { error: 'Cover image upload failed' },
@@ -86,6 +99,12 @@ export async function POST(req: NextRequest) {
       .insert(payload)
       .select()
       .single()
+
+    if (error && payload.cover_image) {
+      // The row was never created, so nothing references the new cover.
+      const { failed } = await deleteManyFromR2([payload.cover_image])
+      if (failed.length) console.error('POST /api/series: orphaned cover not deleted:', failed)
+    }
 
     if (error) {
       if (error.code === '23505') {

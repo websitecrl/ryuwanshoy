@@ -5,6 +5,51 @@ import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { isProfane } from '@/lib/profanity'
 
+type CommentTarget = {
+  chapterId?: string | null
+  seriesId?:  string | null
+  postId?:    string | null
+}
+
+/**
+ * True only when every target given is visible to readers: a chapter must be
+ * published, not a draft, and in a published series (same rule as the reader
+ * pages); a series must be published. Posts have no publish flag, so a post
+ * only has to exist. Stops comments being read or posted on hidden content
+ * by guessed id.
+ */
+async function isPublicTarget({ chapterId, seriesId, postId }: CommentTarget): Promise<boolean> {
+  if (chapterId) {
+    const { data } = await supabaseAdmin
+      .from('chapters')
+      .select('id, series:series_id!inner (is_published)')
+      .eq('id', chapterId)
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .eq('series.is_published', true)
+      .maybeSingle()
+    if (!data) return false
+  }
+  if (seriesId) {
+    const { data } = await supabaseAdmin
+      .from('series')
+      .select('id')
+      .eq('id', seriesId)
+      .eq('is_published', true)
+      .maybeSingle()
+    if (!data) return false
+  }
+  if (postId) {
+    const { data } = await supabaseAdmin
+      .from('posts')
+      .select('id')
+      .eq('id', postId)
+      .maybeSingle()
+    if (!data) return false
+  }
+  return true
+}
+
 // ─── GET /api/comments ────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -17,6 +62,10 @@ export async function GET(req: NextRequest) {
       { error: 'chapter_id, post_id, or series_id is required' },
       { status: 400 }
     )
+  }
+
+  if (!(await isPublicTarget({ chapterId, seriesId, postId }))) {
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
 
   let query = supabaseAdmin
@@ -55,6 +104,10 @@ export async function POST(req: NextRequest) {
       { error: 'Your comment contains prohibited language.' },
       { status: 400 }
     )
+  }
+
+  if (!(await isPublicTarget({ chapterId: chapter_id, seriesId: series_id, postId: post_id }))) {
+    return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
 
   const edit_token = uuidv4()

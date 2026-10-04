@@ -2,7 +2,8 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteFromR2 } from '@/lib/r2'
+import { filterUnsharedCovers } from '@/lib/series-covers'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
 
 type Series = Tables<'series'>
@@ -26,7 +27,7 @@ export async function GET(
 
     const chaptersSelect = `
       id, series_id, title, chapter_number,
-      is_early_access, published_at, created_at, is_published
+      is_early_access, published_at, created_at, is_published, is_draft
     `
 
     const query = supabaseAdmin
@@ -48,8 +49,11 @@ export async function GET(
       )
     }
 
+    // Same visibility rule as the public reader pages.
     if (!isAdmin) {
-      data.chapters = (data.chapters ?? []).filter(c => c.is_published === true)
+      data.chapters = (data.chapters ?? []).filter(
+        c => c.is_published === true && c.is_draft === false
+      )
     }
 
     return NextResponse.json({ data, error: null })
@@ -104,12 +108,11 @@ export async function PATCH(
           // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
           // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
           // currently broken on this deployment. See src/lib/image-processing.ts.
-          payload.cover_image = await uploadToR2(
-            body.coverImageBase64,
-            'covers',
-            `cover-${payload.slug}`
-          )
+          payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
         } catch (err) {
+          if (err instanceof InvalidImageError) {
+            return NextResponse.json({ data: null, error: err.message }, { status: 400 })
+          }
           console.error(`PATCH /api/series/${id} cover upload error:`, err)
           return NextResponse.json(
             { error: 'Cover image upload failed' },
@@ -124,6 +127,19 @@ export async function PATCH(
       .eq('id', id)
       .select()
       .single()
+
+    // A new cover replaces the old file once the row points at it; if the
+    // update failed, the new upload is the unreferenced one instead.
+    // A legacy old cover may still back other series (see series-covers.ts).
+    if (payload.cover_image) {
+      const orphans = error
+        ? [payload.cover_image]
+        : existing.cover_image ? await filterUnsharedCovers([existing.cover_image], id) : []
+      if (orphans.length) {
+        const { failed } = await deleteManyFromR2(orphans)
+        if (failed.length) console.error(`PATCH /api/series/${id}: old cover not deleted:`, failed)
+      }
+    }
 
     if (error) {
       if (error.code === '23505') {
@@ -175,13 +191,21 @@ export async function DELETE(
 
     if (error) throw error
 
-    if (existing.cover_image) deleteFromR2(existing.cover_image).catch(console.error)
-    if (existing.banner_image) deleteFromR2(existing.banner_image).catch(console.error)
-
+    // Awaited, not fire-and-forget: Workers can cut off promises still
+    // pending after the response is sent, orphaning the files. One batched
+    // request also stays under the per-request subrequest cap.
     const chapters = (existing as SeriesWithChapters).chapters ?? []
-    for (const chapter of chapters) {
-      for (const page of chapter.pages ?? []) {
-        if (page.image_url) deleteFromR2(page.image_url).catch(console.error)
+    const covers = existing.cover_image ? await filterUnsharedCovers([existing.cover_image]) : []
+    const imageRefs = [
+      ...covers,
+      existing.banner_image,
+      ...chapters.flatMap(c => (c.pages ?? []).map(p => p.image_url)),
+    ].filter((ref): ref is string => !!ref)
+
+    if (imageRefs.length) {
+      const { failed } = await deleteManyFromR2(imageRefs)
+      if (failed.length) {
+        console.error(`DELETE /api/series/${id}: ${failed.length} R2 object(s) not deleted:`, failed)
       }
     }
 

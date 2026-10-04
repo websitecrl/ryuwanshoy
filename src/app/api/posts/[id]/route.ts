@@ -2,7 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2, deleteFromR2 } from '@/lib/r2'
+import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -64,6 +64,8 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     if ('description' in body) update.description = body.description?.trim() || null
     if ('post_type'   in body) update.post_type   = body.post_type
 
+    let oldImageUrl: string | null = null
+
     if (body.imageBase64) {
       const { data: existing, error: fetchErr } = await supabaseAdmin
         .from('posts')
@@ -84,15 +86,15 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
         // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
         // currently broken on this deployment. See src/lib/image-processing.ts.
         update.image_url = await uploadToR2(body.imageBase64, 'posts')
-      } catch {
+      } catch (uploadErr) {
+        if (uploadErr instanceof InvalidImageError) {
+          return NextResponse.json({ error: uploadErr.message }, { status: 400 })
+        }
+        console.error('[PATCH /api/posts/[id]] R2 upload error:', uploadErr)
         return NextResponse.json({ error: 'Image upload failed' }, { status: 500 })
       }
 
-      if (existing.image_url) {
-        deleteFromR2(existing.image_url).catch(err =>
-          console.warn('[PATCH /api/posts] R2 delete warning:', err)
-        )
-      }
+      oldImageUrl = existing.image_url
     }
 
     if (Object.keys(update).length === 0) {
@@ -105,6 +107,18 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       .eq('id', id)
       .select()
       .single()
+
+    // R2 cleanup is awaited (Workers can cut off promises still pending after
+    // the response) and happens only once we know which file the row points
+    // at: the old image after a successful update, the new upload after a
+    // failed one.
+    const orphan = error ? update.image_url : oldImageUrl
+    if (orphan) {
+      const { failed } = await deleteManyFromR2([orphan])
+      if (failed.length) {
+        console.error('[PATCH /api/posts] R2 object not deleted:', failed)
+      }
+    }
 
     if (error) throw error
 
@@ -144,10 +158,12 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     if (deleteErr) throw deleteErr
 
+    // Awaited — Workers can cut off promises still pending after the response.
     if (post.image_url) {
-      deleteFromR2(post.image_url).catch(err =>
-        console.warn('[DELETE /api/posts] R2 delete warning:', err)
-      )
+      const { failed } = await deleteManyFromR2([post.image_url])
+      if (failed.length) {
+        console.error('[DELETE /api/posts] R2 object not deleted:', failed)
+      }
     }
 
     return NextResponse.json({ success: true })

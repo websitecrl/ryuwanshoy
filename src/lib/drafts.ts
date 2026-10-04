@@ -1,6 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { deleteManyFromR2 } from '@/lib/r2'
+import { filterUnsharedCovers } from '@/lib/series-covers'
 
 // ─── What counts as a draft ───────────────────────────────────────────────────
 // Single source of truth for the drafts badge, the "Delete all drafts" dialog
@@ -41,7 +42,7 @@ export type DraftPreview = {
   count: number
 }
 
-type WithImages<T> = T & { imageRefs: string[]; heroSlides: number; chapters: number }
+type WithImages<T> = T & { imageRefs: string[]; heroSlides: number; chapters: number; coverImage?: string | null }
 
 async function findDraftTargets() {
   const [seriesRes, chaptersRes] = await Promise.all([
@@ -67,8 +68,10 @@ async function findDraftTargets() {
       chapterCount: s.chapters.length,
       chapters:     s.chapters.length,
       heroSlides:   s.hero_slides.length,
+      // Kept out of imageRefs: a legacy cover may also back a series that
+      // isn't being deleted, so it's checked separately before deletion.
+      coverImage:   s.cover_image,
       imageRefs: [
-        s.cover_image,
         s.banner_image,
         ...s.hero_slides.map(h => h.banner_image),
         ...s.chapters.flatMap(c => c.pages.map(p => p.image_url)),
@@ -168,7 +171,11 @@ export async function deleteConfirmedDrafts(confirmed: {
   const deletedSeries   = series.filter(s => deletedSeriesIds.has(s.id))
   const deletedChapters = chapters.filter(c => deletedChapterIds.has(c.id))
 
-  const imageRefs = [...deletedSeries, ...deletedChapters].flatMap(x => x.imageRefs)
+  // Rows are gone by now, so only surviving series count as sharing a cover.
+  const covers = await filterUnsharedCovers(
+    deletedSeries.map(s => s.coverImage).filter((c): c is string => !!c)
+  )
+  const imageRefs = [...covers, ...[...deletedSeries, ...deletedChapters].flatMap(x => x.imageRefs)]
   const { failed } = imageRefs.length ? await deleteManyFromR2(imageRefs) : { failed: [] }
   if (failed.length) {
     console.error(`deleteConfirmedDrafts: ${failed.length} R2 object(s) not deleted:`, failed)
