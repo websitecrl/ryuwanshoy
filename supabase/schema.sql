@@ -52,34 +52,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
 
 
 
-CREATE OR REPLACE FUNCTION "public"."check_rate_limit"("p_key" "text", "p_limit" integer, "p_window_seconds" integer) RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    AS $$
-declare
-  v_now timestamptz := now();
-  v_count integer;
-begin
-  insert into public.rate_limits (key, count, reset_at)
-  values (p_key, 1, v_now + (p_window_seconds || ' seconds')::interval)
-  on conflict (key) do update
-    set count = case
-          when rate_limits.reset_at <= v_now then 1
-          else rate_limits.count + 1
-        end,
-        reset_at = case
-          when rate_limits.reset_at <= v_now then v_now + (p_window_seconds || ' seconds')::interval
-          else rate_limits.reset_at
-        end
-  returning count into v_count;
-
-  return v_count <= p_limit;
-end;
-$$;
-
-
-ALTER FUNCTION "public"."check_rate_limit"("p_key" "text", "p_limit" integer, "p_window_seconds" integer) OWNER TO "postgres";
-
-
 CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog'
@@ -212,16 +184,6 @@ CREATE TABLE IF NOT EXISTS "public"."posts" (
 ALTER TABLE "public"."posts" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."rate_limits" (
-    "key" "text" NOT NULL,
-    "count" integer DEFAULT 1 NOT NULL,
-    "reset_at" timestamp with time zone NOT NULL
-);
-
-
-ALTER TABLE "public"."rate_limits" OWNER TO "postgres";
-
-
 CREATE TABLE IF NOT EXISTS "public"."series" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "title" "text" NOT NULL,
@@ -311,11 +273,6 @@ ALTER TABLE ONLY "public"."pages"
 
 ALTER TABLE ONLY "public"."posts"
     ADD CONSTRAINT "posts_pkey" PRIMARY KEY ("id");
-
-
-
-ALTER TABLE ONLY "public"."rate_limits"
-    ADD CONSTRAINT "rate_limits_pkey" PRIMARY KEY ("key");
 
 
 
@@ -546,9 +503,6 @@ CREATE POLICY "public read hero_slides" ON "public"."hero_slides" FOR SELECT TO 
 
 
 
-ALTER TABLE "public"."rate_limits" ENABLE ROW LEVEL SECURITY;
-
-
 ALTER TABLE "public"."series" ENABLE ROW LEVEL SECURITY;
 
 
@@ -564,7 +518,31 @@ ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
 
 
 
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."chapters";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."comments";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."hero_slides";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."likes";
+
+
+
 ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."pages";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."posts";
+
+
+
+ALTER PUBLICATION "supabase_realtime" ADD TABLE ONLY "public"."series";
 
 
 
@@ -767,62 +745,108 @@ GRANT USAGE ON SCHEMA "public" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."chapters" TO "anon";
-GRANT ALL ON TABLE "public"."chapters" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."chapters" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."chapters" TO "authenticated";
 GRANT ALL ON TABLE "public"."chapters" TO "service_role";
 
 
 
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."comments" TO "anon";
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."comments" TO "authenticated";
+GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."comments" TO "anon";
+GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."comments" TO "authenticated";
 GRANT ALL ON TABLE "public"."comments" TO "service_role";
 
 
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."early_access" TO "anon";
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."early_access" TO "authenticated";
+GRANT SELECT("id") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("chapter_id") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("series_id") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("name") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("content") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("is_read") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("created_at") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("updated_at") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("post_id") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT("parent_id") ON TABLE "public"."comments" TO "authenticated";
+
+
+
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."early_access" TO "anon";
+GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."early_access" TO "authenticated";
 GRANT ALL ON TABLE "public"."early_access" TO "service_role";
 
 
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."hero_slides" TO "anon";
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."hero_slides" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."hero_slides" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."hero_slides" TO "authenticated";
 GRANT ALL ON TABLE "public"."hero_slides" TO "service_role";
 
 
 
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."likes" TO "anon";
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."likes" TO "authenticated";
+GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."likes" TO "anon";
+GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."likes" TO "authenticated";
 GRANT ALL ON TABLE "public"."likes" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."pages" TO "anon";
-GRANT ALL ON TABLE "public"."pages" TO "authenticated";
+GRANT SELECT("id") ON TABLE "public"."likes" TO "authenticated";
+
+
+
+GRANT SELECT("post_id") ON TABLE "public"."likes" TO "authenticated";
+
+
+
+GRANT SELECT("created_at") ON TABLE "public"."likes" TO "authenticated";
+
+
+
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."pages" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."pages" TO "authenticated";
 GRANT ALL ON TABLE "public"."pages" TO "service_role";
 
 
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."posts" TO "anon";
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."posts" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."posts" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."posts" TO "authenticated";
 GRANT ALL ON TABLE "public"."posts" TO "service_role";
 
 
 
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."rate_limits" TO "anon";
-GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."rate_limits" TO "authenticated";
-GRANT ALL ON TABLE "public"."rate_limits" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."series" TO "anon";
-GRANT ALL ON TABLE "public"."series" TO "authenticated";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."series" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,MAINTAIN,UPDATE ON TABLE "public"."series" TO "authenticated";
 GRANT ALL ON TABLE "public"."series" TO "service_role";
 
 
 
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."settings" TO "anon";
-GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."settings" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."settings" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,MAINTAIN ON TABLE "public"."settings" TO "authenticated";
 GRANT ALL ON TABLE "public"."settings" TO "service_role";
 
 
@@ -848,8 +872,8 @@ ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUN
 
 
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,MAINTAIN ON TABLES TO "authenticated";
 ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "service_role";
 
 
