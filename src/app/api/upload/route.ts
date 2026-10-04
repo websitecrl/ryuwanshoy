@@ -1,7 +1,11 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
-import { uploadToR2 } from '@/lib/r2'
+import { InvalidImageError, uploadToR2 } from '@/lib/r2'
+
+// Folders this generic endpoint may write to. Pages, covers, posts and the
+// logo upload through their own routes.
+const ALLOWED_FOLDERS = ['hero-banners']
 
 // ─── POST — admin only ────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
@@ -10,14 +14,19 @@ export async function POST(req: NextRequest) {
 
   const { base64, folder } = await req.json()
 
-  if (!base64 || !folder) {
+  if (typeof base64 !== 'string' || typeof folder !== 'string' || !base64 || !folder) {
     return NextResponse.json(
       { error: 'base64 and folder are required' },
       { status: 400 }
     )
   }
 
-  const MAX_SIZE = 50_000_000
+  if (!ALLOWED_FOLDERS.includes(folder)) {
+    return NextResponse.json({ error: 'Invalid folder' }, { status: 400 })
+  }
+
+  // ~25MB decoded (base64 is 4/3 the size), same cap as the other upload routes.
+  const MAX_SIZE = 34_000_000
   if (base64.length > MAX_SIZE) {
     return NextResponse.json(
       { error: 'Image size exceeds the limit of 25MB' },
@@ -37,6 +46,9 @@ export async function POST(req: NextRequest) {
     const url = await uploadToR2(base64, folder)
     return NextResponse.json({ url })
   } catch (err) {
+    if (err instanceof InvalidImageError) {
+      return NextResponse.json({ error: err.message }, { status: 400 })
+    }
     console.error('POST /api/upload error:', err)
     return NextResponse.json(
       { error: 'Image processing failed' },

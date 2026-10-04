@@ -74,6 +74,43 @@ function getR2() {
   return { client, bucket, endpoint, publicUrl, eaBucket }
 }
 
+/** Thrown when an upload isn't a well-formed data URI of an allowed image type. */
+export class InvalidImageError extends Error {}
+
+// Allowed upload types, detected from the file's leading bytes. The data-URI
+// header is client-controlled and never trusted: without this, a
+// "data:text/html;base64,..." upload would land in the public bucket and be
+// served as HTML from our image origin.
+const IMAGE_SIGNATURES: Array<{ type: string; ext: string; matches: (b: Buffer) => boolean }> = [
+  { type: 'image/jpeg', ext: 'jpg',  matches: b => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  { type: 'image/png',  ext: 'png',  matches: b => b.length > 8 && b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
+  { type: 'image/webp', ext: 'webp', matches: b => b.length > 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP' },
+  { type: 'image/gif',  ext: 'gif',  matches: b => b.length > 6 && /^GIF8[79]a$/.test(b.toString('ascii', 0, 6)) },
+]
+
+/**
+ * Decodes a base64 image data URI and identifies its real type by magic bytes.
+ *
+ * @throws InvalidImageError if the string isn't a base64 data URI, or the
+ *         bytes aren't JPEG, PNG, WebP or GIF
+ */
+function parseImageDataUri(base64: string): { buffer: Buffer<ArrayBuffer>; contentType: string; ext: string } {
+  const commaIdx   = base64.indexOf(',')
+  const headerPart = base64.slice(0, commaIdx)   // "data:image/png;base64"
+
+  if (commaIdx === -1 || !headerPart.startsWith('data:') || !headerPart.includes(';base64')) {
+    throw new InvalidImageError('Invalid base64 string')
+  }
+
+  const buffer = Buffer.from(base64.slice(commaIdx + 1), 'base64')
+  const match  = IMAGE_SIGNATURES.find(sig => sig.matches(buffer))
+  if (!match) {
+    throw new InvalidImageError('Unsupported file type — upload a JPEG, PNG, WebP or GIF')
+  }
+
+  return { buffer, contentType: match.type, ext: match.ext }
+}
+
 /**
  * Uploads a base64 data URI to Cloudflare R2.
  * Returns the public HTTPS URL of the uploaded file.
@@ -81,7 +118,7 @@ function getR2() {
  * @param base64    - base64 data URI (e.g. "data:image/png;base64,...")
  * @param folder    - folder inside the bucket (e.g. "covers", "pages")
  * @param filename  - optional stable filename; if omitted, generates a UUID
- * @throws if the base64 string is malformed, or the PUT to R2 fails
+ * @throws InvalidImageError if the data isn't an allowed image; Error if the PUT to R2 fails
  */
 export async function uploadToR2(
   base64: string,
@@ -90,18 +127,7 @@ export async function uploadToR2(
 ): Promise<string> {
   const { client, bucket, endpoint, publicUrl } = getR2()
 
-  const commaIdx = base64.indexOf(',')
-  const headerPart = base64.slice(0, commaIdx)   // "data:image/png;base64"
-  const data       = base64.slice(commaIdx + 1)   // everything after the comma
-
-  if (commaIdx === -1 || !headerPart.startsWith('data:') || !headerPart.includes(';base64')) {
-    throw new Error('Invalid base64 string')
-  }
-
-  const contentType = headerPart.slice(5, headerPart.indexOf(';')) // between "data:" and ";"
-  const buffer      = Buffer.from(data, 'base64')
-
-  const ext = contentType.split('/')[1] ?? 'jpg'
+  const { buffer, contentType, ext } = parseImageDataUri(base64)
   const key = `${folder}/${filename ?? uuidv4()}.${ext}`
 
   const signed = await client.sign(`${endpoint}/${bucket}/${key}`, {
@@ -346,7 +372,7 @@ export async function getR2StorageBytes(): Promise<number> {
  * @param folder    - folder inside the EA bucket (e.g. "pages")
  * @param filename  - optional stable filename; if omitted, generates a UUID
  * @returns          - a string like "ea:pages/uuid.webp", NOT a URL
- * @throws if the base64 string is malformed, or the PUT to R2 fails
+ * @throws InvalidImageError if the data isn't an allowed image; Error if the PUT to R2 fails
  */
 export async function uploadToEAR2(
   base64: string,
@@ -355,18 +381,8 @@ export async function uploadToEAR2(
 ): Promise<string> {
   const { client, eaBucket, endpoint } = getR2()
 
-  const commaIdx = base64.indexOf(',')
-  const headerPart = base64.slice(0, commaIdx)
-  const data       = base64.slice(commaIdx + 1)
-
-  if (commaIdx === -1 || !headerPart.startsWith('data:') || !headerPart.includes(';base64')) {
-    throw new Error('Invalid base64 string')
-  }
-
-  const contentType = headerPart.slice(5, headerPart.indexOf(';'))
-  const buffer       = Buffer.from(data, 'base64')
-  const ext          = contentType.split('/')[1] ?? 'jpg'
-  const key          = `${folder}/${filename ?? uuidv4()}.${ext}`
+  const { buffer, contentType, ext } = parseImageDataUri(base64)
+  const key = `${folder}/${filename ?? uuidv4()}.${ext}`
 
   const signed = await client.sign(`${endpoint}/${eaBucket}/${key}`, {
     method: 'PUT',
