@@ -77,13 +77,13 @@ export default function BookmarksGrid({ series, chapterCounts }: Props) {
             href="/comics"
             className="font-comic flex items-center gap-1 px-4 rounded-lg
               text-sm uppercase tracking-wide border-2
-              shadow-[4px_4px_0px_var(--ryu-text)]
-              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+              shadow-[4px_4px_0px_var(--ryu-ink)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-ink)]
               transition-all duration-100"
             style={{
               height: 36,
               marginTop: 8,
-              borderColor: 'var(--ryu-text)',
+              borderColor: 'var(--ryu-ink)',
               background: 'var(--ryu-accent)',
               color: 'var(--ryu-on-accent)',
             }}

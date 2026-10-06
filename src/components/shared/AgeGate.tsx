@@ -60,8 +60,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
       <div style={{
         background: 'var(--ryu-surface-1)',
         borderRadius: 20,
-        border: '3px solid var(--ryu-text)',
-        boxShadow: '8px 8px 0 var(--ryu-text)',
+        border: '3px solid var(--ryu-ink)',
+        boxShadow: '8px 8px 0 var(--ryu-ink)',
         padding: '2.5rem 2rem 2rem',
         maxWidth: 480, width: '100%',
         textAlign: 'center',
@@ -72,8 +72,8 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
           <div style={{
             width: 72, height: 72, borderRadius: '50%',
             background: 'var(--destructive)',
-            border: '3px solid var(--ryu-text)',
-            boxShadow: '4px 4px 0 var(--ryu-text)',
+            border: '3px solid var(--ryu-ink)',
+            boxShadow: '4px 4px 0 var(--ryu-ink)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
             <span style={{
@@ -115,11 +115,11 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
               style={{
                 flex: 1, padding: '16px 8px',
                 borderRadius: 12,
-                border: `3px solid var(--ryu-text)`,
+                border: `3px solid var(--ryu-ink)`,
                 background: tier.bg,
                 boxShadow: selected === tier.value
                   ? '0 0 0 3px var(--ryu-surface-1), 0 0 0 6px var(--ryu-text)'
-                  : '4px 4px 0 var(--ryu-text)',
+                  : '4px 4px 0 var(--ryu-ink)',
                 cursor: 'pointer',
                 transition: 'box-shadow 0.15s, transform 0.1s',
                 transform: selected === tier.value ? 'translate(2px, 2px)' : 'none',
@@ -160,11 +160,11 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
           style={{
             width: '100%', padding: '14px',
             borderRadius: 10,
-            border: '3px solid var(--ryu-text)',
+            border: '3px solid var(--ryu-ink)',
             background: selected !== null
               ? TIERS.find(t => t.value === selected)?.bg ?? 'var(--ryu-primary)'
               : 'var(--ryu-text-3)',
-            boxShadow: selected !== null ? '4px 4px 0 var(--ryu-text)' : 'none',
+            boxShadow: selected !== null ? '4px 4px 0 var(--ryu-ink)' : 'none',
             color: 'var(--ryu-surface-1)',
             fontFamily: "var(--font-fredoka), sans-serif",
             fontWeight: 600,

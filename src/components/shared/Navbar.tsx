@@ -126,23 +126,23 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                 padding: '0 14px',
                 background: 'var(--ryu-accent)',
                 color: 'var(--ryu-on-accent)',
-                border: '2.5px solid var(--ryu-text)',
+                border: '2.5px solid var(--ryu-ink)',
                 borderRadius: 8,
                 fontSize: 13,
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                boxShadow: '4px 4px 0 var(--ryu-text)',
+                boxShadow: '4px 4px 0 var(--ryu-ink)',
                 transition: 'transform .12s, box-shadow .12s',
               }}
               onMouseEnter={e => {
                 const el = e.currentTarget as HTMLElement
                 el.style.transform = 'translate(2px,2px)'
-                el.style.boxShadow = '2px 2px 0 var(--ryu-text)'
+                el.style.boxShadow = '2px 2px 0 var(--ryu-ink)'
               }}
               onMouseLeave={e => {
                 const el = e.currentTarget as HTMLElement
                 el.style.transform = ''
-                el.style.boxShadow = '4px 4px 0 var(--ryu-text)'
+                el.style.boxShadow = '4px 4px 0 var(--ryu-ink)'
               }}
             >
               <Heart size={12} />
@@ -198,12 +198,12 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
                 height: 36,
                 background: 'var(--ryu-accent)',
                 color: 'var(--ryu-on-accent)',
-                border: '2.5px solid var(--ryu-text)',
+                border: '2.5px solid var(--ryu-ink)',
                 borderRadius: 8,
                 fontSize: 13,
                 letterSpacing: '0.05em',
                 textTransform: 'uppercase',
-                boxShadow: '4px 4px 0 var(--ryu-text)',
+                boxShadow: '4px 4px 0 var(--ryu-ink)',
               }}
             >
               <Heart size={13} />

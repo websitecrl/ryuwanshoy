@@ -108,6 +108,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
   const [pages,        setPages]        = useState<LocalPage[]>(initialPages) // ← seeded from parent
   const [dragOver,     setDragOver]     = useState(false)
   const [submitting,   setSubmitting]   = useState(false)
+  const [reversed,     setReversed]     = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -126,8 +127,20 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
     })
   }
 
+  /**
+   * Turns picked/dropped files into local page entries and appends them.
+   *
+   * The OS file dialog does NOT return files in click order (Windows puts the
+   * focused file first), so we sort by filename with a natural compare —
+   * "page2" before "page10". Creators name pages in order, so this is the
+   * reliable signal. Fine-tune afterwards with drag-and-drop or the reverse switch.
+   *
+   * @param files - raw files from the input or drop event; non-images are ignored
+   */
   async function handleFiles(files: File[]) {
-    const imageFiles = files.filter(f => f.type.startsWith('image/'))
+    const imageFiles = files
+      .filter(f => f.type.startsWith('image/'))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
     if (!imageFiles.length) return
     const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
       const preview   = URL.createObjectURL(file)
@@ -153,6 +166,12 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
     handleFiles(Array.from(e.dataTransfer.files))
   }
   function removePage(id: string) { setPages(prev => prev.filter(p => p.id !== id)) }
+
+  /** Flips the whole reading order (first ↔ last). Toggling again restores it. */
+  function toggleReversed() {
+    setPages(prev => [...prev].reverse()) // copy first — .reverse() mutates in place
+    setReversed(r => !r)
+  }
 
   async function saveAndProceed(destination: 'draft' | 'next') {
     if (pages.length === 0) { toast.error('Upload at least one page'); return }
@@ -290,9 +309,26 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
                   </SortableContext>
                 </DndContext>
 
-                <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', fontSize: 12, color: 'var(--ryu-text-2)' }}>
-                  <span style={{ color: 'var(--ryu-primary-deep)' }}>ℹ</span>
-                  {' '}Drag pages to reorder. Numbers update automatically.
+                <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', fontSize: 12, color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <span>
+                    <span style={{ color: 'var(--ryu-primary-deep)' }}>ℹ</span>
+                    {' '}Drag pages to reorder. Numbers update automatically.
+                  </span>
+                  {pages.length > 1 && (
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={reversed}
+                      onClick={toggleReversed}
+                      disabled={submitting}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)', whiteSpace: 'nowrap', flexShrink: 0 }}
+                    >
+                      Reverse order
+                      <span style={{ width: 32, height: 18, borderRadius: 9, padding: 2, background: reversed ? 'var(--ryu-primary)' : 'var(--ryu-border)', transition: 'background 150ms ease', display: 'flex' }}>
+                        <span style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--ryu-surface-1)', transform: reversed ? 'translateX(14px)' : 'translateX(0)', transition: 'transform 150ms ease' }} />
+                      </span>
+                    </button>
+                  )}
                 </div>
               </>
             )}

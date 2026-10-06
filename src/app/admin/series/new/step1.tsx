@@ -71,6 +71,7 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
         description: data.description || null, genre: data.genre || null,
         status: data.status, is_published: false,
         coverImageBase64,
+        min_age: data.minAge,
       }),
     })
     const json = await res.json()

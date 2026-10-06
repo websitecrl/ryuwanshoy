@@ -69,9 +69,9 @@ export default function ContinueReading() {
           style={{
             height: 34, padding: '0 14px',
             background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)',
-            border: '2.5px solid var(--ryu-text)', borderRadius: 8,
+            border: '2.5px solid var(--ryu-ink)', borderRadius: 8,
             fontSize: 13, letterSpacing: '0.05em', textTransform: 'uppercase',
-            boxShadow: '4px 4px 0 var(--ryu-text)',
+            boxShadow: '4px 4px 0 var(--ryu-ink)',
           }}
         >
           Continue →
