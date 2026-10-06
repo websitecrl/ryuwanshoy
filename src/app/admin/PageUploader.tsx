@@ -140,7 +140,7 @@ export default function PageUploader({
     setUploading(true)
 
     // Sort by filename so 001.jpg uploads before 002.jpg
-    imgs.sort((a, b) => a.name.localeCompare(b.name))
+    imgs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })) // natural: page2 before page10
 
     try {
       const uploaded: Page[] = []

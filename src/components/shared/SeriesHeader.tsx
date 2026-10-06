@@ -209,10 +209,10 @@ export default function SeriesHeader({
             href={ctaHref}
             className="font-comic flex items-center gap-1 px-4
               bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)]
-              border-2 border-[var(--ryu-text)] rounded-lg
+              border-2 border-[var(--ryu-ink)] rounded-lg
               text-sm uppercase tracking-wide
-              shadow-[4px_4px_0px_var(--ryu-text)]
-              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+              shadow-[4px_4px_0px_var(--ryu-ink)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-ink)]
               transition-all duration-100"
             style={{ height: '36px' }}
           >
@@ -229,9 +229,9 @@ export default function SeriesHeader({
               title="Restart from Chapter 1"
               className="flex items-center justify-center flex-shrink-0
                 bg-[var(--ryu-surface-3)] text-[var(--ryu-text)]
-                border-2 border-[var(--ryu-text)] rounded-lg
-                shadow-[4px_4px_0px_var(--ryu-text)]
-                hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+                border-2 border-[var(--ryu-ink)] rounded-lg
+                shadow-[4px_4px_0px_var(--ryu-ink)]
+                hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-ink)]
                 transition-all duration-100"
               style={{ width: '44px', height: '44px' }}
             >
@@ -243,10 +243,10 @@ export default function SeriesHeader({
           <button
             onClick={toggleBookmark}
             className={`font-comic flex items-center gap-1 px-4
-              border-2 border-[var(--ryu-text)] rounded-lg
+              border-2 border-[var(--ryu-ink)] rounded-lg
               text-sm uppercase tracking-wide
-              shadow-[4px_4px_0px_var(--ryu-text)]
-              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-text)]
+              shadow-[4px_4px_0px_var(--ryu-ink)]
+              hover:-translate-y-0.5 hover:shadow-[4px_6px_0px_var(--ryu-ink)]
               transition-all duration-100 ${
                 bookmarked
                   ? 'bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)]'
@@ -278,7 +278,7 @@ export default function SeriesHeader({
               <Link
                 href="/early-access"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-full border
-                           border-[var(--ryu-text)] text-[var(--ryu-text)]
+                           border-[var(--ryu-ink)] text-[var(--ryu-text)]
                            text-sm font-semibold
                            hover:bg-[var(--ryu-surface-3)] transition-colors"
               >

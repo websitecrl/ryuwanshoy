@@ -66,6 +66,7 @@
   --color-ryu-text: var(--ryu-text);
   --color-ryu-text-2: var(--ryu-text-2);
   --color-ryu-text-3: var(--ryu-text-3);
+  --color-ryu-ink: var(--ryu-ink);
 }
 
 /* ─── Light mode (warm cream) ───────────────────────────────────────────── */
@@ -89,6 +90,7 @@
   --ryu-text: #1C1917;
   --ryu-text-2: #78716C;
   --ryu-text-3: #A8A29E;
+  --ryu-ink: #1C1917; /* outlines + hard offset shadows on cartoon-style buttons/cards */
 
   /* shadcn tokens — remapped to warm palette.
      The primary/accent family aliases the --ryu-* tokens so the two systems can't drift. */
@@ -155,6 +157,7 @@
   --ryu-text: #FFFBF5;
   --ryu-text-2: #BFB1A0;
   --ryu-text-3: #8A7A6B;
+  --ryu-ink: #4A3E33; /* lighter-dark outline — cream (--ryu-text) glared as a border in dark */
 
   /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
   --background: #14110F;

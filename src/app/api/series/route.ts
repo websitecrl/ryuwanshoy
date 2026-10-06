@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
       genre:        body.genre  || null,
       status:       body.status || 'ongoing',
       is_published: body.is_published ?? false,
-      min_age:      body.min_age ?? 0,
+      min_age:      body.min_age ?? 13,
     }
 
     if (body.coverImageBase64) {

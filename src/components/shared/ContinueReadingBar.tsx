@@ -114,10 +114,10 @@ export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
           href={href}
           className="flex-shrink-0 px-4 py-2 rounded-lg
                     font-comic bg-[var(--ryu-accent)] text-[var(--ryu-on-accent)]
-                    border-2 border-[var(--ryu-text)]
+                    border-2 border-[var(--ryu-ink)]
                     text-xs tracking-wide whitespace-nowrap
-                    shadow-[3px_3px_0px_var(--ryu-text)]
-                    hover:-translate-y-0.5 hover:shadow-[3px_5px_0px_var(--ryu-text)]
+                    shadow-[3px_3px_0px_var(--ryu-ink)]
+                    hover:-translate-y-0.5 hover:shadow-[3px_5px_0px_var(--ryu-ink)]
                     transition-all duration-100"
         >
           CONTINUE →
