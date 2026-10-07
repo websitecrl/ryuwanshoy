@@ -140,6 +140,7 @@ export default async function SeriesDetailPage({
         totalPages={totalPages}
         lastPublishedAt={lastPublishedAt}
         firstChapterNumber={firstChapterNumber}
+        chapterIds={chapters.map(c => c.id)}
       />
       <ChapterList
         chapters={chapters}

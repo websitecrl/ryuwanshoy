@@ -8,9 +8,11 @@ import type { ReadingProgress } from '@/types/reader'
 type Props = {
   seriesId: string
   seriesSlug: string
+  /** Published chapter ids — progress pointing anywhere else is stale. */
+  chapterIds: string[]
 }
 
-export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
+export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }: Props) {
   const [progress, setProgress] = useState<ReadingProgress | null>(null)
 
   useEffect(() => {
@@ -20,10 +22,11 @@ export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
 
       const parsed = JSON.parse(raw) as ReadingProgress
 
-      // Validate minimum shape — reject stale or corrupt entries
+      // Validate minimum shape, and drop progress for a deleted/unpublished chapter
       if (
         typeof parsed.chapterNumber !== 'number' ||
-        typeof parsed.chapterId !== 'string'
+        typeof parsed.chapterId !== 'string' ||
+        !chapterIds.includes(parsed.chapterId)
       ) {
         localStorage.removeItem(`reading-progress-${seriesId}`)
         return
@@ -33,7 +36,7 @@ export default function ContinueReadingBar({ seriesId, seriesSlug }: Props) {
     } catch {
       localStorage.removeItem(`reading-progress-${seriesId}`)
     }
-  }, [seriesId])
+  }, [seriesId, chapterIds])
 
   if (!progress) return null
 

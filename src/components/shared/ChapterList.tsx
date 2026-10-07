@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Star } from 'lucide-react'
 import type { ChapterWithPageCount, ReadingProgress } from '@/types/reader'
@@ -179,6 +179,7 @@ export default function ChapterList({
   const [activeTab, setActiveTab]         = useState<Tab>('chapters')
   const [sortOrder, setSortOrder]         = useState<SortOrder>('desc')
   const [chapterStates, setChapterStates] = useState<Record<string, ChapterReadState>>({})
+  const chapterIds = useMemo(() => chapters.map(c => c.id), [chapters])
 
   // Load per-chapter read states from localStorage on mount
   useEffect(() => {
@@ -229,7 +230,7 @@ export default function ChapterList({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-5 sm:pb-16">
 
       {/* Continue reading bar — above tabs, only shown if progress exists */}
-      <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} />
+      <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} chapterIds={chapterIds} />
 
       {/* Tab bar */}
       <div className="flex items-end border-b border-[var(--ryu-border)] mb-5">

@@ -3,14 +3,13 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft, Loader2 } from 'lucide-react'
+import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from '@/lib/constants'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage } from './types'
-import { compressImage } from '@/lib/image-compress'
+import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage, type SaveState } from './types'
 
 // ── Sortable page card ─────────────────────────────────────────────────────
 
@@ -33,7 +32,7 @@ function SortablePage({
         gridColumn: page.is_spread ? 'span 2' : undefined,
         borderRadius: 8,
         overflow: 'hidden',
-        border: `2px solid ${page.error ? '#FCA5A5' : page.uploaded ? '#86EFAC' : 'var(--ryu-border)'}`,
+        border: '2px solid var(--ryu-border)',
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
@@ -44,22 +43,6 @@ function SortablePage({
       {...listeners}
     >
       <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover" />
-
-      {page.uploading && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <Loader2 size={16} className="animate-spin" style={{ color: '#fff' }} />
-        </div>
-      )}
-      {page.uploaded && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(22,163,74,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <CheckCircle2 size={16} style={{ color: '#86EFAC' }} />
-        </div>
-      )}
-      {page.error && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <span style={{ color: '#FCA5A5', fontSize: 10, fontWeight: 700 }}>Failed</span>
-        </div>
-      )}
 
       {/* Page number + spread badge */}
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
@@ -93,22 +76,21 @@ function SortablePage({
 // ── Step 2 ─────────────────────────────────────────────────────────────────
 
 interface Step2Props {
-  seriesId: string
-  seriesTitle: string
-  existingChapterId?: string
-  initialPages?: LocalPage[]          // ← new: restores pages when going back
+  chapterTitle: string
+  onChapterTitleChange: (title: string) => void
+  // Pages live in the wizard so they (and their upload status) survive going back
+  pages: LocalPage[]
+  setPages: React.Dispatch<React.SetStateAction<LocalPage[]>>
+  saving: SaveState
   onBack: () => void
-  onNext: (chapterId: string, pages: LocalPage[]) => void
+  onNext: () => void
+  onSaveDraft: () => void
 }
 
-export default function Step2({ seriesId, existingChapterId, initialPages = [], onBack, onNext }: Step2Props) {
-  const chapterNumber = 1
-  const [chapterTitle, setChapterTitle] = useState('')
-  const [isEA]         = useState(false)
-  const [pages,        setPages]        = useState<LocalPage[]>(initialPages) // ← seeded from parent
+export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPages, saving, onBack, onNext, onSaveDraft }: Step2Props) {
   const [dragOver,     setDragOver]     = useState(false)
-  const [submitting,   setSubmitting]   = useState(false)
   const [reversed,     setReversed]     = useState(false)
+  const submitting = saving !== null
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -130,17 +112,14 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
   /**
    * Turns picked/dropped files into local page entries and appends them.
    *
-   * The OS file dialog does NOT return files in click order (Windows puts the
-   * focused file first), so we sort by filename with a natural compare —
-   * "page2" before "page10". Creators name pages in order, so this is the
-   * reliable signal. Fine-tune afterwards with drag-and-drop or the reverse switch.
+   * Keeps the exact order the browser hands over — no filename sort, since
+   * names like "day_two" / "day_three" don't sort into reading order.
+   * Fine-tune afterwards with drag-and-drop or the reverse switch.
    *
    * @param files - raw files from the input or drop event; non-images are ignored
    */
   async function handleFiles(files: File[]) {
-    const imageFiles = files
-      .filter(f => f.type.startsWith('image/'))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+    const imageFiles = files.filter(f => f.type.startsWith('image/'))
     if (!imageFiles.length) return
     const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
       const preview   = URL.createObjectURL(file)
@@ -173,66 +152,11 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
     setReversed(r => !r)
   }
 
-  async function saveAndProceed(destination: 'draft' | 'next') {
+  /** Nothing is saved on "Next"; "Save as draft" creates the rows via the wizard. */
+  function proceed(destination: 'draft' | 'next') {
     if (pages.length === 0) { toast.error('Upload at least one page'); return }
-
-    if (destination === 'next' && existingChapterId) {
-      toast.success('Continuing with existing chapter')
-      onNext(existingChapterId, pages)
-      return
-    }
-
-    setSubmitting(true)
-
-    const chRes  = await fetch('/api/chapters', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        series_id:       seriesId,
-        chapter_number:  chapterNumber,
-        title:           chapterTitle || null,
-        is_early_access: isEA,
-        is_published:    false,
-        published_at:    new Date().toISOString(),
-      }),
-    })
-    const chJson = await chRes.json()
-    if (chJson.error) { toast.error(chJson.error); setSubmitting(false); return }
-
-    const chapterId = chJson.data.id
-
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i]; if (!page) continue
-      setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
-      try {
-        // Same fix as the standalone PageUploader — shrink before sending so
-        // the Worker never has to decode/hash a raw 2550x3300 original.
-        const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
-        const res  = await fetch('/api/pages', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.is_spread ?? false }),
-        })
-        const json = await res.json()
-        setPages(prev => prev.map(p => p.id === page.id
-          ? { ...p, uploading: false, uploaded: res.ok && !json.error, error: (!res.ok || json.error) ? 'Upload failed' : null }
-          : p
-        ))
-      } catch {
-        setPages(prev => prev.map(p => p.id === page.id
-          ? { ...p, uploading: false, error: 'Upload failed' }
-          : p
-        ))
-        toast.error(`Failed to upload page ${i + 1}`)
-      }
-    }
-
-    if (destination === 'draft') {
-      toast.success('Chapter saved as draft')
-      window.location.href = '/admin/drafts'
-      return
-    }
-
-    toast.success(`Chapter ${chapterNumber} saved — preview your series`)
-    onNext(chapterId, pages)
+    if (destination === 'draft') onSaveDraft()
+    else onNext()
   }
 
   const quickCheck = [
@@ -243,7 +167,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
 
   return (
     <>
-      <div className="flex flex-1 gap-6 px-8 pb-28 max-w-8xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
         <div className="flex-1 space-y-5">
 
           {/* 01 Chapter details */}
@@ -255,7 +179,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
                   Chapter title
                   <span style={{ float: 'right', fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional · readers see this on the index</span>
                 </label>
-                <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="The Beginning" />
+                <input style={inputStyle} value={chapterTitle} onChange={e => onChapterTitleChange(e.target.value)} placeholder="The Beginning" />
               </div>
             </div>
           </Card>
@@ -291,9 +215,8 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', 
-                                  gridTemplateColumns: 'repeat(5, 1fr)', 
-                                  gap: 10 }}>
+                    <div style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />
                       ))}
@@ -305,6 +228,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
                         <span style={{ fontSize: 20, color: 'var(--ryu-text-3)' }}>+</span>
                         <p style={{ fontSize: 10, color: 'var(--ryu-text-3)' }}>Add pages</p>
                       </div>
+                    </div>
                     </div>
                   </SortableContext>
                 </DndContext>
@@ -407,7 +331,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {!submitting && (
             <button
-              onClick={() => saveAndProceed('draft')}
+              onClick={() => proceed('draft')}
               style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
             >
               Save as draft
@@ -415,11 +339,10 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
           )}
           <button
             disabled={submitting || pages.length === 0}
-            onClick={() => saveAndProceed('next')}
+            onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}
           >
-            {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {submitting ? 'Uploading pages...' : 'Next — Preview →'}
+            Next — Preview →
           </button>
         </div>
       </div>

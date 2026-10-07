@@ -14,6 +14,8 @@ type Props = {
   totalPages: number
   lastPublishedAt: string | null
   firstChapterNumber: number
+  /** Published chapter ids — progress pointing anywhere else is stale. */
+  chapterIds: string[]
 }
 
 const STORAGE_KEY = 'ryu.bookmarks.series'
@@ -28,7 +30,7 @@ function getBookmarkMap(): Record<string, boolean> {
 }
 
 // Same key/shape as ContinueReadingBar and ChapterList — reading-progress-{seriesId}
-function getReadingProgress(seriesId: string): ReadingProgress | null {
+function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProgress | null {
   if (typeof window === 'undefined') return null
   try {
     const raw = localStorage.getItem(`reading-progress-${seriesId}`)
@@ -36,6 +38,11 @@ function getReadingProgress(seriesId: string): ReadingProgress | null {
 
     const parsed = JSON.parse(raw) as ReadingProgress
     if (typeof parsed.chapterNumber !== 'number' || typeof parsed.chapterId !== 'string') {
+      return null
+    }
+    // Chapter deleted or unpublished since it was read: no Continue for it
+    if (!chapterIds.includes(parsed.chapterId)) {
+      localStorage.removeItem(`reading-progress-${seriesId}`)
       return null
     }
     return parsed
@@ -49,6 +56,7 @@ export default function SeriesHeader({
   chapterCount,
   lastPublishedAt,
   firstChapterNumber,
+  chapterIds,
 }: Props) {
   const [bookmarked, setBookmarked] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -62,8 +70,8 @@ export default function SeriesHeader({
 
   // Hydrate reading progress from localStorage (same key as ContinueReadingBar/ChapterList)
   useEffect(() => {
-    setProgress(getReadingProgress(series.id))
-  }, [series.id])
+    setProgress(getReadingProgress(series.id, chapterIds))
+  }, [series.id, chapterIds])
 
   function handleRestart() {
     try {
