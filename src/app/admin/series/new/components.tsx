@@ -8,11 +8,12 @@ export function Card({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function CardLabel({ n, title }: { n: string; title: string }) {
+export function CardLabel({ n, title, children }: { n: string; title: string; children?: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
       <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', letterSpacing: 1, fontWeight: 600 }}>{n}</span>
       <span className="font-heading" style={{ fontSize: 16, fontWeight: 600, letterSpacing: -0.2, color: 'var(--ryu-text)' }}>{title}</span>
+      {children}
     </div>
   )
 }

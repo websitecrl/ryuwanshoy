@@ -186,7 +186,23 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
           {/* 02 Pages */}
           <Card>
-            <CardLabel n="02" title="Pages" />
+            <CardLabel n="02" title="Pages">
+              {pages.length > 1 && (
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={reversed}
+                  onClick={toggleReversed}
+                  disabled={submitting}
+                  style={{ marginLeft: 'auto', alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)', whiteSpace: 'nowrap', flexShrink: 0 }}
+                >
+                  Reverse order
+                  <span style={{ width: 32, height: 18, borderRadius: 9, padding: 2, background: reversed ? 'var(--ryu-primary)' : 'var(--ryu-border)', transition: 'background 150ms ease', display: 'flex' }}>
+                    <span style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--ryu-surface-1)', transform: reversed ? 'translateX(14px)' : 'translateX(0)', transition: 'transform 150ms ease' }} />
+                  </span>
+                </button>
+              )}
+            </CardLabel>
 
             {/* Drop zone */}
             <div
@@ -232,28 +248,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                     </div>
                   </SortableContext>
                 </DndContext>
-
-                <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', fontSize: 12, color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                  <span>
-                    <span style={{ color: 'var(--ryu-primary-deep)' }}>ℹ</span>
-                    {' '}Drag pages to reorder. Numbers update automatically.
-                  </span>
-                  {pages.length > 1 && (
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={reversed}
-                      onClick={toggleReversed}
-                      disabled={submitting}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)', whiteSpace: 'nowrap', flexShrink: 0 }}
-                    >
-                      Reverse order
-                      <span style={{ width: 32, height: 18, borderRadius: 9, padding: 2, background: reversed ? 'var(--ryu-primary)' : 'var(--ryu-border)', transition: 'background 150ms ease', display: 'flex' }}>
-                        <span style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--ryu-surface-1)', transform: reversed ? 'translateX(14px)' : 'translateX(0)', transition: 'transform 150ms ease' }} />
-                      </span>
-                    </button>
-                  )}
-                </div>
               </>
             )}
           </Card>
