@@ -90,7 +90,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
   return (
     <>
-      <div className="flex flex-1 gap-6 px-8 pb-28 max-w-8xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
 
         {/* LEFT — 01 Title & link, 02 Story, 04 Access */}
         <div className="flex-1 space-y-5">
@@ -197,7 +197,8 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             <label style={{ ...labelStyle, marginBottom: 8 }}>Cover <span style={{ color: 'var(--ryu-primary)' }}>*</span> <span style={{ float: 'right', fontSize: 10.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>460 × 640 px</span></label>
             {data.coverPreview ? (
               <div style={{ borderRadius: 10, border: '2px solid var(--ryu-primary)', overflow: 'hidden', background: 'var(--ryu-primary-soft)' }}>
-                <div style={{ position: 'relative', width: '100%', aspectRatio: '460/640' }}>
+                {/* Sized to the viewport so a cover never pushes the page into scrolling */}
+                <div style={{ position: 'relative', height: 'min(444px, 34dvh)', width: 'calc(min(444px, 34dvh) * 0.71875)', margin: '0 auto' }}>
                   <Image src={data.coverPreview} alt="Cover" fill className="object-cover" />
                 </div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '10px 12px' }}>
@@ -244,7 +245,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
       </div>
 
-      <div style={{ ...BOTTOM_BAR, position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50 }}>
+      <div style={BOTTOM_BAR}>
         {!submitting && (
           <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: '#DC2626', textDecoration: 'none' }}>
             Discard

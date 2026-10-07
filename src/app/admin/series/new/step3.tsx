@@ -28,7 +28,7 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: '#111', borderRadius: 10, overflowY: 'auto', maxHeight: 700 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: '#111', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
       {pages.map((page, idx) => (
         <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: page.is_spread ? 700 : 500 }}>
           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
@@ -92,8 +92,9 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
     ? leaves[(spread + 1) * 2 + 1]
     : leaves[(spread - 1) * 2]
 
-  const PAGE_W = 420
-  const PAGE_H = Math.round(400 * (3300 / 2550))
+  // CSS sizes so the open book fits the viewport (0.8108 ≈ the old 420 / 518)
+  const PAGE_H = 'clamp(260px, calc(100dvh - 440px), 518px)'
+  const PAGE_W = `calc(${PAGE_H} * 0.8108)`
 
   return (
     <>
@@ -239,18 +240,11 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
   ]
   const preflightDone = preflight.filter(p => p.done).length
  
-  const whenYouPublish = [
-    { text: `Series appears on ryuwanshoy.com/series/${seriesData.slug} immediately.`, icon: '✓', green: true },
-    { text: `Chapter 1 (${uploadedPages.length} pages) goes live; readers can read it.`, icon: '✓', green: true },
-    { text: 'Pages uploaded to Cloudflare R2 & cached on CDN (≈ 2 min).', icon: '✓', green: true },
-  //   { text: 'Early-access subscribers get a push notification.', icon: '○', green: false },
-  ]
- 
   return (
     <>
-      <div className="flex flex-1 gap-6 px-8 pb-28 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
  
-        {/* LEFT — reader preview + series summary */}
+        {/* LEFT — reader preview */}
         <div className="flex-1 space-y-5">
 
           {/* Partial save — rows exist unpublished, some pages still need uploading */}
@@ -300,56 +294,11 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               : <FlipViewer   pages={uploadedPages} />
             }
           </Card>
- 
-          {/* Series summary */}
-          <Card>
-            <CardLabel n="01" title="Series summary" />
-            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-              {/* Cover */}
-              <div style={{ width: 90, height: 126, borderRadius: 8, overflow: 'hidden', flexShrink: 0, position: 'relative', background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
-                {seriesData.coverPreview
-                  ? <Image src={seriesData.coverPreview} alt="Cover" fill className="object-cover" />
-                  : (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: 8, background: 'linear-gradient(to bottom, #3D1A0E, #7C2D12)' }}>
-                      <p style={{ fontSize: 11, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{seriesData.title || 'Untitled'}</p>
-                      <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>{seriesData.genre}</p>
-                    </div>
-                  )
-                }
-              </div>
-              {/* Meta */}
-              <div style={{ flex: 1 }}>
-                <h2 className="font-heading" style={{ fontSize: 20, fontWeight: 700, color: 'var(--ryu-text)', marginBottom: 2 }}>{seriesData.title || 'Untitled'}</h2>
-                <p style={{ fontSize: 12, color: 'var(--ryu-text-2)', marginBottom: 12 }}>
-                  {seriesData.genre} · {seriesData.status.charAt(0).toUpperCase() + seriesData.status.slice(1)}
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
-                  {[
-                    { label: 'CHAPTERS', value: '1' },
-                    { label: 'PAGES',    value: String(uploadedPages.length) },
-                    { label: 'URL',      value: `/${seriesData.slug.slice(0, 8)}${seriesData.slug.length > 8 ? '…' : ''}` },
-                    { label: 'STATUS',   value: 'Draft', highlight: true },
-                  ].map(item => (
-                    <div key={item.label} style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)' }}>
-                      <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--ryu-text-3)', letterSpacing: 0.8, marginBottom: 4 }}>{item.label}</div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: item.highlight ? 'var(--ryu-primary)' : 'var(--ryu-text)' }}>{item.value}</div>
-                    </div>
-                  ))}
-                </div>
-                {seriesData.description && (
-                  <div style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)' }}>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--ryu-text-3)', letterSpacing: 0.8, marginBottom: 6 }}>SYNOPSIS</div>
-                    <p style={{ fontSize: 12, color: 'var(--ryu-text-2)', lineHeight: 1.5, margin: 0 }}>{seriesData.description}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
- 
+
         </div>
  
         {/* RIGHT — sticky panel */}
-        <div className="w-64 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="w-72 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <div className="space-y-4">
  
             {/* Pre-flight checklist */}
@@ -371,17 +320,47 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               ))}
             </Card>
  
-            {/* When you publish */}
+            {/* Series summary */}
             <Card>
-              <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-3" style={{ color: 'var(--ryu-text-2)' }}>When you publish</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {whenYouPublish.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 8 }}>
-                    <span style={{ fontSize: 12, color: item.green ? '#16A34A' : 'var(--ryu-text-3)', flexShrink: 0, marginTop: 1 }}>{item.icon}</span>
-                    <p style={{ fontSize: 12, color: 'var(--ryu-text-2)', lineHeight: 1.4, margin: 0 }}>{item.text}</p>
+              <CardLabel n="01" title="Series summary" />
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
+                {/* Cover */}
+                <div style={{ width: 72, height: 100, borderRadius: 6, overflow: 'hidden', flexShrink: 0, position: 'relative', background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
+                  {seriesData.coverPreview
+                    ? <Image src={seriesData.coverPreview} alt="Cover" fill className="object-cover" />
+                    : (
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: 6, background: 'linear-gradient(to bottom, #3D1A0E, #7C2D12)' }}>
+                        <p style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{seriesData.title || 'Untitled'}</p>
+                      </div>
+                    )
+                  }
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h2 className="font-heading" style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: 'var(--ryu-text)', marginBottom: 4, overflowWrap: 'anywhere' }}>{seriesData.title || 'Untitled'}</h2>
+                  <p style={{ fontSize: 12, color: 'var(--ryu-text-2)' }}>
+                    {seriesData.genre} · {seriesData.status.charAt(0).toUpperCase() + seriesData.status.slice(1)}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: seriesData.description ? 12 : 0 }}>
+                {[
+                  { label: 'CHAPTERS', value: '1' },
+                  { label: 'PAGES',    value: String(uploadedPages.length) },
+                  { label: 'URL',      value: `/${seriesData.slug}` },
+                  { label: 'STATUS',   value: 'Draft', highlight: true },
+                ].map(item => (
+                  <div key={item.label} style={{ padding: '7px 9px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', minWidth: 0 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--ryu-text-3)', letterSpacing: 0.8, marginBottom: 3 }}>{item.label}</div>
+                    <div title={item.value} style={{ fontSize: 13, fontWeight: 700, color: item.highlight ? 'var(--ryu-primary)' : 'var(--ryu-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.value}</div>
                   </div>
                 ))}
               </div>
+              {seriesData.description && (
+                <div style={{ padding: '9px 11px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)' }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--ryu-text-3)', letterSpacing: 0.8, marginBottom: 5 }}>SYNOPSIS</div>
+                  <p className="line-clamp-3" style={{ fontSize: 12, color: 'var(--ryu-text-2)', lineHeight: 1.5, margin: 0 }}>{seriesData.description}</p>
+                </div>
+              )}
             </Card>
  
           </div>

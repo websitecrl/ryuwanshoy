@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { isWizardSaving, subscribeWizardSaving } from '@/lib/wizard-saving'
 import ThemeToggle from '@/components/shared/ThemeToggle'
 import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit } from 'lucide-react'
 
@@ -33,11 +34,18 @@ export default function Sidebar() {
   const [draftCount, setDraftCount] = useState<number>(0)
 
 useEffect(() => {
-  // Initial fetch
-  fetch('/api/drafts')
-    .then(r => r.json())
-    .then(data => { if (data.count !== undefined) setDraftCount(data.count) })
-    .catch(() => {})
+  // Skipped while the wizard publishes: its rows are unpublished until the
+  // end and would flash in the badge. Re-checked before setting, since the
+  // flag can turn on while a fetch is in flight.
+  function refreshDrafts() {
+    if (isWizardSaving()) return
+    fetch('/api/drafts')
+      .then(r => r.json())
+      .then(data => { if (data.count !== undefined && !isWizardSaving()) setDraftCount(data.count) })
+      .catch(() => {})
+  }
+
+  refreshDrafts()
 
   // Realtime
   const channel = supabase
@@ -45,16 +53,14 @@ useEffect(() => {
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'chapters' },
-      () => {
-        fetch('/api/drafts')
-          .then(r => r.json())
-          .then(data => { if (data.count !== undefined) setDraftCount(data.count) })
-          .catch(() => {})
-      }
+      refreshDrafts
     )
     .subscribe()
 
-  return () => { supabase.removeChannel(channel) }
+  // Catch up once publishing ends (or fails and leaves real drafts behind)
+  const unsubscribe = subscribeWizardSaving(saving => { if (!saving) refreshDrafts() })
+
+  return () => { supabase.removeChannel(channel); unsubscribe() }
 }, [])
 
 // R2 storage — runs once on mount

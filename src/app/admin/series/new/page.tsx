@@ -10,6 +10,7 @@ import Step2 from './step2'
 import Step3 from './step3'
 import { type SeriesFormData, type LocalPage, type SaveState } from './types'
 import { createSeries, createChapter, uploadPage, setPublished } from './save'
+import { setWizardSaving } from '@/lib/wizard-saving'
 
 // ── Default form state ─────────────────────────────────────────────────────
 
@@ -72,6 +73,16 @@ function WizardShell() {
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [hasWork])
+
+  // ── Hide the sidebar Drafts badge while publishing ──────────────────────
+  // Publish rows stay unpublished until the end; the cleanup clears the flag
+  // on every exit path (success, failure, unmount). Draft saves don't set it.
+  const savingKind = saving?.kind
+  useEffect(() => {
+    if (savingKind !== 'publish') return
+    setWizardSaving(true)
+    return () => setWizardSaving(false)
+  }, [savingKind])
 
   // ── Sync URL silently on every step change — no page reload ─────────────
   useEffect(() => {
@@ -162,7 +173,7 @@ function WizardShell() {
   }
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       <WizardHeader step={step} seriesTitle={formData.title} />
 
       {step === 1 && (

@@ -119,8 +119,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
    * @param files - raw files from the input or drop event; non-images are ignored
    */
   async function handleFiles(files: File[]) {
-    // TEMP: checking whether the browser order matches the selection order
-    console.log('[step2 upload order]', files.map(f => f.name))
     const imageFiles = files.filter(f => f.type.startsWith('image/'))
     if (!imageFiles.length) return
     const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
@@ -169,7 +167,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   return (
     <>
-      <div className="flex flex-1 gap-6 px-8 pb-28 max-w-8xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
         <div className="flex-1 space-y-5">
 
           {/* 01 Chapter details */}
@@ -217,9 +215,8 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', 
-                                  gridTemplateColumns: 'repeat(5, 1fr)', 
-                                  gap: 10 }}>
+                    <div style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />
                       ))}
@@ -231,6 +228,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                         <span style={{ fontSize: 20, color: 'var(--ryu-text-3)' }}>+</span>
                         <p style={{ fontSize: 10, color: 'var(--ryu-text-3)' }}>Add pages</p>
                       </div>
+                    </div>
                     </div>
                   </SortableContext>
                 </DndContext>
