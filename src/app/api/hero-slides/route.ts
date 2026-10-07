@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
 // ─── GET — public gets visible only, admin gets all ───────────────────────────
 export async function GET() {
@@ -50,6 +51,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('POST /api/hero-slides')
 
   let body
   try {

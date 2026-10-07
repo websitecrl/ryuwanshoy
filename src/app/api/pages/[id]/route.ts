@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteFromR2 } from '@/lib/r2'
 
 // ─── DELETE — admin only ──────────────────────────────────────────────────────
@@ -11,6 +12,7 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('DELETE /api/pages/[id]')
 
   try {
     const { id } = await params

@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteConfirmedDrafts, getDraftPreview } from '@/lib/drafts'
 
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('DELETE /api/drafts')
 
   let body: unknown
   try {

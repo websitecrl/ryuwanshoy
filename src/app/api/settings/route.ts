@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
+import { revalidatePublicContent } from "@/lib/cache/public-cache";
 import type { TablesUpdate } from "@/types/database";
 
 export const dynamic = 'force-dynamic'
@@ -51,6 +52,7 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
+  revalidatePublicContent('PATCH /api/settings');
 
   try {
   const body = await req.json() as Record<string, unknown>

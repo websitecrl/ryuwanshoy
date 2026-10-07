@@ -1,16 +1,23 @@
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { cachedPublicQuery, nullIfNotFound, PublicNotFoundError } from '@/lib/cache/public-cache'
 import ReaderShell from '@/components/reader/ReaderShell'
 
-export const dynamic = 'force-dynamic'
+// The HTML is rendered per request, like before caching (see connection() in
+// the page); only the Supabase reads are cached. Page level ISR would also
+// store a page for every random URL, because unknown chapters currently
+// render the not-found page with a 200 status (a known soft 404, see Plan.md).
 
 type AdjacentChapter = { chapter_number: number } | null
 
-// cache() dedupes the call between generateMetadata and the page render.
-const getChapterData = cache(async (slug: string, chapterNumber: number) => {
-  const supabase = await createClient()
+// Cached across requests. A missing series/chapter throws PublicNotFoundError
+// so it is not cached (bots probing random URLs must not fill the cache); a
+// Supabase error throws so a hiccup is never cached either.
+const queryChapterData = cachedPublicQuery('comics:chapter', async (slug: string, chapterNumber: number) => {
+  const supabase = createPublicClient()
 
   // 1. Series (published only)
   const { data: series, error: seriesError } = await supabase
@@ -18,16 +25,17 @@ const getChapterData = cache(async (slug: string, chapterNumber: number) => {
     .select('id, title, slug, cover_image, status')
     .eq('slug', slug)
     .eq('is_published', true)
-    .single()
+    .maybeSingle()
 
-  if (seriesError || !series) return null
+  if (seriesError) throw seriesError
+  if (!series) throw new PublicNotFoundError(`series "${slug}"`)
 
   // 2. Chapter, prev, next, and all chapters only depend on the series
   const [
     { data: chapter, error: chapterError },
-    { data: prevChapter },
-    { data: nextChapter },
-    { data: allChapters },
+    { data: prevChapter, error: prevError },
+    { data: nextChapter, error: nextError },
+    { data: allChapters, error: allError },
   ] = await Promise.all([
     supabase
       .from('chapters')
@@ -36,7 +44,7 @@ const getChapterData = cache(async (slug: string, chapterNumber: number) => {
       .eq('chapter_number', chapterNumber)
       .eq('is_published', true)
       .eq('is_draft', false)
-      .single(),
+      .maybeSingle(),
 
     supabase
       .from('chapters')
@@ -70,14 +78,19 @@ const getChapterData = cache(async (slug: string, chapterNumber: number) => {
       .order('chapter_number', { ascending: true }),
   ])
 
-  if (chapterError || !chapter) return null
+  const queryError = chapterError ?? prevError ?? nextError ?? allError
+  if (queryError) throw queryError
+  if (!chapter) throw new PublicNotFoundError(`chapter ${slug}/${chapterNumber}`)
 
   // 3. Pages
-  const { data: pages } = await supabase
+  const { data: pages, error: pagesError } = await supabase
     .from('pages')
     .select('id, image_url, page_number, chapter_id, is_spread')
     .eq('chapter_id', chapter.id)
     .order('page_number', { ascending: true })
+
+  // Without this, a failed read would cache "This chapter has no pages yet."
+  if (pagesError) throw pagesError
 
   return {
     series,
@@ -88,6 +101,12 @@ const getChapterData = cache(async (slug: string, chapterNumber: number) => {
     nextChapter: nextChapter as AdjacentChapter,
   }
 })
+
+// cache() dedupes the call between generateMetadata and the page render.
+// Returns null when the series or chapter doesn't exist (or isn't published).
+const getChapterData = cache((slug: string, chapterNumber: number) =>
+  nullIfNotFound(queryChapterData(slug, chapterNumber))
+)
 
 export async function generateMetadata({
   params,
@@ -132,6 +151,11 @@ export default async function ChapterReaderPage({
 }: {
   params: Promise<{ slug: string; chapter: string }>
 }) {
+  // Render per request (as before caching); the data underneath is cached.
+  // Not `dynamic = 'force-dynamic'`: that also disables unstable_cache,
+  // which would send every view back to Supabase.
+  await connection()
+
   const { slug, chapter } = await params
   const chapterNumber = parseInt(chapter, 10)
 

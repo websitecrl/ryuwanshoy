@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import PostsClient from '../(components)/PostsClient'
 
 export const metadata: Metadata = {
@@ -8,7 +9,8 @@ export const metadata: Metadata = {
   description: 'Random drawings, WIPs, memes, and everything in between.',
 }
 
-export const dynamic = 'force-dynamic'
+// No ISR here: reading searchParams (?type=) makes the page HTML render per
+// request. The query result is cached instead (getPosts), keyed by type.
 
 const POST_TYPES = ['sketch', 'drawing', 'meme', 'other']
 
@@ -20,21 +22,38 @@ const TYPE_FILTERS = [
   { value: 'other',    label: 'Other' },
 ]
 
-async function getPosts(type?: string) {
-  const supabase = await createClient()
+/**
+ * Cached posts list for one filter.
+ * @param type - an entry of POST_TYPES, or null for all. The caller must
+ *   validate it: it is part of the cache key, so passing raw ?type= input
+ *   would let anyone create unlimited cache entries.
+ */
+const queryPosts = cachedPublicQuery('posts:list', async (type: string | null) => {
+  const supabase = createPublicClient()
 
   let query = supabase
     .from('posts')
     .select('id, title, description, image_url, post_type, created_at')
     .order('created_at', { ascending: false })
 
-  if (type && POST_TYPES.includes(type)) {
+  if (type) {
     query = query.eq('post_type', type)
   }
 
   const { data, error } = await query
-  console.log('posts data:', data, 'error:', error)
+  if (error) throw error
   return data ?? []
+})
+
+// Returns [] on failure so the page still renders its header and filters.
+// Safe: the failure is never cached, and this HTML isn't cached either.
+async function getPosts(type?: string) {
+  try {
+    return await queryPosts(type && POST_TYPES.includes(type) ? type : null)
+  } catch (err) {
+    console.error('getPosts failed:', err)
+    return []
+  }
 }
 
 export default async function PostsPage({

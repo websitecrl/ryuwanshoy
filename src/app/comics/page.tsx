@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import SeriesGrid from '@/components/admin/reader/SeriesGrid'
 
 export async function generateMetadata() {
@@ -21,16 +22,16 @@ export async function generateMetadata() {
   }
 }
 
-export const dynamic = 'force-dynamic'
+// ISR: see src/lib/cache/public-cache.ts.
+export const revalidate = 60
 
-export default async function ComicsPage() {
-  const supabase = await createClient()
+// Throws on any Supabase error so a failed read is never cached (see
+// cachedPublicQuery). Before caching, errors were ignored and the page
+// rendered empty.
+const getComicsData = cachedPublicQuery('comics:index', async () => {
+  const supabase = createPublicClient()
 
-  const [
-    { data: seriesData },
-    { data: chaptersData },
-    { count: pagesCount },
-  ] = await Promise.all([
+  const [seriesRes, chaptersRes, pagesRes] = await Promise.all([
     supabase
       .from('series')
       .select('*')
@@ -47,8 +48,18 @@ export default async function ComicsPage() {
       .select('*', { count: 'exact', head: true }),
   ])
 
-  const series = seriesData ?? []
-  const chapters = chaptersData ?? []
+  const error = seriesRes.error ?? chaptersRes.error ?? pagesRes.error
+  if (error) throw error
+
+  return {
+    series: seriesRes.data ?? [],
+    chapters: chaptersRes.data ?? [],
+    pagesCount: pagesRes.count ?? 0,
+  }
+})
+
+export default async function ComicsPage() {
+  const { series, chapters, pagesCount } = await getComicsData()
 
   // Chapter counts per series
   const chapterCounts: Record<string, number> = {}
