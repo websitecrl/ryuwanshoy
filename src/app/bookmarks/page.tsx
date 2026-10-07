@@ -38,7 +38,8 @@ export default async function BookmarksPage() {
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--background)' }}>
-      <BookmarksGrid series={series} chapterCounts={chapterCounts} />
+      {/* seriesData is null only when the query failed — never prune bookmarks then */}
+      <BookmarksGrid series={series} chapterCounts={chapterCounts} seriesLoaded={seriesData !== null} />
     </main>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 
@@ -17,14 +17,39 @@ export default function ContinueReading() {
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<ContinueReadingData | null>(null)
 
+  // Stale entry (series/chapter gone): drop it so it never comes back
+  const forget = useCallback(() => {
+    try { localStorage.removeItem('continueReading') } catch {}
+    setData(null)
+  }, [])
+
   useEffect(() => {
     setMounted(true)
+    let entry: ContinueReadingData
     try {
       const raw = localStorage.getItem('continueReading')
       if (!raw) return
-      setData(JSON.parse(raw) as ContinueReadingData)
-    } catch { /* corrupted — ignore */ }
-  }, [])
+      entry = JSON.parse(raw) as ContinueReadingData
+    } catch { return /* corrupted — ignore */ }
+
+    // Only show once the series and chapter are confirmed to still be live.
+    // The public series route 404s for a deleted/unpublished series and only
+    // lists published chapters. A network/server error keeps the entry.
+    let cancelled = false
+    fetch(`/api/series/${encodeURIComponent(entry.seriesSlug)}`)
+      .then(async res => {
+        if (cancelled) return
+        if (res.status === 404) { forget(); return }
+        if (!res.ok) return
+        const json = await res.json() as { data: { chapters?: { chapter_number: number }[] } | null }
+        if (cancelled) return
+        const live = json.data?.chapters?.some(c => c.chapter_number === entry.chapterNumber)
+        if (live) setData(entry)
+        else forget()
+      })
+      .catch(() => { /* offline — keep the entry, just don't show it */ })
+    return () => { cancelled = true }
+  }, [forget])
 
   if (!mounted || !data) return null
 

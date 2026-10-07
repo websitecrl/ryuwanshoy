@@ -224,7 +224,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows, onBack, onSaveDraft, onPublish }: Step3Props) {
   const [mode, setMode] = useState<'scroll' | 'flip'>('scroll')
   const publishing = saving !== null
-  const progressLabel = saving?.page ? `Uploading page ${saving.page.current}/${saving.page.total}` : null
 
   // Pages a previous save attempt didn't finish — Publish / Save as draft retry these only
   const failedPages  = uploadedPages.flatMap((p, i) => p.error ? [i + 1] : [])
@@ -408,7 +407,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
           <button disabled={publishing} onClick={onPublish}
             style={{ padding: '10px 28px', borderRadius: 8, border: '1px solid #15803D', background: '#16A34A', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: publishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.1)' }}>
             {publishing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-            {progressLabel ?? (saving?.kind === 'draft' ? 'Saving draft...' : publishing ? 'Publishing...' : 'Publish series now')}
+            {publishing ? 'Publishing...' : 'Publish series now'}
           </button>
         </div>
       </div>

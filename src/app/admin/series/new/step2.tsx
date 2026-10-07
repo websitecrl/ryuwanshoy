@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft, Loader2 } from 'lucide-react'
+import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -32,7 +32,7 @@ function SortablePage({
         gridColumn: page.is_spread ? 'span 2' : undefined,
         borderRadius: 8,
         overflow: 'hidden',
-        border: `2px solid ${page.error ? '#FCA5A5' : page.uploaded ? '#86EFAC' : 'var(--ryu-border)'}`,
+        border: '2px solid var(--ryu-border)',
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
@@ -43,22 +43,6 @@ function SortablePage({
       {...listeners}
     >
       <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover" />
-
-      {page.uploading && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <Loader2 size={16} className="animate-spin" style={{ color: '#fff' }} />
-        </div>
-      )}
-      {page.uploaded && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(22,163,74,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <CheckCircle2 size={16} style={{ color: '#86EFAC' }} />
-        </div>
-      )}
-      {page.error && (
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(220,38,38,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-          <span style={{ color: '#FCA5A5', fontSize: 10, fontWeight: 700 }}>Failed</span>
-        </div>
-      )}
 
       {/* Page number + spread badge */}
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
@@ -128,17 +112,16 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
   /**
    * Turns picked/dropped files into local page entries and appends them.
    *
-   * The OS file dialog does NOT return files in click order (Windows puts the
-   * focused file first), so we sort by filename with a natural compare —
-   * "page2" before "page10". Creators name pages in order, so this is the
-   * reliable signal. Fine-tune afterwards with drag-and-drop or the reverse switch.
+   * Keeps the exact order the browser hands over — no filename sort, since
+   * names like "day_two" / "day_three" don't sort into reading order.
+   * Fine-tune afterwards with drag-and-drop or the reverse switch.
    *
    * @param files - raw files from the input or drop event; non-images are ignored
    */
   async function handleFiles(files: File[]) {
-    const imageFiles = files
-      .filter(f => f.type.startsWith('image/'))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }))
+    // TEMP: checking whether the browser order matches the selection order
+    console.log('[step2 upload order]', files.map(f => f.name))
+    const imageFiles = files.filter(f => f.type.startsWith('image/'))
     if (!imageFiles.length) return
     const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
       const preview   = URL.createObjectURL(file)
@@ -361,8 +344,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
             onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}
           >
-            {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {saving?.page ? `Uploading page ${saving.page.current}/${saving.page.total}` : submitting ? 'Saving...' : 'Next — Preview →'}
+            Next — Preview →
           </button>
         </div>
       </div>

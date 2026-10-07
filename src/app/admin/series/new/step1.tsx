@@ -263,8 +263,8 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             disabled={submitting || !hasTitle || !hasSlug}
             onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.06)', opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
-            {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {saving ? 'Saving...' : checkingSlug ? 'Checking slug...' : 'Next — First Chapter →'}
+            {checkingSlug ? <Loader2 size={14} className="animate-spin" /> : null}
+            {checkingSlug ? 'Checking slug...' : 'Next — First Chapter →'}
           </button>
         </div>
       </div>

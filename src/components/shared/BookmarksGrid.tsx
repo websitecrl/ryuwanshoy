@@ -21,17 +21,35 @@ function getBookmarkMap(): Record<string, boolean> {
 }
 
 type Props = {
+  /** Every published series. */
   series: Series[]
   chapterCounts: Record<string, number>
+  /** false when the series query failed, so missing ids can't be trusted. */
+  seriesLoaded: boolean
 }
 
-export default function BookmarksGrid({ series, chapterCounts }: Props) {
+export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: Props) {
   const [bookmarkMap, setBookmarkMap] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    setBookmarkMap(getBookmarkMap())
+    const map = getBookmarkMap()
+
+    // Drop bookmarks for series that were deleted or unpublished, but only
+    // when the list really loaded — a failed query must never wipe them.
+    if (seriesLoaded) {
+      const live = new Set(series.map(s => s.id))
+      const stale = Object.keys(map).filter(id => !live.has(id))
+      if (stale.length) {
+        for (const id of stale) delete map[id]
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
+          window.dispatchEvent(new Event('storage')) // keep BookmarksNavLink in sync
+        } catch {}
+      }
+    }
+    setBookmarkMap(map)
 
     function refresh() {
       setBookmarkMap(getBookmarkMap())
@@ -39,7 +57,7 @@ export default function BookmarksGrid({ series, chapterCounts }: Props) {
     // Sync when a SeriesCard elsewhere toggles a bookmark on the same page
     window.addEventListener('storage', refresh)
     return () => window.removeEventListener('storage', refresh)
-  }, [])
+  }, [series, seriesLoaded])
 
   // Avoid a flash of the empty state before localStorage is read
   if (!mounted) return null

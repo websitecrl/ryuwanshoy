@@ -134,13 +134,13 @@ export default function PageUploader({
 
 
   const uploadFiles = useCallback(async (files: File[]) => {
+    // TEMP: checking whether the browser order matches the selection order
+    console.log('[PageUploader upload order]', files.map(f => f.name))
+    // Upload in the exact order the browser hands over — no filename sort
     const imgs = files.filter(f => f.type.startsWith('image/'))
     if (!imgs.length) return
     setError(null)
     setUploading(true)
-
-    // Sort by filename so 001.jpg uploads before 002.jpg
-    imgs.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })) // natural: page2 before page10
 
     try {
       const uploaded: Page[] = []

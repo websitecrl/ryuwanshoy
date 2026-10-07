@@ -199,6 +199,41 @@ function WizardShell() {
           onPublish={publish}
         />
       )}
+
+      {saving && <SavingOverlay saving={saving} />}
+    </div>
+  )
+}
+
+// ── Saving overlay — covers the whole wizard so nothing can be clicked twice ─
+
+function SavingOverlay({ saving }: { saving: NonNullable<SaveState> }) {
+  const { page } = saving
+  const percent = page ? Math.round(((page.current - 1) / page.total) * 100) : 0
+
+  return (
+    <div
+      role="alertdialog"
+      aria-modal="true"
+      aria-busy="true"
+      aria-labelledby="saving-overlay-title"
+      style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'color-mix(in srgb, var(--ryu-ink) 55%, transparent)' }}
+    >
+      <div style={{ width: '100%', maxWidth: 340, padding: '24px 28px', borderRadius: 12, background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', textAlign: 'center' }}>
+        <Loader2 size={24} className="animate-spin" style={{ color: 'var(--ryu-primary)', margin: '0 auto 12px' }} />
+        <p id="saving-overlay-title" style={{ fontSize: 15, fontWeight: 700, color: 'var(--ryu-text)', marginBottom: 4 }}>
+          {saving.kind === 'publish' ? 'Publishing your series' : 'Saving draft'}
+        </p>
+        <p aria-live="polite" style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: page ? 12 : 0 }}>
+          {page ? `Uploading page ${page.current}/${page.total}` : 'Saving series details...'}
+        </p>
+        {page && (
+          <div style={{ height: 6, borderRadius: 99, background: 'var(--ryu-surface-3)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${percent}%`, background: 'var(--ryu-primary)', transition: 'width 200ms ease' }} />
+          </div>
+        )}
+        <p style={{ fontSize: 11.5, color: 'var(--ryu-text-3)', marginTop: 12 }}>Keep this tab open until it finishes.</p>
+      </div>
     </div>
   )
 }

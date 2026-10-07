@@ -42,7 +42,11 @@ export async function GET(
 
     const { data, error } = await query.single()
 
-    if (error || !data) {
+    // PGRST116 = no row matched. Anything else is a real failure, so it must
+    // not look like "deleted" — callers prune local bookmarks on a 404.
+    if (error && error.code !== 'PGRST116') throw error
+
+    if (!data) {
       return NextResponse.json(
         { data: null, error: 'Series not found' },
         { status: 404 }
