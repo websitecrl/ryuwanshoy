@@ -1,19 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { toast } from 'sonner'
 import { CheckCircle2, Circle, ArrowLeft, Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, LocalPage, type SeriesFormData } from './types'
+import { BOTTOM_BAR, LocalPage, type SeriesFormData, type SaveState } from './types'
 
 interface Step3Props {
-  seriesId: string
   seriesData: SeriesFormData
-  chapterId: string
   uploadedPages: LocalPage[]
+  saving: SaveState
+  /** A save already created rows — going back is locked so edits can't drift from them. */
+  hasSavedRows: boolean
   onBack: () => void
+  onSaveDraft: () => void
+  onPublish: () => void
 }
  
 // ── Scroll viewer — pages stacked vertically ───────────────────────────────
@@ -220,30 +221,15 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
 // ── Step 3 ─────────────────────────────────────────────────────────────────
  
-export default function Step3({ seriesId, seriesData, chapterId, uploadedPages, onBack }: Step3Props) {
-  const router      = useRouter()
-  const [mode, setMode]         = useState<'scroll' | 'flip'>('scroll')
-  const [publishing, setPublishing] = useState(false)
- 
-  async function handlePublish() {
-    setPublishing(true)
- 
-    const sRes  = await fetch(`/api/series/${seriesId}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_published: true }),
-    })
-    const sJson = await sRes.json()
-    if (sJson.error) { toast.error(sJson.error); setPublishing(false); return }
- 
-    await fetch(`/api/chapters/${chapterId}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_published: true }),
-    })
- 
-    toast.success(`"${seriesData.title}" is now live!`)
-    router.replace('/admin/series')
-  }
- 
+export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows, onBack, onSaveDraft, onPublish }: Step3Props) {
+  const [mode, setMode] = useState<'scroll' | 'flip'>('scroll')
+  const publishing = saving !== null
+  const progressLabel = saving?.page ? `Uploading page ${saving.page.current}/${saving.page.total}` : null
+
+  // Pages a previous save attempt didn't finish — Publish / Save as draft retry these only
+  const failedPages  = uploadedPages.flatMap((p, i) => p.error ? [i + 1] : [])
+  const pendingCount = uploadedPages.filter(p => !p.uploaded).length
+
   const preflight = [
     { label: 'Series title & slug',                           done: seriesData.title.trim().length > 0 && seriesData.slug.trim().length > 0 },
     { label: 'Genre + status',                                done: seriesData.genre.length > 0 },
@@ -267,7 +253,17 @@ export default function Step3({ seriesId, seriesData, chapterId, uploadedPages, 
  
         {/* LEFT — reader preview + series summary */}
         <div className="flex-1 space-y-5">
- 
+
+          {/* Partial save — rows exist unpublished, some pages still need uploading */}
+          {hasSavedRows && !publishing && pendingCount > 0 && (
+            <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #FCA5A5', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
+              <strong>Nothing is published yet.</strong>{' '}
+              {failedPages.length > 0 && <>Page {failedPages.join(', ')} failed to upload. </>}
+              {pendingCount} of {uploadedPages.length} pages still need uploading.
+              Click <strong>Publish</strong> or <strong>Save as draft</strong> to retry; pages already uploaded won&apos;t be sent again.
+            </div>
+          )}
+
           {/* Reader preview */}
           <Card>
             {/* Header row */}
@@ -394,25 +390,25 @@ export default function Step3({ seriesId, seriesData, chapterId, uploadedPages, 
       </div>
  
       <div style={BOTTOM_BAR}>
-        {/* Hide back + draft buttons while publishing */}
-        {!publishing && (
+        {/* Hide back + draft buttons while publishing; back is locked once rows exist */}
+        {!publishing && !hasSavedRows && (
           <button onClick={onBack}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
             <ArrowLeft size={15} /> Back to chapter
           </button>
         )}
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: publishing ? 'auto' : 0 }}>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: publishing || hasSavedRows ? 'auto' : 0 }}>
           {!publishing && (
-            <button onClick={() => { window.location.href = '/admin/drafts' }}
+            <button onClick={onSaveDraft}
               style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
               Save as draft
             </button>
           )}
-          <button disabled={publishing} onClick={handlePublish}
+          <button disabled={publishing} onClick={onPublish}
             style={{ padding: '10px 28px', borderRadius: 8, border: '1px solid #15803D', background: '#16A34A', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: publishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.1)' }}>
             {publishing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-            {publishing ? 'Publishing...' : 'Publish series now'}
+            {progressLabel ?? (saving?.kind === 'draft' ? 'Saving draft...' : publishing ? 'Publishing...' : 'Publish series now')}
           </button>
         </div>
       </div>

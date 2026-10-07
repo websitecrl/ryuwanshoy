@@ -9,8 +9,7 @@ import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@d
 import { CSS } from '@dnd-kit/utilities'
 import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from '@/lib/constants'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage } from './types'
-import { compressImage } from '@/lib/image-compress'
+import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage, type SaveState } from './types'
 
 // ── Sortable page card ─────────────────────────────────────────────────────
 
@@ -93,22 +92,21 @@ function SortablePage({
 // ── Step 2 ─────────────────────────────────────────────────────────────────
 
 interface Step2Props {
-  seriesId: string
-  seriesTitle: string
-  existingChapterId?: string
-  initialPages?: LocalPage[]          // ← new: restores pages when going back
+  chapterTitle: string
+  onChapterTitleChange: (title: string) => void
+  // Pages live in the wizard so they (and their upload status) survive going back
+  pages: LocalPage[]
+  setPages: React.Dispatch<React.SetStateAction<LocalPage[]>>
+  saving: SaveState
   onBack: () => void
-  onNext: (chapterId: string, pages: LocalPage[]) => void
+  onNext: () => void
+  onSaveDraft: () => void
 }
 
-export default function Step2({ seriesId, existingChapterId, initialPages = [], onBack, onNext }: Step2Props) {
-  const chapterNumber = 1
-  const [chapterTitle, setChapterTitle] = useState('')
-  const [isEA]         = useState(false)
-  const [pages,        setPages]        = useState<LocalPage[]>(initialPages) // ← seeded from parent
+export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPages, saving, onBack, onNext, onSaveDraft }: Step2Props) {
   const [dragOver,     setDragOver]     = useState(false)
-  const [submitting,   setSubmitting]   = useState(false)
   const [reversed,     setReversed]     = useState(false)
+  const submitting = saving !== null
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -173,66 +171,11 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
     setReversed(r => !r)
   }
 
-  async function saveAndProceed(destination: 'draft' | 'next') {
+  /** Nothing is saved on "Next"; "Save as draft" creates the rows via the wizard. */
+  function proceed(destination: 'draft' | 'next') {
     if (pages.length === 0) { toast.error('Upload at least one page'); return }
-
-    if (destination === 'next' && existingChapterId) {
-      toast.success('Continuing with existing chapter')
-      onNext(existingChapterId, pages)
-      return
-    }
-
-    setSubmitting(true)
-
-    const chRes  = await fetch('/api/chapters', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        series_id:       seriesId,
-        chapter_number:  chapterNumber,
-        title:           chapterTitle || null,
-        is_early_access: isEA,
-        is_published:    false,
-        published_at:    new Date().toISOString(),
-      }),
-    })
-    const chJson = await chRes.json()
-    if (chJson.error) { toast.error(chJson.error); setSubmitting(false); return }
-
-    const chapterId = chJson.data.id
-
-    for (let i = 0; i < pages.length; i++) {
-      const page = pages[i]; if (!page) continue
-      setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
-      try {
-        // Same fix as the standalone PageUploader — shrink before sending so
-        // the Worker never has to decode/hash a raw 2550x3300 original.
-        const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
-        const res  = await fetch('/api/pages', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.is_spread ?? false }),
-        })
-        const json = await res.json()
-        setPages(prev => prev.map(p => p.id === page.id
-          ? { ...p, uploading: false, uploaded: res.ok && !json.error, error: (!res.ok || json.error) ? 'Upload failed' : null }
-          : p
-        ))
-      } catch {
-        setPages(prev => prev.map(p => p.id === page.id
-          ? { ...p, uploading: false, error: 'Upload failed' }
-          : p
-        ))
-        toast.error(`Failed to upload page ${i + 1}`)
-      }
-    }
-
-    if (destination === 'draft') {
-      toast.success('Chapter saved as draft')
-      window.location.href = '/admin/drafts'
-      return
-    }
-
-    toast.success(`Chapter ${chapterNumber} saved — preview your series`)
-    onNext(chapterId, pages)
+    if (destination === 'draft') onSaveDraft()
+    else onNext()
   }
 
   const quickCheck = [
@@ -255,7 +198,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
                   Chapter title
                   <span style={{ float: 'right', fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional · readers see this on the index</span>
                 </label>
-                <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="The Beginning" />
+                <input style={inputStyle} value={chapterTitle} onChange={e => onChapterTitleChange(e.target.value)} placeholder="The Beginning" />
               </div>
             </div>
           </Card>
@@ -407,7 +350,7 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {!submitting && (
             <button
-              onClick={() => saveAndProceed('draft')}
+              onClick={() => proceed('draft')}
               style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
             >
               Save as draft
@@ -415,11 +358,11 @@ export default function Step2({ seriesId, existingChapterId, initialPages = [], 
           )}
           <button
             disabled={submitting || pages.length === 0}
-            onClick={() => saveAndProceed('next')}
+            onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}
           >
             {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {submitting ? 'Uploading pages...' : 'Next — Preview →'}
+            {saving?.page ? `Uploading page ${saving.page.current}/${saving.page.total}` : submitting ? 'Saving...' : 'Next — Preview →'}
           </button>
         </div>
       </div>

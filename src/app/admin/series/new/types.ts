@@ -106,3 +106,9 @@ export const DEFAULT_CHAPTER: ChapterFormData = {
   isEA: false,
   pages: [],
 }
+
+/** Which save is running, plus page upload progress ("Uploading page 3/12"). */
+export type SaveState = {
+  kind: 'draft' | 'publish'
+  page: { current: number; total: number } | null
+} | null

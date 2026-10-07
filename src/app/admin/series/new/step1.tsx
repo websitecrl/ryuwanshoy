@@ -7,19 +7,22 @@ import { toast } from 'sonner'
 import { Image as ImageIcon, CheckCircle2, Circle, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, GENRES, inputStyle, labelStyle, generateSlug, type SeriesFormData } from './types'
-import { compressImage } from '@/lib/image-compress'
+import { BOTTOM_BAR, GENRES, inputStyle, labelStyle, generateSlug, type SeriesFormData, type SaveState } from './types'
+import { isSlugAvailable } from './save'
 
 interface Step1Props {
   data: SeriesFormData
   onChange: (patch: Partial<SeriesFormData>) => void
-  onNext: (seriesId: string) => void
-  existingSeriesId?: string 
+  saving: SaveState
+  onNext: () => void
+  onSaveDraft: () => void
 }
 
-export default function Step1({ data, onChange, onNext, existingSeriesId }: Step1Props) {
-  const [submitting, setSubmitting] = useState(false)
-  const [dragOver, setDragOver]     = useState(false)
+export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: Step1Props) {
+  const [dragOver,     setDragOver]     = useState(false)
+  const [slugTaken,    setSlugTaken]    = useState(false)
+  const [checkingSlug, setCheckingSlug] = useState(false)
+  const submitting = saving !== null || checkingSlug
 
   const coverInputRef = useRef<HTMLInputElement>(null)
 
@@ -29,6 +32,7 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
   function handleTitleChange(value: string) {
     const newSlug = data.slug === generateSlug(data.title) || data.slug === ''
       ? generateSlug(value) : data.slug
+    if (newSlug !== data.slug) setSlugTaken(false)
     onChange({ title: value, slug: newSlug })
   }
 
@@ -46,45 +50,32 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
     if (f?.type.startsWith('image/')) handleCoverFile(f)
   }
 
-  async function saveAndProceed(destination: 'draft' | 'next') {
+  /**
+   * Validates, then confirms the slug is free so a clash shows up here rather
+   * than at Publish. Nothing is saved on "Next"; "Save as draft" creates the
+   * series row via the wizard.
+   */
+  async function proceed(destination: 'draft' | 'next') {
     if (!data.title.trim()) { toast.error('Title is required'); return }
     if (!data.slug.trim())  { toast.error('Slug is required');  return }
-    // if series was already created skip the POST
-    if (destination === 'next' && existingSeriesId) {
-        toast.success('Continuing with existing series')
-        onNext(existingSeriesId)
-        return
-    }
-    setSubmitting(true)
 
-    let coverImageBase64: string | undefined
-    try {
-      // Cover cards render at 460x640 — 1280px longest side is plenty of
-      // headroom for retina without shipping a multi-MB original.
-      if (data.coverFile) coverImageBase64 = await compressImage(data.coverFile, { maxDimension: 1280 })
-    } catch { toast.error('Failed to process images'); setSubmitting(false); return }
+    const available = await checkSlug()
+    if (available === false) { toast.error('That slug is already used by another series'); return }
+    if (available === null)  toast.warning("Couldn't check the slug. It'll be checked again when you save.")
 
-    const res = await fetch('/api/series', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: data.title.trim(), slug: data.slug.trim().toLowerCase(),
-        description: data.description || null, genre: data.genre || null,
-        status: data.status, is_published: false,
-        coverImageBase64,
-        min_age: data.minAge,
-      }),
-    })
-    const json = await res.json()
-    if (json.error) { toast.error(json.error); setSubmitting(false); return }
+    if (destination === 'draft') onSaveDraft()
+    else onNext()
+  }
 
-    if (destination === 'draft') {
-      toast.success('Series saved as draft')
-      window.location.href = '/admin/drafts'
-      return
-    }
-
-    toast.success('Series info saved — add your first chapter')
-    onNext(json.data.id)
+  /** @returns true = free, false = taken, null = couldn't check */
+  async function checkSlug(): Promise<boolean | null> {
+    const slug = data.slug.trim().toLowerCase()
+    if (!slug) return null
+    setCheckingSlug(true)
+    const available = await isSlugAvailable(slug)
+    setCheckingSlug(false)
+    setSlugTaken(available === false)
+    return available
   }
 
   const checklist = [
@@ -122,8 +113,13 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
                 </label>
                 <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--ryu-border)', borderRadius: 6, overflow: 'hidden', background: 'var(--ryu-surface-2)' }}>
                   <span style={{ padding: '10px 12px', fontSize: 13, color: 'var(--ryu-text-3)', borderRight: '1px solid var(--ryu-border)', whiteSpace: 'nowrap', userSelect: 'none' }}>ryuwanshoy.com/</span>
-                  <input style={{ ...inputStyle, border: 'none', borderRadius: 0, background: 'transparent' }} value={data.slug} onChange={e => onChange({ slug: e.target.value })} placeholder="my-awesome-comic" />
+                  <input style={{ ...inputStyle, border: 'none', borderRadius: 0, background: 'transparent' }} value={data.slug} onChange={e => { setSlugTaken(false); onChange({ slug: e.target.value }) }} onBlur={() => { void checkSlug() }} placeholder="my-awesome-comic" />
                 </div>
+                {slugTaken && (
+                  <p role="alert" style={{ marginTop: 6, fontSize: 12, color: '#DC2626' }}>
+                    This slug is already used by another series. Pick a different one.
+                  </p>
+                )}
                 {data.slug && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: 'var(--ryu-primary-soft)', border: '1px solid var(--ryu-border)' }}>
                     <span style={{ fontSize: 12, color: 'var(--ryu-text-2)' }}>ryuwanshoy.com/series/<strong style={{ color: 'var(--ryu-primary-deep)' }}>{data.slug}</strong></span>
@@ -258,17 +254,17 @@ export default function Step1({ data, onChange, onNext, existingSeriesId }: Step
           {!submitting && (
             <button
               disabled={!hasTitle || !hasSlug}
-              onClick={() => saveAndProceed('draft')}
+              onClick={() => proceed('draft')}
               style={{ padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
               Save as draft
             </button>
           )}
           <button
             disabled={submitting || !hasTitle || !hasSlug}
-            onClick={() => saveAndProceed('next')}
+            onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.06)', opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
             {submitting ? <Loader2 size={14} className="animate-spin" /> : null}
-            {submitting ? 'Saving...' : 'Next — First Chapter →'}
+            {saving ? 'Saving...' : checkingSlug ? 'Checking slug...' : 'Next — First Chapter →'}
           </button>
         </div>
       </div>
