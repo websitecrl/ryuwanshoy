@@ -1,0 +1,41 @@
+# PR check: type check + ESLint on every pull request to main.
+# Needs no secrets: it never talks to Supabase or Cloudflare. `next build` is
+# left out on purpose, because the build prerenders / and /comics from
+# Supabase and would need the Supabase keys as GitHub secrets.
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+# Read-only token; this job only reads the code.
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the older run instead of queueing it.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      # Next 16 needs Node 20.9+.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Clean install from package-lock.json (never edits the lockfile).
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      # Only errors fail the check; the existing no-console warnings don't.
+      - name: Lint
+        run: npm run lint
