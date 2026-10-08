@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { useComments } from '@/hooks/useComments'
 import Image from 'next/image'
 import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
 import { timeAgo } from '@/lib/time'
@@ -370,20 +371,8 @@ interface Props {
 }
 
 /**
- * Models the comment list's three real states explicitly, instead of using
- * a bare `Comment[]` where `[]` ambiguously means both "still loading" and
- * "genuinely zero comments." Before this, the UI would briefly show
- * "No comments yet" while the fetch was still in flight, because there was
- * no state distinguishing the two — this makes that collapse impossible
- * at the type level.
- */
-type CommentsState =
-  | { status: 'loading' }
-  | { status: 'error' }
-  | { status: 'loaded'; comments: Comment[] }
-
-/**
- * Same reasoning as CommentsState: `liked: false` / `count: 0` as initial
+ * Explicit states, the same idea as useComments' loading/error/loaded:
+ * `liked: false` / `count: 0` as initial
  * values are indistinguishable from "we checked and it's really false/0."
  * Before this, someone who'd already liked the post would see the heart
  * render empty for a frame on reopen. It also closes a real race: without
@@ -406,12 +395,18 @@ export default function PostModal({ post, onClose }: Props) {
   const [justLiked, setJustLiked] = useState(false)
   const likeRequestInFlightRef = useRef(false)
   const [reduceMotion, setReduceMotion] = useState(false)
-  const [commentsState, setCommentsState] = useState<CommentsState>({ status: 'loading' })
+  // Newest 30 top-level comments (with replies); "Show older comments" loads
+  // more. Shown chat-style below: oldest at the top, newest above the input.
+  const thread = useComments<Comment>({ postId: post.id })
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  const commentsListRef = useRef<HTMLDivElement>(null)
+  // Distance from the bottom of the comment list, saved just before "Show
+  // older" prepends comments above the viewport (see the layout effect below).
+  const scrollFromBottomRef = useRef<number | null>(null)
 
   // Comments start hidden behind the like/comment/share rail on both
   // desktop (slide-in drawer) and mobile (full-screen swap) — see the
@@ -451,51 +446,7 @@ export default function PostModal({ post, onClose }: Props) {
     setOwnIds(new Set(Object.keys(getTokenMap())))
   }, [])
 
-  /**
-   * Mutates the comment list only when it's actually loaded — a no-op
-   * otherwise, since there's nothing to append/edit/remove from before the
-   * first successful fetch. Centralizes every local-state comment mutation
-   * (post, edit, delete, reply) through one place instead of five separate
-   * `setComments` calls that each had to know the shape.
-   */
-  const updateLoadedComments = useCallback((updater: (comments: Comment[]) => Comment[]) => {
-    setCommentsState(prev =>
-      prev.status === 'loaded' ? { status: 'loaded', comments: updater(prev.comments) } : prev
-    )
-  }, [])
-
-  // Initial (or retry) load — drives the loading → loaded/error transition.
-  const loadComments = useCallback(async () => {
-    setCommentsState({ status: 'loading' })
-    try {
-      const res = await fetch(`/api/comments?post_id=${post.id}`)
-      if (!res.ok) throw new Error('Failed to load comments.')
-      const data = await res.json() as Comment[]
-      setCommentsState({ status: 'loaded', comments: Array.isArray(data) ? data : [] })
-    } catch {
-      setCommentsState({ status: 'error' })
-    }
-  }, [post.id])
-
-  /**
-   * Background reconciliation after a mutation (e.g. a delete that cascades
-   * to replies server-side). Deliberately does NOT flip back to 'loading'
-   * or 'error' — we already have a locally-updated list on screen, so a
-   * failed background refresh should just leave it as-is rather than
-   * regress the UI to a spinner or error state over a non-critical refresh.
-   */
-  const refetchComments = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/comments?post_id=${post.id}`)
-      if (!res.ok) return
-      const data = await res.json() as Comment[]
-      if (Array.isArray(data)) setCommentsState({ status: 'loaded', comments: data })
-    } catch {
-      // Non-fatal — local optimistic state stays as-is.
-    }
-  }, [post.id])
-
-  // Load likes + comments on open
+  // Load likes on open (comments are loaded by useComments above).
   useEffect(() => {
     const likeToken = getLikeToken()
     fetch(`/api/likes?post_id=${post.id}&like_token=${likeToken}`)
@@ -507,9 +458,7 @@ export default function PostModal({ post, onClose }: Props) {
         setLikeState({ status: 'loaded', liked, count })
       })
       .catch(() => setLikeState({ status: 'error' }))
-
-    loadComments()
-  }, [post.id, loadComments])
+  }, [post.id])
 
   // ESC to close — closes the comments panel first if it's open, then the
   // whole modal, so ESC mirrors what the back-chevron / drag handle does.
@@ -625,7 +574,8 @@ export default function PostModal({ post, onClose }: Props) {
 
   async function handleSubmit() {
     const trimContent = content.trim()
-    if (!trimContent || submitting) return
+    // Wait for the list: thread.add only works once comments are loaded.
+    if (!trimContent || submitting || thread.status !== 'loaded') return
 
     setSubmitting(true)
     setSubmitError('')
@@ -641,7 +591,7 @@ export default function PostModal({ post, onClose }: Props) {
         setOwnIds(prev => new Set([...prev, data.id]))
       }
 
-      updateLoadedComments(prev => [...prev, data])
+      thread.add(data)
       setContent('')
       setTimeout(() => commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
     } catch (err) {
@@ -661,11 +611,9 @@ export default function PostModal({ post, onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ edit_token: token }),
       })
-      // Remove immediately for a snappy UI, then refetch — the DB cascades
-      // parent_id on delete, so this also picks up any replies that just
-      // got deleted along with it.
-      updateLoadedComments(prev => prev.filter(c => c.id !== id))
-      await refetchComments()
+      // Also drops its replies locally; the DB deletes them with it
+      // (ON DELETE CASCADE on parent_id), so no refetch is needed.
+      thread.remove(id)
       toast.success('Comment deleted.')
     } catch (err) {
       if (isRateLimitError(err)) { toastRateLimited(); return }
@@ -674,12 +622,7 @@ export default function PostModal({ post, onClose }: Props) {
   }
 
   function handleEdit(id: string, newContent: string) {
-    updateLoadedComments(prev =>
-      prev.map(c => c.id === id
-        ? { ...c, content: newContent, updated_at: new Date().toISOString() }
-        : c
-      )
-    )
+    thread.edit(id, newContent)
   }
 
   function handleReplyPosted(reply: Comment & { edit_token: string }) {
@@ -687,13 +630,32 @@ export default function PostModal({ post, onClose }: Props) {
       saveToken(reply.id, reply.edit_token)
       setOwnIds(prev => new Set([...prev, reply.id]))
     }
-    updateLoadedComments(prev => [...prev, reply])
+    thread.add(reply)
   }
 
-  // ── Separate top-level comments from replies ────────────────────────────────
-  const comments = commentsState.status === 'loaded' ? commentsState.comments : []
-  const topLevel = comments.filter(c => !c.parent_id)
-  const repliesFor = (parentId: string) => comments.filter(c => c.parent_id === parentId)
+  function handleLoadOlder() {
+    const list = commentsListRef.current
+    if (list) scrollFromBottomRef.current = list.scrollHeight - list.scrollTop
+    void thread.loadOlder()
+  }
+
+  // Older comments are inserted ABOVE what the reader is looking at. Restore
+  // the same distance from the bottom once loading finishes, so the view
+  // doesn't jump (browsers without scroll anchoring, e.g. Safari, would).
+  // Runs when loadingOlder flips back to false, in the same render as the
+  // new comments; on failure nothing was added, so this is a no-op.
+  useLayoutEffect(() => {
+    const list = commentsListRef.current
+    if (thread.loadingOlder || !list || scrollFromBottomRef.current === null) return
+    list.scrollTop = list.scrollHeight - scrollFromBottomRef.current
+    scrollFromBottomRef.current = null
+  }, [thread.loadingOlder])
+
+  // Chat-style panel: oldest at the top, newest right above the input, so
+  // flip the hook's newest-first order. "Show older" sits at the top.
+  const topLevel = [...thread.topLevel].reverse()
+  const { repliesFor } = thread
+  const commentCount = thread.total
 
   const liked = likeState.status === 'loaded' && likeState.liked
   const likeCount = likeState.status === 'loaded' ? likeState.count : 0
@@ -777,7 +739,7 @@ export default function PostModal({ post, onClose }: Props) {
               <span className="rail-icon-bg">
                 <MessageCircle size={22} color="#fff" />
               </span>
-              <span className="rail-count">{comments.length}</span>
+              <span className="rail-count">{commentCount}</span>
             </button>
 
             <button type="button" onClick={handleShare} className="rail-btn" aria-label="Share">
@@ -816,23 +778,23 @@ export default function PostModal({ post, onClose }: Props) {
               <ChevronLeft size={18} />
             </button>
             <span className="comments-panel-title">
-              Comments{comments.length > 0 ? ` (${comments.length})` : ''}
+              Comments{commentCount > 0 ? ` (${commentCount})` : ''}
             </span>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
-            {commentsState.status === 'loading' ? (
+          <div ref={commentsListRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+            {thread.status === 'loading' ? (
               <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
                 Loading comments…
               </p>
-            ) : commentsState.status === 'error' ? (
+            ) : thread.status === 'error' ? (
               <div className="flex flex-col items-center gap-2 py-8">
                 <p className="text-xs" style={{ color: 'var(--ryu-text-muted)' }}>
                   Couldn&apos;t load comments.
                 </p>
                 <button
                   type="button"
-                  onClick={loadComments}
+                  onClick={() => void thread.reload()}
                   className="text-xs underline"
                   style={{ color: 'var(--ryu-primary)', background: 'none', border: 'none' }}
                 >
@@ -844,20 +806,37 @@ export default function PostModal({ post, onClose }: Props) {
                 No comments yet — be the first!
               </p>
             ) : (
-              topLevel.map(comment => (
-                <CommentRow
-                  key={comment.id}
-                  comment={comment}
-                  replies={repliesFor(comment.id)}
-                  isOwn={ownIds.has(comment.id)}
-                  ownIds={ownIds}
-                  postId={post.id}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  onReplyPosted={handleReplyPosted}
-                  depth={0}
-                />
-              ))
+              <>
+                {thread.hasMore && (
+                  <button
+                    type="button"
+                    onClick={handleLoadOlder}
+                    disabled={thread.loadingOlder}
+                    className="self-center text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{
+                      color: 'var(--ryu-primary)',
+                      background: 'var(--ryu-surface-2)',
+                      border: '0.5px solid var(--ryu-border)',
+                    }}
+                  >
+                    {thread.loadingOlder ? 'Loading…' : 'Show older comments'}
+                  </button>
+                )}
+                {topLevel.map(comment => (
+                  <CommentRow
+                    key={comment.id}
+                    comment={comment}
+                    replies={repliesFor(comment.id)}
+                    isOwn={ownIds.has(comment.id)}
+                    ownIds={ownIds}
+                    postId={post.id}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onReplyPosted={handleReplyPosted}
+                    depth={0}
+                  />
+                ))}
+              </>
             )}
             <div ref={commentsEndRef} />
           </div>
@@ -885,7 +864,7 @@ export default function PostModal({ post, onClose }: Props) {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={submitting || !content.trim()}
+                disabled={submitting || !content.trim() || thread.status !== 'loaded'}
                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 post-comment-send"
                 style={{
                   background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: 'none',

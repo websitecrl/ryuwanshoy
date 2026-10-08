@@ -4,37 +4,58 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { InvalidImageError, uploadToR2 } from '@/lib/r2'
+import { isCursor, readLimit } from '@/lib/cursor'
+import { normalizePostType, POST_LIST_FIELDS, POSTS_PAGE_SIZE } from '@/lib/posts'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const POST_TYPES = ['sketch', 'drawing', 'meme', 'other']
+const MAX_PAGE_SIZE = 100
 
 // ─── GET /api/posts ───────────────────────────────────────────────────────────
+// Public, newest first, one page at a time:
+//   ?type=sketch|drawing|meme|other  [&before=<cursor>] [&limit=1..100]
+//   → { data, nextCursor }   (nextCursor: pass as ?before= for the next page)
+// Admin only: ?all=1 returns every post in one list (the admin posts table).
+// Posts have no draft/hidden state, so the service role client is safe here.
 export async function GET(req: NextRequest) {
   try {
-    const type = req.nextUrl.searchParams.get('type')
+    const params = req.nextUrl.searchParams
+    const all = params.get('all') === '1'
+    if (all) {
+      const auth = await requireAdmin()
+      if (auth instanceof NextResponse) return auth
+    }
+
+    const before = params.get('before')
+    if (before !== null && !isCursor(before)) {
+      return NextResponse.json({ error: 'Invalid cursor' }, { status: 400 })
+    }
+    const limit = readLimit(params.get('limit'), POSTS_PAGE_SIZE, MAX_PAGE_SIZE)
+    const type = normalizePostType(params.get('type'))
 
     let query = supabaseAdmin
       .from('posts')
-      .select('id, title, image_url, post_type, created_at')
+      .select(POST_LIST_FIELDS)
       .order('created_at', { ascending: false })
 
-    if (type && POST_TYPES.includes(type)) {
-      query = query.eq('post_type', type)
-    }
-
-    const limit = Number(req.nextUrl.searchParams.get('limit'))
-    if (Number.isInteger(limit) && limit > 0) {
-      query = query.limit(Math.min(limit, 100))
-    }
+    if (type) query = query.eq('post_type', type)
+    if (before) query = query.lt('created_at', before)
+    // One extra row tells us whether another page exists.
+    if (!all) query = query.limit(limit + 1)
 
     const { data, error } = await query
-
     if (error) throw error
 
-    return NextResponse.json({ data })
+    const hasMore = !all && data.length > limit
+    const page = hasMore ? data.slice(0, limit) : data
+    const last = page[page.length - 1]
+
+    return NextResponse.json({
+      data: page,
+      nextCursor: hasMore && last?.created_at ? last.created_at : null,
+    })
   } catch (err) {
     console.error('GET /api/posts error:', err)
     return NextResponse.json({ error: 'Failed to fetch posts' }, { status: 500 })
