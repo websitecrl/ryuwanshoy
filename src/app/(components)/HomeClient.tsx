@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
+import { useState, useEffect } from "react";
 import HeroBanner from "@/components/admin/reader/HeroBanner";
 import ContinueReading from "@/components/admin/reader/ContinueReading";
 import LatestReleases from "@/components/admin/reader/LatestReleases";
@@ -62,9 +61,13 @@ export default function HomeClient({
   initialPosts,
   settings,
 }: Props) {
-  const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
-  const [chapters, setChapters] = useState(initialChapters);
-  const [posts, setPosts] = useState(initialPosts);
+  // No realtime on purpose: one Supabase connection per visitor hit the free
+  // plan's 200 connection cap, and every admin save made each open tab refetch.
+  // The page is cached (ISR) and admin saves purge it, so a reload or the next
+  // visit shows new content. See docs/caching.md.
+  const heroSlides = initialHeroSlides;
+  const chapters = initialChapters;
+  const posts = initialPosts;
   const [maxAge, setMaxAge] = useState<number | null>(null);
   // Same stale-logo-url guard as Navbar — falls back to the initial-letter
   // avatar if settings.logo_url doesn't actually resolve.
@@ -74,49 +77,6 @@ export default function HomeClient({
     const stored = localStorage.getItem('ryu-age')
     setMaxAge (stored !== null ? Number(stored) : 18)
   }, [])
-
-  const fetchHeroSlides = useCallback(async () => {
-    const res = await fetch("/api/hero-slides");
-    if (!res.ok) return;
-    // Route returns a bare array; admins also get hidden slides, so re-filter.
-    const json = await res.json() as HeroSlide[];
-    setHeroSlides((json ?? []).filter(s => s.is_visible));
-  }, []);
-
-  const fetchChapters = useCallback(async () => {
-    const res = await fetch("/api/chapters/latest?limit=6");
-    if (!res.ok) return;
-    const json = await res.json() as { data: Chapter[] };
-    setChapters(json.data ?? []);
-  }, []);
-
-  const fetchPosts = useCallback(async () => {
-    const res = await fetch("/api/posts?limit=4");
-    if (!res.ok) return;
-    const json = await res.json() as { data: Post[] };
-    setPosts(json.data ?? []);
-  }, []);
-
-  const handleComicsChange = useCallback(() => {
-    void fetchHeroSlides();
-    void fetchChapters();
-  }, [fetchHeroSlides, fetchChapters]);
-
-  const handlePostsChange = useCallback(() => {
-    void fetchPosts();
-  }, [fetchPosts]);
-
-  useRealtimeSubscription({
-    channelName: "home-comics",
-    tables: ["chapters", "series", "hero_slides"],
-    onChange: handleComicsChange,
-  });
-
-  useRealtimeSubscription({
-    channelName: "home-posts",
-    tables: ["posts"],
-    onChange: handlePostsChange,
-  });
 
   const creatorName = settings?.creator_name ?? "Ryu"
   const siteDescription = settings?.site_description ?? "Original comics and art by a Filipino creator."

@@ -56,31 +56,27 @@ This means public reads through the session client depend on **RLS allowing anon
 
 ## Rendering strategy
 
+Full details, including how to watch hits and misses: [caching.md](./caching.md).
+
 | Route | Strategy | Why |
 |-------|----------|-----|
-| Root layout | `revalidate = 0` | Always fetch fresh site title/logo/social links |
-| `/` | ISR `revalidate = 60` + client refetch on Realtime events | Fast page with near-live updates |
-| `/comics` | ISR `revalidate = 60` | Catalogue stats |
-| `/posts` | ISR `revalidate = 60` (`?type=` variants) | |
-| `/comics/[slug]` | `force-dynamic` | Chapter list and counts must be current |
-| `/comics/[slug]/[chapter]` | `force-dynamic` | Never serve stale/unpublished pages |
-| `/bookmarks` | `force-dynamic` | |
-| `/sitemap.xml` | `revalidate = 3600` | Hourly rebuild |
-| `/donate`, `/early-access` | Client components that `fetch('/api/settings')` | Settings are editable at runtime |
-| `/api/pages`, `/api/drafts`, `/api/posts`, `/api/settings`, `/api/notifications`, `/api/upload-logo` | `dynamic = 'force-dynamic'` (+ `runtime = 'nodejs'` on several) | Never cache |
+| `/`, `/comics`, `/donate`, `/early-access` | ISR `revalidate = 60`, purged on every admin write | Served from cache; no client refetch |
+| `/posts` | Per request (`?type=`), data cached per type | Filter lives in the URL |
+| `/comics/[slug]`, `/comics/[slug]/[chapter]` | Per request (`connection()`), data cached | Data cached; HTML per request |
+| `/bookmarks` | `force-dynamic` | Per visitor |
+| `/sitemap.xml` | `revalidate = 3600`, purged on admin write | Hourly rebuild |
+| `/api/*` | Not cached | Admin and per request APIs |
 
 ## Realtime
 
-`src/hooks/useRealtimeSubscription.ts` opens a Supabase Realtime channel and subscribes to `postgres_changes` (`event: '*'`, `schema: 'public'`) for one or more tables, calling `onChange` on any event.
+Realtime is **admin only**. Public pages (home, posts) used to open one Supabase Realtime connection per visitor; that was removed because the free plan caps concurrent connections at 200 and every admin save made each open tab refetch. Public pages now rely on caching plus the purge on admin writes: a reload or the next visit shows new content.
 
 | Channel | Tables | Consumer |
 |---------|--------|----------|
-| `home-comics` | `chapters`, `series`, `hero_slides` | `HomeClient` |
-| `home-posts` | `posts` | `HomeClient` |
-| `posts-realtime` | `posts` | `PostsClient` |
-| `notif-bell` | (comments/likes) | `NotificationBell` (admin) |
+| `notif-bell` | `comments`, `likes` | `NotificationBell` (admin) |
+| `drafts-count` | (drafts) | `Sidebar` (admin) |
 
-> The Home page's refetch handlers currently mis-read the API responses — see [Known issues #1](./14-known-issues-and-roadmap.md#1-home-page-realtime-refetch-blanks-content).
+Don't add realtime to public pages; rely on the cache purge instead (see [caching.md](./caching.md)).
 
 ## Why the code looks the way it does: Cloudflare Workers constraints
 
@@ -122,5 +118,5 @@ Sentry is wired through `withSentryConfig` in `next.config.ts`, with three init 
 - **Admin check first:** mutating handlers begin with `const auth = await requireAdmin(); if (auth instanceof NextResponse) return auth`.
 - **Fire-and-forget cleanup:** after a successful DB delete, R2 objects are deleted without awaiting (`deleteFromR2(...).catch(console.error)`), so an orphaned file is possible but a failed R2 delete never blocks the admin.
 - **Cache-busting URLs:** `uploadToR2` returns `…?v=<timestamp>`; stable filenames (e.g. `cover-<slug>`) are reused on re-upload while URLs still change.
-- **Optimistic client + realtime:** admin actions mutate through the API; public pages refresh via Realtime.
+- **Mutate through the API, purge the cache:** admin actions go through `/api/*` routes, which call `revalidatePublicContent()`; public pages pick up the change on the next load.
 - **`localStorage` as the reader's database:** see [Reader & client state](./11-reader-and-client-state.md).
