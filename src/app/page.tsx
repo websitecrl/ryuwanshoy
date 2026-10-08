@@ -1,42 +1,40 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import HomeClient from './(components)/HomeClient'
-import { getSettings } from '@/lib/settings'
+import { getSettingsOrThrow } from '@/lib/settings'
 
 // ISR: served from cache, refreshed in the background at most once a minute,
 // and purged right away by admin writes (revalidatePublicContent).
 export const revalidate = 60
 
+// No try/catch: a settings failure must throw, so ISR keeps the last good
+// copy instead of caching the default title (see getSettingsOrThrow).
 export async function generateMetadata() {
-  try {
-    const data = await getSettings()
+  const data = await getSettingsOrThrow()
 
-    const title = data?.site_title ?? 'Ryuwanshoy'
-    const description = data?.site_description ?? 'A Filipino webcomic by Ryu'
-    // Not logo_url: the logo is small and not 1200×630, so share cards
-    // cropped or rejected it.
-    const image = '/og-default.png'
+  const title = data?.site_title ?? 'Ryuwanshoy'
+  const description = data?.site_description ?? 'A Filipino webcomic by Ryu'
+  // Not logo_url: the logo is small and not 1200×630, so share cards
+  // cropped or rejected it.
+  const image = '/og-default.png'
 
-    return {
-      title, 
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
       description,
-      openGraph: {
-        title,
-        description,
-      url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com', 
-        siteName: title,
-        images: [{ url: image, width: 1200, height: 630}],
-        type: 'website',
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title,
-        description,
-        images: [image],
-      },
-    }
-  }catch {
-    return { title: 'Ryuwanshoy' }
+      url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com',
+      siteName: title,
+      images: [{ url: image, width: 1200, height: 630 }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
   }
 }
 
@@ -116,7 +114,7 @@ export default async function HomePage() {
     getHeroSlides(),
     getLatestChapters(),
     getRecentPosts(),
-    getSettings(),
+    getSettingsOrThrow(),
   ]);
 
   return (

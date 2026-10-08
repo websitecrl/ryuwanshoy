@@ -9,6 +9,7 @@ How public pages are cached on Cloudflare, and how to see what the cache is doin
 | `/`, `/comics`, `/donate`, `/early-access` | cached (ISR) | cached | 60 s, or right away on admin save |
 | `/comics/[slug]`, `/comics/[slug]/[chapter]` | rendered per request | cached | 60 s, or right away on admin save |
 | `/posts` (and `?type=`) | rendered per request | cached per type | 60 s, or right away on admin save |
+| `/sitemap.xml` | cached | (read inside the route) | 1 h, or right away on admin save |
 | `/admin/*`, `/api/*`, `/bookmarks` | not cached | not cached | |
 
 All public reads go through `cachedPublicQuery` in `src/lib/cache/public-cache.ts` and use
@@ -31,9 +32,24 @@ on a Supabase error (never return `[]`/`null` for an error, or the empty result 
 - R2 bucket `ryuwanshoy-opennext-cache`: the cached pages and query results.
 - Durable Object `DOQueueHandler`: runs the background 60 s refresh.
 - D1 `ryuwanshoy-opennext-tag-cache`: records admin purges. Its table is created by
-  `npx opennextjs-cloudflare deploy`, so always deploy with that command.
+  `opennextjs-cloudflare deploy`, so **always deploy with `npm run deploy`**. With a plain
+  `wrangler deploy` the table is missing, purges silently do nothing, and admin changes take up to
+  60 s to show.
 
-Caching only works in a deployed build or `npx opennextjs-cloudflare preview`. `next dev` never caches.
+Caching only works in a deployed build or `npm run preview` (local Cloudflare runtime). `next dev`
+never caches.
+
+**The build needs Supabase.** `/` and `/comics` are prerendered at build time, so the build must
+have the `NEXT_PUBLIC_SUPABASE_*` env vars and the Supabase project must be awake (a paused
+free-tier project fails the build with a prerender error).
+
+**Known 60 s windows** (no fix needed, just know them): if a settings read fails, pages that only
+read settings through the layout (e.g. `/donate`) can show the default title for up to 60 s; and if
+an admin route throws an uncaught error, its purge is skipped and the change shows up after 60 s.
+
+**Never run an OpenNext build in a git worktree whose `node_modules` is linked to the main
+checkout.** OpenNext patches files inside `next/dist` and that breaks `next dev` for the main
+checkout. Fix: `npm ci`.
 
 ## Watching the cache
 
