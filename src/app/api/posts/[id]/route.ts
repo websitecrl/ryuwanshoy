@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 
 type RouteContext = { params: Promise<{ id: string }> }
@@ -40,6 +41,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('PATCH /api/posts/[id]')
 
   try {
     const { id } = await params
@@ -134,6 +136,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('DELETE /api/posts/[id]')
 
   try {
     const { id } = await params

@@ -7,8 +7,6 @@ import { getSettings } from "@/lib/settings";
 import { Toaster } from 'sonner'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 
-export const dynamic = 'force-dynamic'
-
 // metadataBase turns relative image URLs (/og-default.png) into absolute
 // ones — Facebook and X ignore relative og:image URLs.
 // The openGraph/twitter images are the share-card fallback for any page

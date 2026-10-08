@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { InvalidImageError, uploadToR2 } from '@/lib/r2'
 
 export const dynamic = 'force-dynamic'
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('POST /api/posts')
 
   try {
     const body = await req.json()

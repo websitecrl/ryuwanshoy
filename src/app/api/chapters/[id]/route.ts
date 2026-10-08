@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteManyFromR2 } from '@/lib/r2'
 import type { TablesUpdate } from '@/types/database'
 
@@ -46,6 +47,7 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('PATCH /api/chapters/[id]')
 
   try {
     const { id } = await params
@@ -93,6 +95,7 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('DELETE /api/chapters/[id]')
 
   try {
     const { id } = await params

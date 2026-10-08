@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { filterUnsharedCovers } from '@/lib/series-covers'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
@@ -75,6 +76,7 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('PATCH /api/series/[id]')
 
   const { id } = await params
 
@@ -171,6 +173,7 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('DELETE /api/series/[id]')
 
   const { id } = await params
 

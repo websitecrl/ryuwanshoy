@@ -1,14 +1,19 @@
 import { cache } from 'react'
 import { notFound } from 'next/navigation'
+import { connection } from 'next/server'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+import { cachedPublicQuery, nullIfNotFound, PublicNotFoundError } from '@/lib/cache/public-cache'
 import type { Tables } from '@/types/database'
 import type { ChapterWithPageCount } from '@/types/reader'
 import SeriesHeader from '@/components/shared/SeriesHeader'
 import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
 
-export const dynamic = 'force-dynamic'
+// The HTML is rendered per request, like before caching (see connection() in
+// the page); only the Supabase read is cached. Page level ISR would also
+// store a page for every random slug, because unknown slugs currently render
+// the not-found page with a 200 status (a known soft 404, see Plan.md).
 
 // Raw shape Supabase returns before we map it —
 // pages(count) comes back as [{ count: number | string }]
@@ -20,71 +25,74 @@ type RawSeries = Tables<'series'> & {
   chapters: RawChapter[]
 }
 
-// cache() dedupes the call between generateMetadata and the page render.
-const getSeriesBySlug = cache(async (slug: string): Promise<{
+// Cached across requests. A missing series throws PublicNotFoundError so it
+// is not cached (bots probing random slugs must not fill the cache); a
+// Supabase error throws so a hiccup is never cached either.
+const querySeriesBySlug = cachedPublicQuery('comics:series', async (slug: string): Promise<{
   series: Tables<'series'>
   chapters: ChapterWithPageCount[]
   totalPages: number
   lastPublishedAt: string | null
-} | null> => {
-  try {
-    const supabase = await createClient()
+}> => {
+  const supabase = createPublicClient()
 
-    const { data, error } = await supabase
-      .from('series')
-      .select(`
-        *,
+  const { data, error } = await supabase
+    .from('series')
+    .select(`
+      *,
 chapters (
-          id,
-          series_id,
-          title,
-          chapter_number,
-          is_early_access,
-          is_published,
-          is_draft,
-          published_at,
-          created_at,
-          pages (count)
-        )
-      `)
-      .eq('slug', slug)
-      .eq('is_published', true)
-      .order('chapter_number', { referencedTable: 'chapters', ascending: true })
-      .single()
+        id,
+        series_id,
+        title,
+        chapter_number,
+        is_early_access,
+        is_published,
+        is_draft,
+        published_at,
+        created_at,
+        pages (count)
+      )
+    `)
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .order('chapter_number', { referencedTable: 'chapters', ascending: true })
+    .maybeSingle()
 
-    if (error || !data) return null
+  if (error) throw error
+  if (!data) throw new PublicNotFoundError(`series "${slug}"`)
 
-    const raw = data as unknown as RawSeries
+  const raw = data as unknown as RawSeries
 
 // Filter drafts server-side — only pass published chapters to the client
-    const chapters: ChapterWithPageCount[] = (raw.chapters ?? [])
-      .filter(ch => ch.is_published === true && ch.is_draft === false)
-      .map(ch => ({
-        ...ch,
-        page_count: Number(ch.pages?.[0]?.count ?? 0),
-      }))
+  const chapters: ChapterWithPageCount[] = (raw.chapters ?? [])
+    .filter(ch => ch.is_published === true && ch.is_draft === false)
+    .map(ch => ({
+      ...ch,
+      page_count: Number(ch.pages?.[0]?.count ?? 0),
+    }))
 
-    const totalPages = chapters.reduce((sum, ch) => sum + ch.page_count, 0)
+  const totalPages = chapters.reduce((sum, ch) => sum + ch.page_count, 0)
 
-    const lastPublishedAt =
-      chapters.length > 0
-        ? ([...chapters].sort(
-            (a, b) =>
-              new Date(b.published_at!).getTime() -
-              new Date(a.published_at!).getTime()
-          )[0]?.published_at ?? null)
-        : null
+  const lastPublishedAt =
+    chapters.length > 0
+      ? ([...chapters].sort(
+          (a, b) =>
+            new Date(b.published_at!).getTime() -
+            new Date(a.published_at!).getTime()
+        )[0]?.published_at ?? null)
+      : null
 
-    return {
-      series: data as Tables<'series'>,
-      chapters,
-      totalPages,
-      lastPublishedAt,
-    }
-  } catch {
-    return null
+  return {
+    series: data as Tables<'series'>,
+    chapters,
+    totalPages,
+    lastPublishedAt,
   }
 })
+
+// cache() dedupes the call between generateMetadata and the page render.
+// Returns null when the series doesn't exist (or isn't published).
+const getSeriesBySlug = cache((slug: string) => nullIfNotFound(querySeriesBySlug(slug)))
 
 export async function generateMetadata({
   params,
@@ -123,6 +131,11 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
+  // Render per request (as before caching); the data underneath is cached.
+  // Not `dynamic = 'force-dynamic'`: that also disables unstable_cache,
+  // which would send every view back to Supabase.
+  await connection()
+
   const { slug } = await params
   const result = await getSeriesBySlug(slug)
 

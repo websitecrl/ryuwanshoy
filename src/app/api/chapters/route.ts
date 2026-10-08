@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
 // ─── GET /api/chapters ────────────────────────────────────────────────────────
 // Admin only — get all chapters for a series
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('POST /api/chapters')
 
   const body = await req.json()
   const { series_id, chapter_number, title, is_early_access, published_at, is_published, is_draft } = body

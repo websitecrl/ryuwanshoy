@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { TablesInsert } from '@/types/database'
 
@@ -49,6 +50,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+  revalidatePublicContent('POST /api/series')
 
   try {
     const body = await req.json()

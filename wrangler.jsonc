@@ -30,6 +30,28 @@
 			"bucket_name": "ryuwanshoy-opennext-cache"
 		}
 	],
+	"d1_databases": [
+		// OpenNext tag cache: records on-demand purges (revalidatePath /
+		// revalidateTag from admin writes). The `revalidations` table is created
+		// by `npx opennextjs-cloudflare deploy`.
+		{
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "ryuwanshoy-opennext-tag-cache",
+			"database_id": "07ab909c-6360-41f2-8ef9-6ffba8f8ebff"
+		}
+	],
+	"durable_objects": {
+		"bindings": [
+			// OpenNext queue: runs the background refresh of pages older than
+			// their `revalidate`. The class is exported by .open-next/worker.js.
+			{ "name": "NEXT_CACHE_DO_QUEUE", "class_name": "DOQueueHandler" }
+		]
+	},
+	"migrations": [
+		// SQLite backed, so it works on the Workers free plan. Never edit or
+		// reuse an applied tag; add a new one for later Durable Object changes.
+		{ "tag": "v1", "new_sqlite_classes": ["DOQueueHandler"] }
+	],
 	"ratelimits": [
 		// Workers Rate Limiting bindings, keyed per client IP in the API routes.
 		// period must be 10 or 60; namespace_id must be unique per account.
