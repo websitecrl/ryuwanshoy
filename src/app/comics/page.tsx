@@ -31,53 +31,46 @@ export const revalidate = 60
 const getComicsData = cachedPublicQuery('comics:index', async () => {
   const supabase = createPublicClient()
 
-  const [seriesRes, chaptersRes, pagesRes] = await Promise.all([
+  const [seriesRes, pagesRes] = await Promise.all([
+    // chapters(count) asks the database for one number per series instead of
+    // downloading every chapter row. The chapters.* filters apply to what is
+    // counted only (no !inner), so a series with 0 chapters still shows.
+    // Same rule as the reader: published and not a draft (the series itself
+    // is published by the outer filter).
     supabase
       .from('series')
-      .select('*')
+      .select('*, chapters(count)')
       .eq('is_published', true)
+      .eq('chapters.is_published', true)
+      .eq('chapters.is_draft', false)
       .order('created_at', { ascending: false }),
-
-    // Same filter as the reader: published, not a draft, and in a published
-    // series. Otherwise draft chapters inflate the counts on a cached page.
-    supabase
-      .from('chapters')
-      .select('id, series_id, series:series_id!inner(is_published)')
-      .eq('is_published', true)
-      .eq('is_draft', false)
-      .eq('series.is_published', true),
 
     supabase
       .from('pages')
       .select('*', { count: 'exact', head: true }),
   ])
 
-  const error = seriesRes.error ?? chaptersRes.error ?? pagesRes.error
+  const error = seriesRes.error ?? pagesRes.error
   if (error) throw error
 
-  return {
-    series: seriesRes.data ?? [],
-    chapters: chaptersRes.data ?? [],
-    pagesCount: pagesRes.count ?? 0,
-  }
+  // Split the embedded count back out, so SeriesGrid gets plain series rows.
+  const chapterCounts: Record<string, number> = {}
+  const series = (seriesRes.data ?? []).map(({ chapters, ...row }) => {
+    chapterCounts[row.id] = Number(chapters?.[0]?.count ?? 0)
+    return row
+  })
+
+  return { series, chapterCounts, pagesCount: pagesRes.count ?? 0 }
 })
 
 export default async function ComicsPage() {
-  const { series, chapters, pagesCount } = await getComicsData()
-
-  // Chapter counts per series
-  const chapterCounts: Record<string, number> = {}
-  for (const ch of chapters) {
-    if (ch.series_id) {
-      chapterCounts[ch.series_id] = (chapterCounts[ch.series_id] ?? 0) + 1
-    }
-  }
+  const { series, chapterCounts, pagesCount } = await getComicsData()
 
   // Stats for the header strip
   const stats = {
     series: series.length,
-    chapters: chapters.length,
-    pages: pagesCount ?? 0,
+    chapters: Object.values(chapterCounts).reduce((sum, n) => sum + n, 0),
+    pages: pagesCount,
   }
 
   return (

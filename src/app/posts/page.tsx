@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
+import { normalizePostType, POST_LIST_FIELDS, POSTS_PAGE_SIZE } from '@/lib/posts'
 import PostsClient from '../(components)/PostsClient'
 
 export const metadata: Metadata = {
@@ -10,9 +11,7 @@ export const metadata: Metadata = {
 }
 
 // No ISR here: reading searchParams (?type=) makes the page HTML render per
-// request. The query result is cached instead (getPosts), keyed by type.
-
-const POST_TYPES = ['sketch', 'drawing', 'meme', 'other']
+// request. The first page of posts is cached instead (getFirstPage), keyed by type.
 
 const TYPE_FILTERS = [
   { value: undefined,  label: 'All' },
@@ -23,18 +22,21 @@ const TYPE_FILTERS = [
 ]
 
 /**
- * Cached posts list for one filter.
- * @param type - an entry of POST_TYPES, or null for all. The caller must
- *   validate it: it is part of the cache key, so passing raw ?type= input
- *   would let anyone create unlimited cache entries.
+ * Cached FIRST page of posts for one filter (POSTS_PAGE_SIZE, newest first).
+ * Later pages come from GET /api/posts via the "Load more" button.
+ * @param type - from normalizePostType: a known type, or null for all. It is
+ *   part of the cache key, so raw ?type= input would let anyone create
+ *   unlimited cache entries.
+ * @returns the posts plus nextCursor (null when there is nothing more)
  */
-const queryPosts = cachedPublicQuery('posts:list', async (type: string | null) => {
+const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string | null) => {
   const supabase = createPublicClient()
 
   let query = supabase
     .from('posts')
-    .select('id, title, description, image_url, post_type, created_at')
+    .select(POST_LIST_FIELDS)
     .order('created_at', { ascending: false })
+    .limit(POSTS_PAGE_SIZE + 1) // one extra row tells us whether more exist
 
   if (type) {
     query = query.eq('post_type', type)
@@ -42,17 +44,23 @@ const queryPosts = cachedPublicQuery('posts:list', async (type: string | null) =
 
   const { data, error } = await query
   if (error) throw error
-  return data ?? []
+
+  const rows = data ?? []
+  const hasMore = rows.length > POSTS_PAGE_SIZE
+  const posts = hasMore ? rows.slice(0, POSTS_PAGE_SIZE) : rows
+  const last = posts[posts.length - 1]
+  return { posts, nextCursor: hasMore && last?.created_at ? last.created_at : null }
 })
 
-// Returns [] on failure so the page still renders its header and filters.
-// Safe: the failure is never cached, and this HTML isn't cached either.
-async function getPosts(type?: string) {
+// Falls back to an empty list on failure so the page still renders its
+// header and filters. Safe: the failure is never cached, and this HTML isn't
+// cached either.
+async function getFirstPage(type: string | null) {
   try {
-    return await queryPosts(type && POST_TYPES.includes(type) ? type : null)
+    return await queryFirstPage(type)
   } catch (err) {
-    console.error('getPosts failed:', err)
-    return []
+    console.error('getFirstPage failed:', err)
+    return { posts: [], nextCursor: null }
   }
 }
 
@@ -62,7 +70,7 @@ export default async function PostsPage({
   searchParams: Promise<{ type?: string }>
 }) {
   const { type } = await searchParams
-  const posts = await getPosts(type)
+  const { posts, nextCursor } = await getFirstPage(normalizePostType(type))
 
   return (
     <main className="flex-1">
@@ -132,7 +140,12 @@ export default async function PostsPage({
       {/* Keyed by type: PostsClient seeds its state from initialPosts once, so
           without a key a pill click changes the URL and the highlighted pill
           but leaves the previous type's grid on screen. */}
-      <PostsClient key={type ?? 'all'} initialPosts={posts} activeType={type} />
+      <PostsClient
+        key={type ?? 'all'}
+        initialPosts={posts}
+        initialCursor={nextCursor}
+        activeType={normalizePostType(type) ?? undefined}
+      />
     </main>
   )
 }

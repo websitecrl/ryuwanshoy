@@ -21,7 +21,8 @@ export default function AdminPostsPage() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        const res = await fetch('/api/posts')
+        // ?all=1: admin only, every post in one list (public calls are paged).
+        const res = await fetch('/api/posts?all=1')
         if (!res.ok) throw new Error('Failed to load posts')
         const json = await res.json()
         setPosts(json.data)

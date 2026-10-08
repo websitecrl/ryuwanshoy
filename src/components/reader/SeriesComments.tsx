@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
+import { useComments } from '@/hooks/useComments'
 import { Pencil, Trash2, Send, MessageSquare, CornerDownRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
@@ -324,8 +325,9 @@ function CommentRow({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SeriesComments({ seriesId }: Props) {
-  const [comments,   setComments]   = useState<Comment[]>([])
-  const [loading,    setLoading]    = useState(true)
+  // Newest 30 top-level comments (with their replies); "Show older comments"
+  // loads the next 30. Local actions update the list without a reload.
+  const thread = useComments<Comment>({ seriesId })
   const [submitting, setSubmitting] = useState(false)
   const [content,    setContent]    = useState('')
   const [ownIds,     setOwnIds]     = useState<Set<string>>(new Set())
@@ -334,21 +336,6 @@ export default function SeriesComments({ seriesId }: Props) {
     const map = getTokenMap()
     setOwnIds(new Set(Object.keys(map)))
   }, [])
-
-  const fetchComments = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/comments?series_id=${seriesId}`)
-      if (!res.ok) return
-      const data = await res.json() as Comment[]
-      setComments(data)
-    } catch {
-      // Non-fatal
-    } finally {
-      setLoading(false)
-    }
-  }, [seriesId])
-
-  useEffect(() => { fetchComments() }, [fetchComments])
 
 
   async function handleSubmit() {
@@ -376,7 +363,7 @@ export default function SeriesComments({ seriesId }: Props) {
 
       setContent('')
       toast.success('Comment posted!')
-      await fetchComments()
+      thread.add(data)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
@@ -399,21 +386,16 @@ export default function SeriesComments({ seriesId }: Props) {
         const { error } = await res.json() as { error: string }
         throw new Error(error ?? 'Delete failed.')
       }
-      setComments(prev => prev.filter(c => c.id !== id))
+      // Also drops its replies locally; the DB deletes them with it.
+      thread.remove(id)
       toast.success('Comment deleted.')
-      await fetchComments()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to delete comment.')
     }
   }
 
   function handleEdit(id: string, newContent: string) {
-    setComments(prev =>
-      prev.map(c => c.id === id
-        ? { ...c, content: newContent, updated_at: new Date().toISOString() }
-        : c
-      )
-    )
+    thread.edit(id, newContent)
   }
 
   function handleReplyPosted(reply: Comment & { edit_token: string }) {
@@ -421,15 +403,12 @@ export default function SeriesComments({ seriesId }: Props) {
       saveToken(reply.id, reply.edit_token)
       setOwnIds(prev => new Set([...prev, reply.id]))
     }
-    setComments(prev => [...prev, reply])
+    thread.add(reply)
   }
 
-  // ── Separate top-level comments from replies ────────────────────────────────
-  const topLevel = comments.filter(c => !c.parent_id)
-  const repliesFor = (parentId: string) =>
-    comments.filter(c => c.parent_id === parentId)
-
-  const totalCount = comments.length
+  const { topLevel, repliesFor } = thread
+  const loading = thread.status === 'loading'
+  const totalCount = thread.total
 
   return (
     <div className="w-full bg-[var(--ryu-surface-1)] border-t border-[var(--ryu-border)]">
@@ -498,6 +477,17 @@ export default function SeriesComments({ seriesId }: Props) {
                 </div>
               ))}
             </div>
+          ) : thread.status === 'error' ? (
+            <div className="py-10 text-center space-y-2">
+              <p className="text-sm text-[var(--ryu-text-3)]">Couldn&apos;t load comments.</p>
+              <button
+                type="button"
+                onClick={() => void thread.reload()}
+                className="text-sm font-semibold text-[var(--ryu-primary)] hover:opacity-80"
+              >
+                Retry
+              </button>
+            </div>
           ) : topLevel.length === 0 ? (
             <div className="py-10 text-center">
               <p className="text-sm text-[var(--ryu-text-3)]">
@@ -505,6 +495,7 @@ export default function SeriesComments({ seriesId }: Props) {
               </p>
             </div>
           ) : (
+            <>
             <div className="rounded-xl border border-[var(--ryu-border)] overflow-hidden
                             bg-[var(--ryu-surface-1)] divide-y divide-[var(--ryu-border-soft)]">
               {topLevel.map(comment => (
@@ -523,6 +514,22 @@ export default function SeriesComments({ seriesId }: Props) {
                 </div>
               ))}
             </div>
+            {thread.hasMore && (
+              <div className="flex justify-center pt-4">
+                <button
+                  type="button"
+                  onClick={() => void thread.loadOlder()}
+                  disabled={thread.loadingOlder}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold border
+                             border-[var(--ryu-border)] text-[var(--ryu-text-2)]
+                             bg-[var(--ryu-surface-2)] hover:text-[var(--ryu-text)]
+                             disabled:opacity-50 transition-colors"
+                >
+                  {thread.loadingOlder ? 'Loading…' : 'Show older comments'}
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
