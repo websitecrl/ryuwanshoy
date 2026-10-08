@@ -128,7 +128,7 @@ flowchart LR
 │   │   ├── reader/          ReaderShell, ScrollReader, FlipReader, ReaderTopBar, PostModal, SeriesComments
 │   │   └── admin/           Sidebar, Dashboard*, HeroBannerManager, NotificationBell
 │   │       └── reader/      Public-facing home/catalogue components (see note in Components doc)
-│   ├── hooks/               useRealtimeSubscription, useRyuTheme
+│   ├── hooks/               useRyuTheme
 │   ├── lib/                 supabase clients, r2, auth, rate-limit, theme, image helpers…
 │   └── types/               database.ts (generated), reader.ts
 ├── supabase/                Only `.temp/` (CLI link info) is tracked — no migrations in the repo

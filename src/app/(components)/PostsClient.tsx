@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import PostModal from "@/components/reader/PostModal"
-import { useRealtimeSubscription } from "@/hooks/useRealtimeSubscription";
 
 type Post = {
   id: string;
@@ -30,22 +29,11 @@ type Props = {
 };
 
 export default function PostsClient({ initialPosts, activeType }: Props) {
-  const [posts, setPosts] = useState(initialPosts);
+  // No realtime on purpose (free plan 200 connection cap, refetch burst on
+  // every admin save). Post data is cached and admin saves purge it, so a
+  // reload shows new posts. See docs/caching.md.
+  const posts = initialPosts;
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
-
-  const fetchPosts = useCallback(async () => {
-    const url = activeType ? `/api/posts?type=${activeType}` : "/api/posts";
-    const res = await fetch(url);
-    if (!res.ok) return;
-    const json = await res.json() as { data: Post[] };
-    setPosts(json.data ?? []);
-  }, [activeType]);
-
-  useRealtimeSubscription({
-    channelName: "posts-realtime",
-    tables: ["posts"],
-    onChange: fetchPosts,
-  });
 
   return (
     <>
