@@ -1,4 +1,4 @@
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createPublicClient } from '@/lib/supabase/public'
 
 export const revalidate = 3600 // rebuild sitemap every hour
 
@@ -13,11 +13,18 @@ export default async function sitemap() {
     { url: `${baseUrl}/donate`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
   ]
 
+  // Public (anon) client: a public route has no need for the service role
+  // key. Errors throw so a failed refresh keeps serving the previous sitemap
+  // instead of caching one with missing URLs for an hour.
+  const supabase = createPublicClient()
+
   // Dynamic series pages
-  const { data: series } = await supabaseAdmin
+  const { data: series, error: seriesError } = await supabase
     .from('series')
     .select('slug, created_at')
     .eq('is_published', true)
+
+  if (seriesError) throw seriesError
 
   const seriesPages = (series ?? []).map(s => ({
     url: `${baseUrl}/comics/${s.slug}`,
@@ -26,12 +33,16 @@ export default async function sitemap() {
     priority: 0.8,
   }))
 
-  // Dynamic chapter pages
-  const { data: chapters } = await supabaseAdmin
+  // Dynamic chapter pages. Same rule as the reader: published, not a draft,
+  // and in a published series.
+  const { data: chapters, error: chaptersError } = await supabase
     .from('chapters')
-    .select('chapter_number, series:series_id(slug), published_at')
+    .select('chapter_number, series:series_id!inner(slug, is_published), published_at')
     .eq('is_published', true)
     .eq('is_draft', false)
+    .eq('series.is_published', true)
+
+  if (chaptersError) throw chaptersError
 
   const chapterPages = (chapters ?? [])
     .filter(ch => ch.series && (ch.series as { slug: string }).slug)

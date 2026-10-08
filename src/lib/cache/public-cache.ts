@@ -76,24 +76,29 @@ export async function nullIfNotFound<T>(query: Promise<T>): Promise<T | null> {
  * chapters, pages, posts, hero slides, settings, logo) must call it.
  *
  * Call it right after the admin check, not after the write. It only queues
- * the purge: Next applies queued purges once the handler has returned its
+ * the purge: Next applies queued purges once the handler has RETURNED a
  * response (any status), so a single call also covers early returns and a
- * write that fails halfway after some rows already changed. A purge with
- * nothing to purge just costs one extra page render.
+ * write that fails halfway, as long as the handler catches its own errors.
+ * If a handler throws uncaught, Next skips the queued purge and the change
+ * shows up only after PUBLIC_REVALIDATE_SECONDS. A purge with nothing to
+ * purge just costs one extra page render.
  *
- * Both calls expire immediately (no stale window): revalidatePath on the root
- * layout covers every page under it, and the tag covers cached queries even
- * on pages that render per request (e.g. /posts with ?type=).
+ * All calls expire immediately (no stale window): revalidatePath on the root
+ * layout covers every page under it, the tag covers cached queries even on
+ * pages that render per request (e.g. /posts with ?type=), and the sitemap
+ * is a separate route that isn't under the layout, so it is purged by path.
  *
- * Never throws: the write already succeeded, so a purge failure must not turn
- * the admin's save into an error. It is logged loudly instead; worst case the
- * page refreshes on its own within PUBLIC_REVALIDATE_SECONDS.
+ * Never throws here, so queuing can't turn the admin's save into an error.
+ * The actual tag write happens after the response; if it fails (e.g. the D1
+ * table is missing because the deploy skipped `opennextjs-cloudflare
+ * deploy`), pages refresh on their own within PUBLIC_REVALIDATE_SECONDS.
  *
  * @param reason - short label for the logs, e.g. 'PATCH /api/chapters/[id]'
  */
 export function revalidatePublicContent(reason: string): void {
   try {
     revalidatePath('/', 'layout')
+    revalidatePath('/sitemap.xml')
     revalidateTag(PUBLIC_CONTENT_TAG, { expire: 0 })
     console.log(`[cache] PURGE public content (${reason})`)
   } catch (err) {

@@ -38,10 +38,14 @@ const getComicsData = cachedPublicQuery('comics:index', async () => {
       .eq('is_published', true)
       .order('created_at', { ascending: false }),
 
+    // Same filter as the reader: published, not a draft, and in a published
+    // series. Otherwise draft chapters inflate the counts on a cached page.
     supabase
       .from('chapters')
-      .select('id, series_id')
-      .eq('is_published', true),
+      .select('id, series_id, series:series_id!inner(is_published)')
+      .eq('is_published', true)
+      .eq('is_draft', false)
+      .eq('series.is_published', true),
 
     supabase
       .from('pages')
