@@ -51,7 +51,9 @@ async function fetchPage<T>(target: CommentTarget, before?: string): Promise<Pag
  *   - total: count of every comment (replies included), for the header badge
  *   - hasMore / loadingOlder / loadOlder(): the "Show older comments" button
  *   - reload(): first page again (e.g. Retry after an error)
- *   - add(comment): a comment or reply the user just posted
+ *   - add(comment): a comment or reply the user just posted. Only works once
+ *     loaded, so callers must keep their post button disabled until
+ *     status === 'loaded' (otherwise the comment is saved but not shown)
  *   - remove(id): a deleted comment; also drops its replies, since the DB
  *     deletes them with it (ON DELETE CASCADE on parent_id)
  *   - edit(id, content)
@@ -68,6 +70,9 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
   const reload = useCallback(async () => {
     const gen = ++generation.current
     setState({ status: 'loading' })
+    // An in-flight loadOlder from the old generation won't clear its own
+    // flag (its finally sees a stale generation), so clear it here.
+    setLoadingOlder(false)
     try {
       const page = await fetchPage<T>(target)
       if (gen !== generation.current) return

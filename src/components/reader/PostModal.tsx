@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useComments } from '@/hooks/useComments'
 import Image from 'next/image'
 import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
@@ -403,6 +403,10 @@ export default function PostModal({ post, onClose }: Props) {
   const [submitError, setSubmitError] = useState('')
   const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  const commentsListRef = useRef<HTMLDivElement>(null)
+  // Distance from the bottom of the comment list, saved just before "Show
+  // older" prepends comments above the viewport (see the layout effect below).
+  const scrollFromBottomRef = useRef<number | null>(null)
 
   // Comments start hidden behind the like/comment/share rail on both
   // desktop (slide-in drawer) and mobile (full-screen swap) — see the
@@ -570,7 +574,8 @@ export default function PostModal({ post, onClose }: Props) {
 
   async function handleSubmit() {
     const trimContent = content.trim()
-    if (!trimContent || submitting) return
+    // Wait for the list: thread.add only works once comments are loaded.
+    if (!trimContent || submitting || thread.status !== 'loaded') return
 
     setSubmitting(true)
     setSubmitError('')
@@ -627,6 +632,24 @@ export default function PostModal({ post, onClose }: Props) {
     }
     thread.add(reply)
   }
+
+  function handleLoadOlder() {
+    const list = commentsListRef.current
+    if (list) scrollFromBottomRef.current = list.scrollHeight - list.scrollTop
+    void thread.loadOlder()
+  }
+
+  // Older comments are inserted ABOVE what the reader is looking at. Restore
+  // the same distance from the bottom once loading finishes, so the view
+  // doesn't jump (browsers without scroll anchoring, e.g. Safari, would).
+  // Runs when loadingOlder flips back to false, in the same render as the
+  // new comments; on failure nothing was added, so this is a no-op.
+  useLayoutEffect(() => {
+    const list = commentsListRef.current
+    if (thread.loadingOlder || !list || scrollFromBottomRef.current === null) return
+    list.scrollTop = list.scrollHeight - scrollFromBottomRef.current
+    scrollFromBottomRef.current = null
+  }, [thread.loadingOlder])
 
   // Chat-style panel: oldest at the top, newest right above the input, so
   // flip the hook's newest-first order. "Show older" sits at the top.
@@ -759,7 +782,7 @@ export default function PostModal({ post, onClose }: Props) {
             </span>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
+          <div ref={commentsListRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 flex flex-col gap-3">
             {thread.status === 'loading' ? (
               <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
                 Loading comments…
@@ -787,7 +810,7 @@ export default function PostModal({ post, onClose }: Props) {
                 {thread.hasMore && (
                   <button
                     type="button"
-                    onClick={() => void thread.loadOlder()}
+                    onClick={handleLoadOlder}
                     disabled={thread.loadingOlder}
                     className="self-center text-xs font-semibold px-3 py-1.5 rounded-lg disabled:opacity-50"
                     style={{
@@ -841,7 +864,7 @@ export default function PostModal({ post, onClose }: Props) {
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={submitting || !content.trim()}
+                disabled={submitting || !content.trim() || thread.status !== 'loaded'}
                 className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all duration-150 post-comment-send"
                 style={{
                   background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: 'none',

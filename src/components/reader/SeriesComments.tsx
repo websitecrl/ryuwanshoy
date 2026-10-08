@@ -452,7 +452,7 @@ export default function SeriesComments({ seriesId }: Props) {
       <div className="flex justify-end">
         <button
           onClick={handleSubmit}
-          disabled={submitting || !content.trim()}
+          disabled={submitting || !content.trim() || thread.status !== 'loaded'}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold
                     bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]
                     hover:opacity-80 disabled:opacity-40 transition-opacity"

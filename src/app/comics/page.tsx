@@ -28,7 +28,9 @@ export const revalidate = 60
 // Throws on any Supabase error so a failed read is never cached (see
 // cachedPublicQuery). Before caching, errors were ignored and the page
 // rendered empty.
-const getComicsData = cachedPublicQuery('comics:index', async () => {
+// v2: the cached shape changed (chapterCounts instead of chapter rows), so a
+// new key guarantees an old entry is never read as the new shape.
+const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   const supabase = createPublicClient()
 
   const [seriesRes, pagesRes] = await Promise.all([
