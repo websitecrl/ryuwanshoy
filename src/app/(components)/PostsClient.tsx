@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import PostModal from "@/components/reader/PostModal"
 import { toast } from "sonner";
+import { formatDate } from "@/lib/time";
 
 type Post = {
   id: string;
@@ -14,15 +15,6 @@ type Post = {
   created_at: string | null;
 };
 
-
-function formatDate(dateString: string | null): string {
-  if (!dateString) return "";
-  return new Date(dateString).toLocaleDateString("en-PH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 type Props = {
   initialPosts: Post[];

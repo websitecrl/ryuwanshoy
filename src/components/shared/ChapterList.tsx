@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Star } from 'lucide-react'
 import type { ChapterWithPageCount, ReadingProgress } from '@/types/reader'
 import ContinueReadingBar from './ContinueReadingBar'
+import { formatDate } from '@/lib/time'
 
 type Props = {
   chapters: ChapterWithPageCount[]
@@ -20,15 +21,6 @@ type ChapterReadState = {
   state: 'unread' | 'reading' | 'read'
   currentPage?: number
   totalPages?: number
-}
-
-function formatDate(dateString: string | null): string {
-  if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('en-PH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 // ─── Tab button ───────────────────────────────────────────────────────────────

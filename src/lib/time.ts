@@ -21,3 +21,16 @@ export function timeAgo(dateStr: string | null): string {
   if (hours < 24) return `${hours}h ago`
   return `${days}d ago`
 }
+
+/**
+ * "Oct 9, 2026" style date (en-PH), used for post and chapter dates.
+ * Parses the string as is (unlike timeAgo it doesn't append "Z"), which is
+ * how every copy of this helper behaved before it was shared.
+ * @returns the formatted date, or '' when there is no date
+ */
+export function formatDate(dateStr: string | null): string {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-PH', {
+    year: 'numeric', month: 'short', day: 'numeric',
+  })
+}

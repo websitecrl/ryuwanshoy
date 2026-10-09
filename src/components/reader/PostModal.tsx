@@ -4,7 +4,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useComments } from '@/hooks/useComments'
 import Image from 'next/image'
 import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
-import { timeAgo } from '@/lib/time'
+import { timeAgo, formatDate } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
@@ -26,13 +26,6 @@ type Comment = {
   created_at: string | null
   updated_at: string | null
   parent_id: string | null
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-PH', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
 }
 
 function getLikeToken(): string {

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Plus, Pencil, Image as ImageIcon } from 'lucide-react'
 import DeleteButton from '@/components/admin/DeleteButton'
+import { formatDate } from '@/lib/time'
 
 type Post = {
   id: string; title: string | null; description: string | null
@@ -38,10 +39,6 @@ export default function AdminPostsPage() {
       throw new Error(j.error ?? 'Failed to delete illustration')
     }
     setPosts(prev => prev.filter(p => p.id !== id))
-  }
-
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   if (loading) {
