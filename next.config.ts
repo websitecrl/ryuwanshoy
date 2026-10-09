@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 initOpenNextCloudflareForDev();
@@ -51,7 +50,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               `img-src 'self' blob: data: https://${R2_HOST} https://${LEGACY_R2_HOST} https://storage.ko-fi.com`,
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.ingest.us.sentry.io",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
               "frame-src https://www.google.com",
             ].join('; '),
           },
@@ -62,17 +61,4 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 };
 
-export default withSentryConfig(nextConfig, {
-  org: "ryuwanshoy",
-  project: "javascript-nextjs",
-  silent: true,
-  disableLogger: true,
-  sourcemaps: {
-    disable: true,
-  },
-    webpack: {
-    autoInstrumentServerFunctions: false,
-    autoInstrumentMiddleware: false,
-    autoInstrumentAppDirectory: false,
-  },
-});
+export default nextConfig;

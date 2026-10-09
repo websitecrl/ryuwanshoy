@@ -17,7 +17,7 @@ Comic / manhwa publishing site for a Filipino creator. Public reader side + prot
 | DB + Auth | Supabase |
 | Image storage | Cloudflare R2 (S3 SDK + sharp) |
 | Hosting | Cloudflare Pages (OpenNext) |
-| Monitoring | Sentry |
+| Monitoring | Cloudflare Workers Logs + Traces |
 | Email list | Mailchimp |
 | Donations | Ko-fi + GCash QR |
 
