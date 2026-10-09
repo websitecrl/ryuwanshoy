@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
+import { isChunkLoadError, reloadOnceForChunkError } from '@/lib/chunk-error'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 // global-error REPLACES the root layout, so the layout's stylesheet (and the
 // --ryu-* tokens in it) must be imported here, and it must render its own
@@ -20,9 +21,14 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // Old tab after a deploy: reset() would rerun the old build and fail again,
+  // so reload to get the new one (see chunk-error.ts).
+  const stale = isChunkLoadError(error)
+
   useEffect(() => {
     console.error(error)
-  }, [error])
+    if (stale) reloadOnceForChunkError()
+  }, [error, stale])
 
   return (
     // Same theme bootstrap as the root layout, so dark-mode readers get the
@@ -52,11 +58,12 @@ export default function GlobalError({
           Something broke!
         </h1>
         <p style={{ fontSize: 16, color: 'var(--ryu-text-2)', maxWidth: 400, margin: 0 }}>
-          The page couldn&apos;t load. Try again, and if it keeps happening, sending a report
-          below helps get it fixed.
+          {stale
+            ? 'The site was just updated. Reload the page to get the new version.'
+            : 'The page couldn’t load. Try again, and if it keeps happening, sending a report below helps get it fixed.'}
         </p>
         <button
-          onClick={reset}
+          onClick={stale ? () => window.location.reload() : reset}
           style={{
             padding: '12px 28px',
             borderRadius: 8,
@@ -68,7 +75,7 @@ export default function GlobalError({
             cursor: 'pointer',
           }}
         >
-          Try again
+          {stale ? 'Reload' : 'Try again'}
         </button>
         <CrashReport error={error} />
       </body>

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
+import { isChunkLoadError, reloadOnceForChunkError } from '@/lib/chunk-error'
 
 /**
  * Error screen for anything that throws inside the root layout (pages,
@@ -15,9 +16,14 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // Old tab after a deploy: reset() would rerun the old build and fail again,
+  // so reload to get the new one (see chunk-error.ts).
+  const stale = isChunkLoadError(error)
+
   useEffect(() => {
     console.error(error)
-  }, [error])
+    if (stale) reloadOnceForChunkError()
+  }, [error, stale])
 
   return (
     <div
@@ -48,11 +54,12 @@ export default function Error({
       </h1>
       {/* Nothing is reported automatically, so don't claim the admin knows. */}
       <p style={{ fontSize: 16, color: 'var(--ryu-text-2)', maxWidth: 400 }}>
-        An unexpected error occurred. Try again, and if it keeps happening, sending a report
-        below helps get it fixed.
+        {stale
+          ? 'The site was just updated. Reload the page to get the new version.'
+          : 'An unexpected error occurred. Try again, and if it keeps happening, sending a report below helps get it fixed.'}
       </p>
       <button
-        onClick={reset}
+        onClick={stale ? () => window.location.reload() : reset}
         style={{
           marginTop: 8,
           padding: '12px 28px',
@@ -67,7 +74,7 @@ export default function Error({
           cursor: 'pointer',
         }}
       >
-        Try again
+        {stale ? 'Reload' : 'Try again'}
       </button>
       <CrashReport error={error} />
     </div>
