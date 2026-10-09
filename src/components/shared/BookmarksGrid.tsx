@@ -6,6 +6,8 @@ import { Bookmark } from 'lucide-react'
 import SeriesCard from '@/components/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import { getBookmarkMap, saveBookmarkMap } from '@/lib/bookmarks'
+import { useMaxAge } from '@/hooks/useSavedAge'
+import { fitsAge } from '@/lib/age'
 
 type Series = Database['public']['Tables']['series']['Row']
 
@@ -22,6 +24,7 @@ type Props = {
 export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: Props) {
   const [bookmarkMap, setBookmarkMap] = useState<Record<string, boolean>>({})
   const [mounted, setMounted] = useState(false)
+  const maxAge = useMaxAge()
 
   useEffect(() => {
     setMounted(true)
@@ -50,7 +53,10 @@ export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: P
   // Avoid a flash of the empty state before localStorage is read
   if (!mounted) return null
 
-  const bookmarked = series.filter(s => bookmarkMap[s.id] === true)
+  // Series above the reader's saved age are hidden, not unbookmarked: they
+  // come back if the reader picks an older age. The stale cleanup above must
+  // keep using the full `series` list, or it would delete them.
+  const bookmarked = series.filter(s => bookmarkMap[s.id] === true && fitsAge(s.min_age, maxAge))
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 py-8">

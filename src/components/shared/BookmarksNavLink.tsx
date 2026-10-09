@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Database } from "@/types/database";
 import { getBookmarkMap } from "@/lib/bookmarks";
+import { useMaxAge } from "@/hooks/useSavedAge";
+import { fitsAge } from "@/lib/age";
 
 type Series = Database["public"]["Tables"]["series"]["Row"];
 
@@ -17,6 +19,7 @@ interface Props {
 export default function BookmarksNavLink({ allSeries, className = "" }: Props) {
   const [bookmarkMap, setBookmarkMap] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
+  const maxAge = useMaxAge();
 
   useEffect(() => {
     setMounted(true);
@@ -30,7 +33,8 @@ export default function BookmarksNavLink({ allSeries, className = "" }: Props) {
     return () => window.removeEventListener("storage", refresh);
   }, []);
 
-  const count = allSeries.filter((s) => bookmarkMap[s.id] === true).length;
+  // Same rule as the /bookmarks page, so the badge matches what it shows.
+  const count = allSeries.filter((s) => bookmarkMap[s.id] === true && fitsAge(s.min_age, maxAge)).length;
 
   // Don't render the count badge until localStorage is read (avoids hydration flash)
   if (!mounted) return null;
