@@ -7,7 +7,7 @@ All routes use the Next.js App Router under `src/app/`. Dynamic params are `Prom
 | URL | File | Rendering | Data source | Notes |
 |-----|------|-----------|-------------|-------|
 | `/` | `app/page.tsx` → `(components)/HomeClient.tsx` | ISR 60 s | Hero slides, latest 6 published chapters (of published series), latest 4 posts, settings | Realtime refresh; age-filtered; see below |
-| `/comics` | `app/comics/page.tsx` → `components/admin/reader/SeriesGrid.tsx` | ISR 60 s | Published series, chapter counts, total page count | Filters, sort, search, age filter |
+| `/comics` | `app/comics/page.tsx` → `components/reader/SeriesGrid.tsx` | ISR 60 s | Published series, chapter counts, total page count | Filters, sort, search, age filter |
 | `/comics/[slug]` | `app/comics/[slug]/page.tsx` | dynamic | Series + published chapters with `pages(count)` | `notFound()` if unpublished |
 | `/comics/[slug]/[chapter]` | `app/comics/[slug]/[chapter]/page.tsx` → `ReaderShell` | dynamic | Series, chapter, pages, prev/next, chapter list | No Navbar/Footer |
 | `/posts` | `app/posts/page.tsx` → `(components)/PostsClient.tsx` | ISR 60 s | `posts`, optional `?type=` filter | Realtime; opens `PostModal` |

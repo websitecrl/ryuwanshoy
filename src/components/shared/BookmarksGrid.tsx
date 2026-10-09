@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Bookmark } from 'lucide-react'
-import SeriesCard from '@/components/admin/reader/SeriesCard'
+import SeriesCard from '@/components/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import { getBookmarkMap, saveBookmarkMap } from '@/lib/bookmarks'
 
