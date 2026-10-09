@@ -30,7 +30,7 @@ These docs were written from the code as it exists in the repository (Next.js 16
 - **Package name:** `ryuwanshoy` · **Version:** `0.1.0` · **Commits:** 48 at the time of writing.
 - **Public site:** home, comics, series detail, chapter reader, illustrations ("posts"), bookmarks, donate, early access.
 - **Admin:** `/admin` — Supabase email/password login, single admin identified by `ADMIN_USER_ID`.
-- **Data:** Supabase Postgres (tables: `series`, `chapters`, `pages`, `posts`, `hero_slides`, `comments`, `likes`, `early_access`, `settings`, `rate_limits`).
+- **Data:** Supabase Postgres (tables: `series`, `chapters`, `pages`, `posts`, `hero_slides`, `comments`, `likes`, `early_access`, `feedback`, `settings`, `rate_limits`).
 - **Files:** Cloudflare R2 — a public bucket for images and a private bucket reserved for Early Access pages.
 - **Hosting:** Cloudflare Workers through `@opennextjs/cloudflare`.
 - **No reader accounts** — bookmarks, progress, age, theme and comment ownership all live in the reader's browser (`localStorage`).

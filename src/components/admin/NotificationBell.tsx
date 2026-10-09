@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, Trash2, CheckCheck, Heart } from 'lucide-react'
+import { Bell, Trash2, CheckCheck, Heart, MessageSquare } from 'lucide-react'
+import { timeAgo } from '@/lib/time'
 
 type NotifType = 'comment' | 'like'
 
@@ -14,33 +16,18 @@ type Notification = {
   is_read: boolean | null
   created_at: string | null
   post_id?: string | null
-  chapter_id?: string | null
   post_title?: string | null
-  chapter_number?: number | null
   series_title?: string | null
-}
-
-function timeAgo(dateStr: string): string {
-  if (!dateStr) return ''
-  const normalized = dateStr.endsWith('Z') ? dateStr : dateStr + 'Z'
-  const diff  = Date.now() - new Date(normalized).getTime()
-  const mins  = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days  = Math.floor(diff / 86400000)
-  if (mins < 1)   return 'just now'
-  if (mins < 60)  return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  return `${days}d ago`
 }
 
 const SEEN_LIKES_KEY = 'ryu.seen_likes'
 
+// Comments live on a series or on a post (illustration); likes only on posts.
 function notifLabel(n: Notification): string {
   const target =
     n.post_title ? `"${n.post_title}"` :
-    n.series_title && n.chapter_number
-      ? `"${n.series_title} Ch. ${n.chapter_number}"`
-      : 'a post'
+    n.series_title ? `"${n.series_title}"` :
+    n.type === 'like' ? 'a post' : 'a series'
   if (n.type === 'like') return `Someone liked ${target}`
   return `${n.name ?? 'Someone'} commented on ${target}`
 }
@@ -66,6 +53,9 @@ export default function NotificationBell() {
   const [open,    setOpen]    = useState(false)
   const [notifs,  setNotifs]  = useState<Notification[]>([])
   const [unread,  setUnread]  = useState(0)
+  // Unread reader feedback. Not cleared by opening the bell (unlike comments):
+  // it's handled on /admin/feedback, so a report is never "read" by accident.
+  const [feedbackUnread, setFeedbackUnread] = useState(0)
   const dropdownRef           = useRef<HTMLDivElement>(null)
   const supabase              = createClient()
   const [, setTicking] = useState(0)
@@ -74,8 +64,9 @@ export default function NotificationBell() {
     try {
       const res = await fetch('/api/notifications')
       if (!res.ok) return
-      const json = await res.json() as { notifications: Notification[] }
+      const json = await res.json() as { notifications: Notification[]; feedbackUnread?: number }
       const raw = json.notifications ?? []
+      setFeedbackUnread(json.feedbackUnread ?? 0)
 
       // FIX: cross-reference localStorage so seen likes aren't counted as unread
       const seenLikes = getSeenLikes()
@@ -124,6 +115,9 @@ export default function NotificationBell() {
       .channel('notif-bell')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchNotifs)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' },    fetchNotifs)
+      // New reports (and reads/deletes from /admin/feedback) refresh the count.
+      // Needs the admin SELECT policy from 20261009120000_create_feedback.sql.
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, fetchNotifs)
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
@@ -144,7 +138,9 @@ export default function NotificationBell() {
     if (!open && unread > 0) markAllRead()
   }
 
-  const hasUnread = unread > 0
+  const totalUnread = unread + feedbackUnread
+  const hasUnread = totalUnread > 0
+  const badge = totalUnread > 9 ? '9+' : String(totalUnread)
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -166,19 +162,20 @@ export default function NotificationBell() {
         </div>
 
         <span className="text-xs font-semibold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
-          {hasUnread ? `${unread > 9 ? '9+' : unread} new` : 'Notifications'}
+          {hasUnread ? `${badge} new` : 'Notifications'}
         </span>
 
         {hasUnread && (
           <span
-            className="w-4 h-4 rounded-full flex items-center justify-center text-white"
+            className="w-4 h-4 rounded-full flex items-center justify-center"
             style={{
               fontSize: 9,
               fontWeight: 700,
               background: 'var(--ryu-primary)',
+              color: 'var(--ryu-on-primary)',
             }}
           >
-            {unread > 9 ? '9+' : unread}
+            {badge}
           </span>
         )}
       </button>
@@ -200,7 +197,7 @@ export default function NotificationBell() {
           style={{
             background: 'var(--ryu-surface-1)',
             border:     '1px solid var(--ryu-border)',
-            boxShadow:  '0 8px 32px -8px rgba(0,0,0,0.18)',
+            boxShadow:  '0 8px 32px -8px color-mix(in srgb, var(--ryu-ink) 18%, transparent)',
           }}
         >
           <div
@@ -230,11 +227,28 @@ export default function NotificationBell() {
             )}
           </div>
 
+          {feedbackUnread > 0 && (
+            <Link
+              href="/admin/feedback"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-xs font-semibold transition-opacity hover:opacity-80"
+              style={{
+                background:   'var(--ryu-primary-soft)',
+                color:        'var(--ryu-primary-deep)',
+                borderBottom: '1px solid var(--ryu-border)',
+              }}
+            >
+              <MessageSquare size={14} />
+              {feedbackUnread} new feedback {feedbackUnread === 1 ? 'report' : 'reports'}
+              <span className="ml-auto">Open inbox →</span>
+            </Link>
+          )}
+
           <div className="max-h-96 overflow-y-auto">
             {notifs.length === 0 ? (
               <div
                 className="px-4 py-8 text-center text-sm"
-                style={{ color: 'var(--ryu-text-muted)' }}
+                style={{ color: 'var(--ryu-text-3)' }}
               >
                 No notifications yet
               </div>
@@ -253,8 +267,8 @@ export default function NotificationBell() {
                   <div
                     className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold"
                     style={{
-                      background: n.type === 'like' ? '#FCE7F3' : 'var(--ryu-primary)',
-                      color:      n.type === 'like' ? '#9D174D' : '#fff',
+                      background: n.type === 'like' ? 'var(--ryu-primary-soft)' : 'var(--ryu-primary)',
+                      color:      n.type === 'like' ? 'var(--ryu-primary-deep)' : 'var(--ryu-on-primary)',
                     }}
                   >
                     {n.type === 'like'
@@ -277,14 +291,14 @@ export default function NotificationBell() {
                     {n.type === 'comment' && n.content && (
                       <p
                         className="text-xs mt-0.5 leading-relaxed line-clamp-2"
-                        style={{ color: 'var(--ryu-text-secondary)', fontFamily: "'Quicksand', system-ui, sans-serif" }}
+                        style={{ color: 'var(--ryu-text-2)', fontFamily: "'Quicksand', system-ui, sans-serif" }}
                       >
                         "{n.content}"
                       </p>
                     )}
                     <span
                       className="text-[10px] mt-1 block"
-                      style={{ color: 'var(--ryu-text-muted)', fontFamily: "'Quicksand', system-ui, sans-serif" }}
+                      style={{ color: 'var(--ryu-text-3)', fontFamily: "'Quicksand', system-ui, sans-serif" }}
                     >
                       {timeAgo(n.created_at ?? '')}
                     </span>
@@ -293,9 +307,9 @@ export default function NotificationBell() {
                   <button
                     onClick={() => deleteNotif(n)}
                     className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color: 'var(--ryu-text-muted)', background: 'none', border: 'none' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#DC2626'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-muted)'}
+                    style={{ color: 'var(--ryu-text-3)', background: 'none', border: 'none' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-primary-deep)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
                   >
                     <Trash2 size={12} />
                   </button>

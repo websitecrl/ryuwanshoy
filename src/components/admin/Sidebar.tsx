@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { isWizardSaving, subscribeWizardSaving } from '@/lib/wizard-saving'
 import ThemeToggle from '@/components/shared/ThemeToggle'
-import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit } from 'lucide-react'
+import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit, MessageSquare } from 'lucide-react'
 
 const navItems = [
   { label: 'Dashboard',     href: '/admin/dashboard', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Chapters',      href: '/admin/chapters',  icon: BookMarked },
   { label: 'Illustration',  href: '/admin/posts',     icon: Image },
   { label: 'Drafts',        href: '/admin/drafts',    icon: FileEdit},
+  { label: 'Feedback',      href: '/admin/feedback',  icon: MessageSquare },
   { label: 'Settings',      href: '/admin/settings',  icon: Settings },
 ]
 

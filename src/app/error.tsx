@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect } from 'react'
+import CrashReport from '@/components/shared/CrashReport'
 
+/**
+ * Error screen for anything that throws inside the root layout (pages,
+ * loaders). The layout (navbar, footer, toasts) stays on screen.
+ * Whole-page crashes are handled by global-error.tsx instead.
+ */
 export default function Error({
   error,
   reset,
@@ -23,7 +29,7 @@ export default function Error({
         justifyContent: 'center',
         gap: 16,
         padding: '32px',
-        background: 'var(--ryu-bg)',
+        background: 'var(--background)',
         color: 'var(--ryu-text)',
         textAlign: 'center',
       }}
@@ -40,8 +46,10 @@ export default function Error({
       >
         Something broke!
       </h1>
+      {/* Nothing is reported automatically, so don't claim the admin knows. */}
       <p style={{ fontSize: 16, color: 'var(--ryu-text-2)', maxWidth: 400 }}>
-        An unexpected error occurred. Try refreshing the page — if it keeps happening, the admin has been notified.
+        An unexpected error occurred. Try again, and if it keeps happening, sending a report
+        below helps get it fixed.
       </p>
       <button
         onClick={reset}
@@ -51,7 +59,7 @@ export default function Error({
           borderRadius: 8,
           border: '2px solid var(--ryu-primary)',
           background: 'var(--ryu-primary)',
-          color: '#1E1E1E',
+          color: 'var(--ryu-on-primary)',
           fontFamily: 'var(--font-fredoka), sans-serif',
           fontWeight: 600,
           fontSize: 20,
@@ -61,6 +69,7 @@ export default function Error({
       >
         Try again
       </button>
+      <CrashReport error={error} />
     </div>
   )
 }

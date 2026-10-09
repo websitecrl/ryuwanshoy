@@ -1,4 +1,7 @@
+'use client'
+
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import SocialLinks from './SocialLinks'
 
 type FooterProps = {
@@ -24,6 +27,11 @@ export default function Footer({
   tiktokUrl,
 }: FooterProps) {
   const currentYear = new Date().getFullYear()
+  const pathname = usePathname()
+  // Tell the feedback form which page the reader was on (not when already there).
+  const feedbackHref = pathname && pathname !== '/feedback'
+    ? `/feedback?from=${encodeURIComponent(pathname)}`
+    : '/feedback'
 
   return (
     <footer
@@ -33,9 +41,11 @@ export default function Footer({
         background: 'var(--ryu-surface-1)',
       }}
     >
+      {/* minHeight, not height, + flex-wrap: on narrow phones the row wraps
+          instead of overflowing. Desktop stays one 80px row. */}
       <div
-        className="mx-auto flex items-center justify-between px-8"
-        style={{ maxWidth: 1600, height: 80 }}
+        className="mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-8 py-4"
+        style={{ maxWidth: 1600, minHeight: 80 }}
       >
         {/* Left — copyright + social icons */}
         <div className="flex items-center gap-5">
@@ -55,21 +65,33 @@ export default function Footer({
           />
         </div>
 
-        {/* Right — nav links (hidden on mobile) */}
-        <nav className="hidden md:flex items-center gap-6">
-          {footerLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="font-reader transition-colors"
-              style={{ fontSize: 13, color: 'var(--ryu-text-3)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--ryu-text-3)')}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Right — nav links (hidden on mobile) + Feedback (always shown) */}
+        <div className="flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-6">
+            {footerLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-reader transition-colors"
+                style={{ fontSize: 13, color: 'var(--ryu-text-3)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--ryu-text-3)')}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <Link
+            href={feedbackHref}
+            prefetch={false} // static page; avoid prefetching a separate ?from= URL per page
+            className="font-reader transition-colors"
+            style={{ fontSize: 13, color: 'var(--ryu-text-3)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--ryu-text-3)')}
+          >
+            Feedback
+          </Link>
+        </div>
       </div>
     </footer>
   )

@@ -21,6 +21,7 @@ Checked against the live DB on 2026-10-04. All are `TO authenticated`.
 | `hero_slides` | Admin can insert / update / delete hero_slides |
 | `settings` | Admin can insert / update settings |
 | `early_access` | Admin can read / delete early_access |
+| `feedback` | Admin can read feedback (SELECT only, for the bell's Realtime). No anon access; inserts only via `POST /api/feedback` (service role) |
 | `comments` | Admin can delete comments |
 
 ## Re-check the list

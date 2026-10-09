@@ -150,6 +150,45 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback: {
+        Row: {
+          created_at: string
+          email: string | null
+          error_digest: string | null
+          error_message: string | null
+          id: string
+          is_read: boolean
+          kind: string
+          message: string
+          page_url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          error_digest?: string | null
+          error_message?: string | null
+          id?: string
+          is_read?: boolean
+          kind: string
+          message?: string
+          page_url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          error_digest?: string | null
+          error_message?: string | null
+          id?: string
+          is_read?: boolean
+          kind?: string
+          message?: string
+          page_url?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       hero_slides: {
         Row: {
           banner_image: string | null

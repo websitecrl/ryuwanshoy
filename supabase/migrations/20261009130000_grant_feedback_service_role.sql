@@ -1,0 +1,22 @@
+-- Fix for 20261009120000_create_feedback.sql (already applied, so not edited).
+--
+-- On this project, tables created through `supabase db query` do NOT get the
+-- usual default grants for service_role. Checked on the live DB 2026-10-09:
+--   comments  service_role: DELETE, INSERT, REFERENCES, SELECT, TRIGGER, TRUNCATE, UPDATE
+--   feedback  service_role: REFERENCES, TRIGGER, TRUNCATE   ← no INSERT/SELECT/UPDATE/DELETE
+-- so POST /api/feedback (service role) failed with "permission denied".
+--
+-- Grant exactly what the API routes use:
+--   POST /api/feedback            INSERT
+--   GET  /api/feedback            SELECT
+--   PATCH /api/feedback[/id]      UPDATE (is_read)
+--   DELETE /api/feedback/[id]     DELETE
+-- anon/authenticated are unchanged (anon: nothing; authenticated: SELECT,
+-- filtered to the admin by RLS).
+--
+-- HOW TO APPLY (not `db push`):
+--   npx supabase db query --linked -f supabase/migrations/20261009130000_grant_feedback_service_role.sql
+-- No column changes, so src/types/database.ts does not need regenerating.
+-- Idempotent: GRANT is a no-op when the privilege already exists.
+
+grant select, insert, update, delete on public.feedback to service_role;
