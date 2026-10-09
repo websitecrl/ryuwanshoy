@@ -123,6 +123,9 @@ export default function PageUploader({
 
   useEffect(() => {
     onPagesChange?.(pages)
+    // Only on page changes. Listing onPagesChange would also fire on every
+    // render when a parent passes an inline function (the edit page passes
+    // setPages, which is stable, so nothing is missed).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages])
 
