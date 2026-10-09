@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useMaxAge } from '@/hooks/useSavedAge'
 
 type Series = { title: string; slug: string; min_age: number | null }
 type Chapter = { id: string; chapter_number: number }
@@ -18,16 +19,11 @@ type HeroSlide = {
 
 export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; siteName: string }) {
   const [idx, setIdx] = useState(0)
-  const [maxAge, setMaxAge] = useState<number | null>(null)
-
-  // Read confirmed age from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('ryu-age')
-    if (stored !== null) setMaxAge(Number(stored))
-  }, [])
+  // All ages until the saved age is read (the cached HTML is shared).
+  const maxAge = useMaxAge()
 
   // Filter slides by reader's confirmed age
-  const visibleSlides = maxAge === null ? [] : slides.filter(s => {
+  const visibleSlides = slides.filter(s => {
     const age = s.series?.min_age ?? 13
     return age <= maxAge
   })

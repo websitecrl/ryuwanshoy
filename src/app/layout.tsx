@@ -6,6 +6,7 @@ import AgeGate from "@/components/shared/AgeGate";
 import { getSettings } from "@/lib/settings";
 import { Toaster } from 'sonner'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
+import { AGE_INIT_SCRIPT } from '@/lib/age'
 
 // metadataBase turns relative image URLs (/og-default.png) into absolute
 // ones — Facebook and X ignore relative og:image URLs.
@@ -37,8 +38,9 @@ export default async function RootLayout({ children,}: Readonly<{
 
   const settings = await getSettings()
   return (
-    // suppressHydrationWarning: THEME_INIT_SCRIPT adds `dark` to <html> before
-    // React hydrates, so the class list intentionally differs from the server's.
+    // suppressHydrationWarning: THEME_INIT_SCRIPT adds `dark` and
+    // AGE_INIT_SCRIPT adds data-age-confirmed to <html> before React hydrates,
+    // so its attributes intentionally differ from the server's.
     <html
       lang="en"
       className={`${fredoka.variable} h-full antialiased`}
@@ -46,6 +48,7 @@ export default async function RootLayout({ children,}: Readonly<{
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: AGE_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <AgeGate>
