@@ -58,7 +58,7 @@ Ryuwanshoy is a comic / manhwa publishing site for a single Filipino creator. It
 | Database & Auth | **Supabase** (`@supabase/ssr`, `@supabase/supabase-js`) | Postgres + Auth + Realtime |
 | File storage | **Cloudflare R2** via `aws4fetch` | S3-compatible, SigV4-signed `fetch` |
 | Hosting | **Cloudflare Workers** via `@opennextjs/cloudflare` + `wrangler` | See [Deployment](./13-deployment-and-operations.md) |
-| Monitoring | `@sentry/nextjs` | Partially enabled — see [Known issues](./14-known-issues-and-roadmap.md) |
+| Monitoring | Cloudflare Workers Logs + Traces | Server side only; see [Architecture → Monitoring](./03-architecture.md#monitoring) |
 | Bot protection | Google reCAPTCHA v2 (`react-google-recaptcha`) | Early Access form only |
 | Email list | Mailchimp REST (optional) | Fire-and-forget sync on signup |
 | Lint/format | ESLint 9 (`eslint-config-next`), Prettier 3 | |
@@ -132,10 +132,9 @@ flowchart LR
 │   ├── lib/                 supabase clients, r2, auth, rate-limit, theme, image helpers…
 │   └── types/               database.ts (generated), reader.ts
 ├── supabase/                Only `.temp/` (CLI link info) is tracked — no migrations in the repo
-├── next.config.ts           Headers/CSP, images, Sentry wrapper
+├── next.config.ts           Headers/CSP, images
 ├── open-next.config.ts      OpenNext (Cloudflare) config
 ├── wrangler.jsonc           Worker name, bindings, observability
-├── sentry.{client,server,edge}.config.ts
 └── CLAUDE.md / claude.md    "Do not edit" list for Claude Code
 ```
 

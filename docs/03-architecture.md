@@ -110,7 +110,14 @@ There is no `global-error.tsx`.
 
 ## Monitoring
 
-Sentry is wired through `withSentryConfig` in `next.config.ts`, with three init files at the repo root. Client init is enabled only when `NODE_ENV === 'production'`; **server and edge inits are `enabled: false`**, and there is no `instrumentation.ts`. `tracesSampleRate` is `1.0` everywhere. Cloudflare's own observability (logs + traces, 100% sampling, persisted) is enabled in `wrangler.jsonc`.
+Cloudflare's own observability is the only monitoring, configured in `wrangler.jsonc`:
+
+- **Logs: 100%** of requests (every error, plus the `[cache] MISS` / `PURGE` lines; see [caching.md](./caching.md)).
+- **Traces: 10%** of requests. Logs and traces share the free plan's daily observability budget, and one traced request is ~10 spans.
+
+View them in the Cloudflare dashboard (Workers → ryuwanshoy → Logs) or with `npx wrangler tail`.
+
+**Not monitored: errors in readers' browsers.** Sentry used to report those (browser only; its server and edge parts never ran on Workers) and was removed. To see real-visitor page speed, use PageSpeed Insights or Cloudflare Web Analytics.
 
 ## Cross-cutting patterns
 

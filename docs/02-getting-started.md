@@ -5,7 +5,7 @@
 - **Node.js** 20 LTS or newer (Next.js 16 requires ≥ 20.9) and **npm** (the repo has a `package-lock.json`).
 - A **Supabase** project (URL, anon key, service-role key) with the tables described in [Database](./06-database.md).
 - A **Cloudflare** account with two **R2 buckets** (public + private/EA) and an R2 API token — needed for any upload to work.
-- Optional: reCAPTCHA v2 keys (Early Access), a Mailchimp audience (Early Access sync), a Sentry project.
+- Optional: reCAPTCHA v2 keys (Early Access), a Mailchimp audience (Early Access sync).
 
 ## Install and run
 
