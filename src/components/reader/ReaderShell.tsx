@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Tables } from '@/types/database'
+import { savedAgeAllows } from '@/hooks/useSavedAge'
 import ScrollReader from './ScrollReader'
 import FlipReader from './FlipReader'
 import ReaderTopBar from './ReaderTopBar'
@@ -21,6 +22,7 @@ type Props = {
     title: string
     slug: string
     cover_image: string | null
+    min_age: number | null
   }
   chapter: {
     id: string
@@ -65,10 +67,16 @@ export default function ReaderShell({
     } catch {}
   }, [])
 
+  // Every effect below that saves something first checks the reader may see
+  // this series (spec 0003). A blocked chapter still mounts once on first
+  // load, and without this it overwrote the saved mode with 'scroll' and
+  // could save the comic as "continue reading".
+
   // Persist mode
   useEffect(() => {
+    if (!savedAgeAllows(series.min_age)) return
     try { localStorage.setItem(MODE_KEY, mode) } catch {}
-  }, [mode])
+  }, [mode, series.min_age])
 
   // Restore page from ?page= URL param on mount
   useEffect(() => {
@@ -84,7 +92,7 @@ export default function ReaderShell({
   // so simply opening a chapter link got recorded as "reading progress"
   // identically to someone who actually read it.
   useEffect(() => {
-    if (currentPage <= 1) return
+    if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {
       localStorage.setItem(
         `reading-progress-${series.id}`,
@@ -98,14 +106,14 @@ export default function ReaderShell({
         })
       )
     } catch {}
-  }, [series.id, chapter, pages, currentPage])
+  }, [series.id, series.min_age, chapter, pages, currentPage])
 
   // Mark chapter done at last page
   useEffect(() => {
-    if (currentPage >= pages.length) {
+    if (currentPage >= pages.length && savedAgeAllows(series.min_age)) {
       try { localStorage.setItem(`ch-done-${chapter.id}`, 'true') } catch {}
     }
-  }, [currentPage, pages.length, chapter.id])
+  }, [currentPage, pages.length, chapter.id, series.min_age])
 
   // Save continue reading (includes currentPage so resume works)
   //
@@ -114,7 +122,7 @@ export default function ReaderShell({
   // chapter link was opened, not only once someone had actually started
   // reading it.
   useEffect(() => {
-    if (currentPage <= 1) return
+    if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {
       localStorage.setItem(
         CONTINUE_KEY,

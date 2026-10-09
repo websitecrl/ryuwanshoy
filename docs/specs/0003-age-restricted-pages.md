@@ -19,6 +19,11 @@ series `min_age` (for example a reader who picked 13 opening a direct link to an
 - The block screen offers "Back to comics" and "I picked the wrong age". The second clears the
   saved age, so the age gate asks again.
 - No saved age yet: the age gate shows as before; after picking, the rule above applies.
+- Added after #28: a blocked page is unmounted, not just hidden, so its reader can't run
+  (`?page=N`, flip mode arrow keys). The reader's saves (mode, progress, chapter done, continue
+  reading) also check `savedAgeAllows(min_age)` from storage, because the page mounts once on
+  first load before the age is known. The home "Continue reading" card is hidden (not deleted)
+  while the series `min_age` is above the saved age.
 
 ## Code area
 - `src/lib/age.ts`, `src/hooks/useSavedAge.ts`, `src/app/globals.css`

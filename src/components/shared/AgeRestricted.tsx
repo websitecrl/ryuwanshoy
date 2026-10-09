@@ -35,7 +35,10 @@ export default function AgeRestricted({ minAge, children }: {
   return (
     <div className="age-restricted" data-min-age={required} style={{ display: 'contents' }}>
       <div className="age-restricted-content" style={{ display: blocked ? 'none' : 'contents' }}>
-        {children}
+        {/* Blocked: unmount the page, not just hide it. A hidden reader still
+            ran: ?page=N, flip mode arrow keys and its progress effects saved
+            the comic to "continueReading" (shown on the home page). */}
+        {blocked === true ? null : children}
       </div>
       {blocked !== false && <AgeBlockedScreen minAge={required} shown={blocked === true} />}
     </div>
