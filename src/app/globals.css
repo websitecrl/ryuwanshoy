@@ -91,6 +91,10 @@
   --ryu-text-2: #78716C;
   --ryu-text-3: #A8A29E;
   --ryu-ink: #1C1917; /* outlines + hard offset shadows on cartoon-style buttons/cards */
+  /* Full screen backdrop behind the age gate. Fully opaque on purpose: the
+     page behind it is in the HTML, so a mature page must not show through.
+     Same in light and dark, so .dark doesn't override it. */
+  --ryu-overlay: #000000;
 
   /* Aliases for names used across the app that were never defined (the
      browser silently ignored them, e.g. see-through backgrounds). They point
