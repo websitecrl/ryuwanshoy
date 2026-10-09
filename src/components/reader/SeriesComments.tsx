@@ -5,6 +5,7 @@ import { useComments } from '@/hooks/useComments'
 import { Pencil, Trash2, Send, MessageSquare, CornerDownRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
+import { getToken, getTokenMap, saveToken } from '@/lib/comment-tokens'
 import { timeAgo } from '@/lib/time'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -20,29 +21,6 @@ type Comment = {
 
 type Props = {
   seriesId: string
-}
-
-// ─── localStorage helpers ─────────────────────────────────────────────────────
-
-const TOKEN_STORE = 'ryu.comment.tokens'
-
-function getTokenMap(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(TOKEN_STORE)
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
-  } catch { return {} }
-}
-
-function saveToken(commentId: string, token: string) {
-  try {
-    const map = getTokenMap()
-    map[commentId] = token
-    localStorage.setItem(TOKEN_STORE, JSON.stringify(map))
-  } catch {}
-}
-
-function getToken(commentId: string): string | null {
-  return getTokenMap()[commentId] ?? null
 }
 
 // ─── Reply form ───────────────────────────────────────────────────────────────
