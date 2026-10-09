@@ -34,7 +34,7 @@ export async function GET() {
 
     const mapped = (data ?? []).map(s => ({
       ...s,
-      chapter_count: (s.chapters as unknown as [{ count: number }])?.[0]?.count ?? 0
+      chapter_count: s.chapters?.[0]?.count ?? 0
     }))
 
     return NextResponse.json(mapped)

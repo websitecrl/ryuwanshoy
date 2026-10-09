@@ -8,8 +8,12 @@ import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
 import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly } from '@/lib/checklists'
 
-type Chapter = Tables<'chapters'>
 type Page    = Tables<'pages'>
+// What GET /api/chapters/[id] returns: select('*, pages(*), series(is_published)')
+type Chapter = Tables<'chapters'> & {
+  pages?: Page[]
+  series?: Pick<Tables<'series'>, 'is_published'> | null
+}
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--ryu-surface-2)',
@@ -52,8 +56,8 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         setTitle(c.title ?? '')
         setIsEarlyAccess(c.is_early_access ?? false)
         setPublishedAt(c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : '')
-        setPages((c as unknown as { pages?: Page[] }).pages ?? [])
-        setSeriesPublished((c as unknown as { series?: { is_published: boolean | null } }).series?.is_published ?? false)
+        setPages(c.pages ?? [])
+        setSeriesPublished(c.series?.is_published ?? false)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
       } finally { setFetching(false) }
@@ -305,7 +309,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             <div style={{ padding: 16 }}>
               <PageUploader
                 chapterId={chapterId ?? ''}
-                initialPages={chapter ? (chapter as unknown as { pages?: Page[] }).pages ?? [] : []}
+                initialPages={chapter?.pages ?? []}
                 onPagesChange={setPages}
               />
             </div>
