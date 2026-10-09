@@ -2,7 +2,13 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
-import { revalidatePublicContent } from '@/lib/cache/public-cache'
+import {
+  cachedPublicQuery,
+  nullIfNotFound,
+  PublicNotFoundError,
+  revalidatePublicContent,
+} from '@/lib/cache/public-cache'
+import { createPublicClient } from '@/lib/supabase/public'
 import { filterUnsharedCovers } from '@/lib/series-covers'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
@@ -15,49 +21,78 @@ interface SeriesWithChapters extends Series {
   chapters: Chapter[]
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+const CHAPTERS_SELECT = `
+  id, series_id, title, chapter_number,
+  is_early_access, published_at, created_at, is_published, is_draft
+`
+
+/**
+ * The reader's view of one series, cached across requests and visitors.
+ * Readers call this route from the home page "Continue reading" bar on every
+ * visit, so it must not hit Supabase each time.
+ *
+ * Anon client + is_published filter, and only published, non-draft chapters
+ * (same visibility rule as the reader pages). A missing series throws
+ * PublicNotFoundError so bots probing random slugs don't fill the cache; a
+ * Supabase error throws so it is never cached either.
+ *
+ * @param key - a series uuid or slug, as given in the URL
+ */
+const queryPublicSeries = cachedPublicQuery('api:series', async (key: string) => {
+  const { data, error } = await createPublicClient()
+    .from('series')
+    .select(`*, chapters (${CHAPTERS_SELECT})`)
+    .eq(UUID_RE.test(key) ? 'id' : 'slug', key)
+    .eq('is_published', true)
+    .order('chapter_number', { referencedTable: 'chapters', ascending: true })
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) throw new PublicNotFoundError(`series "${key}"`)
+
+  return {
+    ...data,
+    chapters: (data.chapters ?? []).filter(
+      c => c.is_published === true && c.is_draft === false
+    ),
+  }
+})
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
+    // No cookie → no Supabase call here, so this is cheap for readers.
     const auth = await requireAdmin()
     const isAdmin = !(auth instanceof NextResponse)
 
-    const chaptersSelect = `
-      id, series_id, title, chapter_number,
-      is_early_access, published_at, created_at, is_published, is_draft
-    `
-
-    const query = supabaseAdmin
-      .from('series')
-      .select(`*, chapters (${chaptersSelect})`)
-      .eq(isUUID ? 'id' : 'slug', id)
-      .order('chapter_number', { referencedTable: 'chapters', ascending: true })
-
-    if (!isAdmin) {
-      query.eq('is_published', true)
+    // Admin (editor pages, wizard slug check): live data, any series,
+    // drafts included. Never cached.
+    let data: SeriesWithChapters | null
+    if (isAdmin) {
+      const res = await supabaseAdmin
+        .from('series')
+        .select(`*, chapters (${CHAPTERS_SELECT})`)
+        .eq(UUID_RE.test(id) ? 'id' : 'slug', id)
+        .order('chapter_number', { referencedTable: 'chapters', ascending: true })
+        .maybeSingle()
+      if (res.error) throw res.error
+      data = res.data as SeriesWithChapters | null
+    } else {
+      data = await nullIfNotFound(queryPublicSeries(id)) as SeriesWithChapters | null
     }
 
-    const { data, error } = await query.single()
-
-    // PGRST116 = no row matched. Anything else is a real failure, so it must
-    // not look like "deleted" — callers prune local bookmarks on a 404.
-    if (error && error.code !== 'PGRST116') throw error
-
+    // A real "not found" is a 404; a failure is a 500, so it never looks like
+    // "deleted" (callers prune local bookmarks on a 404).
     if (!data) {
       return NextResponse.json(
         { data: null, error: 'Series not found' },
         { status: 404 }
-      )
-    }
-
-    // Same visibility rule as the public reader pages.
-    if (!isAdmin) {
-      data.chapters = (data.chapters ?? []).filter(
-        c => c.is_published === true && c.is_draft === false
       )
     }
 

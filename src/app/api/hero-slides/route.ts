@@ -4,12 +4,15 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
-// ─── GET — public gets visible only, admin gets all ───────────────────────────
+// ─── GET — admin only (every slide, hidden ones included) ─────────────────────
+// Readers get hero slides from the cached home page (src/app/page.tsx), so
+// there is no public GET anymore. The old public branch was only used by the
+// home page's realtime refetch, which was removed.
 export async function GET() {
   const auth = await requireAdmin()
-  const isAdmin = !(auth instanceof NextResponse)
+  if (auth instanceof NextResponse) return auth
 
-  const query = supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from('hero_slides')
     .select(`
       id, headline, banner_image, is_visible,
@@ -19,32 +22,11 @@ export async function GET() {
     `)
     .order('order_index', { ascending: true })
 
-  if (!isAdmin) {
-    query.eq('is_visible', true)
-  }
-
-  const { data, error } = await query
-
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if (isAdmin) return NextResponse.json(data)
-
-  // The service-role client bypasses RLS, so apply the same visibility the
-  // anon client gets: unpublished series and unpublished/draft chapters are
-  // nulled out, matching the home page's server-rendered hero query.
-  const visible = (data ?? []).map(({ series, chapter, ...slide }) => ({
-    ...slide,
-    series: series?.is_published
-      ? { title: series.title, slug: series.slug, min_age: series.min_age }
-      : null,
-    chapter: chapter?.is_published && chapter.is_draft === false
-      ? { id: chapter.id, chapter_number: chapter.chapter_number }
-      : null,
-  }))
-
-  return NextResponse.json(visible)
+  return NextResponse.json(data)
 }
 
 // ─── POST — admin only ────────────────────────────────────────────────────────

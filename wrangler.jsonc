@@ -98,7 +98,12 @@
 		},
 		"traces": {
 			"enabled": true,
-			"head_sampling_rate": 1,
+			// Trace 10% of requests. Logs and traces share the free plan's daily
+			// observability budget (~200k events/day), and one traced request is
+			// ~10 spans, so 100% would stop all logging after ~16k requests.
+			// A 10% sample still shows which step is slow. Logs above stay at
+			// 100% so every error and [cache] line is kept.
+			"head_sampling_rate": 0.1,
 			"persist": true
 		}
 	}
