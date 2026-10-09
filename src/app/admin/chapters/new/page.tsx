@@ -273,11 +273,9 @@ export default function NewChapterPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 animate-page-in">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>No series found. Create a series first before adding chapters.</p>
-        <Link href="/admin/series/new">
-          <button style={{ padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+        <Link href="/admin/series/new" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
             Create New Series
-          </button>
-        </Link>
+          </Link>
       </div>
     )
   }

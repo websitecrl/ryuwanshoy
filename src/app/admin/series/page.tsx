@@ -389,9 +389,8 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="flex items-center gap-2 mt-auto">
 
           {/* Chapters button — primary, takes most space */}
-          <Link href={`/admin/chapters/new?series_id=${s.id}`} className="flex-1">
-            <button
-              className="w-full flex items-center justify-center gap-1.5 h-9 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80"
+          <Link href={`/admin/chapters/new?series_id=${s.id}`}
+              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80"
               style={{
                 background: 'var(--ryu-primary-soft)',
                 color: 'var(--ryu-primary-deep)',
@@ -400,12 +399,11 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
             >
               <BookMarked size={13} />
               Chapters
-            </button>
-          </Link>
+            </Link>
 
           {/* Edit */}
-          <Link href={`/admin/series/${s.id}`}>
-            <button
+          <Link href={`/admin/series/${s.id}`}
+              aria-label="Edit series"
               className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
               title="Edit series"
               style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)' }}
@@ -421,8 +419,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
               }}
             >
               <Pencil size={14} />
-            </button>
-          </Link>
+            </Link>
 
           {/* Delete */}
           <DeleteButton

@@ -106,8 +106,7 @@ export default function AdminChaptersPage() {
             </div>
           )}
         </div>
-        <Link href="/admin/series">
-          <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
+        <Link href="/admin/series" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
             style={{
               background: '#FEF08A', color: '#1E1E1E',
               border: '1px solid #D4B800',
@@ -115,8 +114,7 @@ export default function AdminChaptersPage() {
               cursor: 'pointer',
             }}>
             <Plus size={16} strokeWidth={2.5} /> New Chapter
-          </button>
-        </Link>
+          </Link>
       </div>
 
       {/* Error */}
@@ -208,16 +206,15 @@ export default function AdminChaptersPage() {
                     <div className="flex items-center justify-end gap-2">
 
                       {/* Edit */}
-                      <Link href={`/admin/chapters/${c.id}`}>
-                        <button
+                      <Link href={`/admin/chapters/${c.id}`}
+                          aria-label="Edit chapter"
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
                           onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-primary)'; el.style.color = 'var(--ryu-primary-deep)' }}
                           onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border)'; el.style.color = 'var(--ryu-text-2)' }}
                         >
                           <Pencil size={14} />
-                        </button>
-                      </Link>
+                        </Link>
 
                       {/* Delete */}
                       <DeleteButton

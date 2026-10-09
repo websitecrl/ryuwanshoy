@@ -339,9 +339,8 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
           {/* Right — cancel + save */}
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href="/admin/chapters">
-              <button
-                style={{
+            <Link href="/admin/chapters"
+                style={{ display: 'inline-block',
                   padding: '10px 18px', borderRadius: 8,
                   border: '1px solid var(--ryu-border)',
                   background: 'var(--ryu-surface-1)',
@@ -350,8 +349,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                 }}
               >
                 Cancel
-              </button>
-            </Link>
+              </Link>
             <button
               type="button"
               disabled={loading}

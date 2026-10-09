@@ -22,9 +22,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
     setBookmarked(getBookmarkMap()[series.id] === true)
   }, [series.id])
 
-  function toggleBookmark(e: React.MouseEvent) {
-    e.preventDefault()
-    e.stopPropagation()
+  function toggleBookmark() {
     const next = !bookmarked
     setSeriesBookmarked(series.id, next)
     setBookmarked(next)
@@ -34,15 +32,18 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
   const statusLabel = series.status === 'ongoing' ? 'Ongoing' : series.status === 'hiatus' ? 'Hiatus' : 'Completed'
   const metaLine = [series.genre, statusLabel, chapterLabel].filter(Boolean).join(' · ')
 
+  // The bookmark button sits NEXT TO the link, not inside it (a button inside
+  // a link is invalid HTML and confuses keyboard and screen reader users).
+  // It's positioned over the cover's top right corner.
   return (
-    <Link
-      href={`/comics/${series.slug}`}
-      className="group flex flex-col gap-0 rounded-xl overflow-hidden border transition-all duration-200"
+    <div
+      className="group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-200"
       style={{
         borderColor: 'var(--ryu-border)',
         backgroundColor: 'var(--ryu-surface-1)',
       }}
     >
+    <Link href={`/comics/${series.slug}`} className="flex flex-1 flex-col gap-0">
       {/* Cover */}
       <div
         className="relative overflow-hidden"
@@ -61,26 +62,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
             <BookImage size={32} strokeWidth={1.5} style={{ color: 'var(--ryu-text-3)' }} />
           </div>
         )}
-
-        {/* Bookmark button */}
-        <button
-          onClick={toggleBookmark}
-          aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark series'}
-          className="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150"
-          style={{
-            background: bookmarked
-              ? 'var(--ryu-primary)'
-              : 'rgba(0,0,0,0.55)',
-            color: '#fff',
-            border: 'none',
-          }}
-        >
-          <Bookmark
-            size={15}
-            fill={bookmarked ? '#fff' : 'none'}
-            strokeWidth={2}
-          />
-        </button>
       </div>
 
       {/* Body */}
@@ -130,5 +111,27 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
         </p>
       </div>
     </Link>
+
+      {/* Bookmark button */}
+      <button
+        type="button"
+        onClick={toggleBookmark}
+        aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark series'}
+        className="absolute top-2 right-2 z-10 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150"
+        style={{
+          background: bookmarked
+            ? 'var(--ryu-primary)'
+            : 'rgba(0,0,0,0.55)',
+          color: '#fff',
+          border: 'none',
+        }}
+      >
+        <Bookmark
+          size={15}
+          fill={bookmarked ? '#fff' : 'none'}
+          strokeWidth={2}
+        />
+      </button>
+    </div>
   )
 }

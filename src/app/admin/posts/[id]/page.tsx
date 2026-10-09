@@ -376,8 +376,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
         {/* Right — cancel + save */}
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/admin/posts">
-            <button style={{
+          <Link href="/admin/posts" style={{ display: 'inline-block',
               padding: '10px 18px', borderRadius: 8,
               border: '1px solid var(--ryu-border)',
               background: 'var(--ryu-surface-1)',
@@ -385,8 +384,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
               fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
             }}>
               Cancel
-            </button>
-          </Link>
+            </Link>
           <button
             type="button"
             disabled={submitting}

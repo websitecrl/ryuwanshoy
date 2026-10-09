@@ -284,12 +284,10 @@ export default function EditSeriesPage() {
         }}>
           <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: '#DC2626', textDecoration: 'none' }}>Cancel</Link>
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href={`/admin/chapters/new?series_id=${id}`}>
-              <button type="button"
+            <Link href={`/admin/chapters/new?series_id=${id}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
                 <Plus size={14} /> Add Chapter
-              </button>
-            </Link>
+              </Link>
             <button type="submit" disabled={submitting}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
               {submitting && <Loader2 size={14} className="animate-spin" />}
