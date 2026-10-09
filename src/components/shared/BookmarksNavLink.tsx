@@ -4,19 +4,9 @@ import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Database } from "@/types/database";
+import { getBookmarkMap } from "@/lib/bookmarks";
 
 type Series = Database["public"]["Tables"]["series"]["Row"];
-
-const STORAGE_KEY = "ryu.bookmarks.series";
-
-function getBookmarkMap(): Record<string, boolean> {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "{}");
-  } catch {
-    return {};
-  }
-}
 
 interface Props {
   allSeries: Series[];
