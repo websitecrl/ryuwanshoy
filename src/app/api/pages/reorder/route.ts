@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    await Promise.all(
+    const results = await Promise.all(
       body.pages.map(({ id, page_number }: { id: string; page_number: number }) =>
         supabaseAdmin
           .from('pages')
@@ -28,6 +28,18 @@ export async function PATCH(req: NextRequest) {
           .eq('id', id)
       )
     )
+
+    // Supabase returns errors instead of throwing them, so check each one.
+    // Some updates may have landed; the client sends the full order, so a
+    // retry puts every page right.
+    const failed = results.filter(r => r.error)
+    if (failed.length > 0) {
+      console.error(`PATCH /api/pages/reorder: ${failed.length} of ${results.length} updates failed:`, failed[0]?.error)
+      return NextResponse.json<{ data: null; error: string }>(
+        { data: null, error: 'Some pages could not be reordered. Please try again.' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json<{ data: null; error: null }>({ data: null, error: null })
   } catch (error) {

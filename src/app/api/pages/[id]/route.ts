@@ -59,7 +59,7 @@ export async function DELETE(
 
     if (remainingError) throw remainingError
 
-    await Promise.all(
+    const results = await Promise.all(
       remaining.map((p, index) =>
         supabaseAdmin
           .from('pages')
@@ -67,6 +67,17 @@ export async function DELETE(
           .eq('id', p.id)
       )
     )
+
+    // Supabase returns errors instead of throwing them, so check each one.
+    // The page itself is already deleted, so say that rather than "delete failed".
+    const failed = results.filter(r => r.error)
+    if (failed.length > 0) {
+      console.error(`DELETE /api/pages/[id]: ${failed.length} of ${results.length} renumber updates failed:`, failed[0]?.error)
+      return NextResponse.json(
+        { data: null, error: 'Page deleted, but the other pages could not be renumbered. Reload, then drag any page to fix the order.' },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({ data: null, error: null })
   } catch (error) {
