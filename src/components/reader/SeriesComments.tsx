@@ -253,7 +253,7 @@ function CommentRow({
                   <button
                     onClick={() => onDelete(comment.id)}
                     className="flex items-center gap-1 text-xs text-[var(--ryu-text-3)]
-                               hover:text-red-500 transition-colors"
+                               hover:text-[var(--ryu-danger)] transition-colors"
                   >
                     <Trash2 size={11} /> Delete
                   </button>

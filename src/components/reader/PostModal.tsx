@@ -842,7 +842,7 @@ export default function PostModal({ post, onClose }: Props) {
             </div>
 
             {submitError && (
-              <p className="text-[10px]" style={{ color: '#dc2626' }}>{submitError}</p>
+              <p className="text-[10px]" style={{ color: 'var(--ryu-danger)' }}>{submitError}</p>
             )}
           </div>
         </div>

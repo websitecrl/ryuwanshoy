@@ -95,6 +95,13 @@
      page behind it is in the HTML, so a mature page must not show through.
      Same in light and dark, so .dark doesn't override it. */
   --ryu-overlay: #000000;
+  /* Illustration type tags (SketchbookPreview): a soft tint with dark text in
+     light mode, a deep tint with light text in dark mode (.dark below). */
+  --ryu-tag-sketch-bg: #FFF7ED;   --ryu-tag-sketch-fg: #9A3412;
+  --ryu-tag-wip-bg: #FEF08A;      --ryu-tag-wip-fg: #713F12;
+  --ryu-tag-meme-bg: #E1F5EE;     --ryu-tag-meme-fg: #085041;
+  --ryu-tag-fanart-bg: #FBEAF0;   --ryu-tag-fanart-fg: #72243E;
+  --ryu-tag-announce-bg: #E6F1FB; --ryu-tag-announce-fg: #0C447C;
 
   /* Aliases for names used across the app that were never defined (the
      browser silently ignored them, e.g. see-through backgrounds). They point
@@ -178,6 +185,12 @@
   --ryu-text-2: #BFB1A0;
   --ryu-text-3: #8A7A6B;
   --ryu-ink: #4A3E33; /* lighter-dark outline — cream (--ryu-text) glared as a border in dark */
+  /* Illustration type tags: the light mode pastels glared as bright pills here. */
+  --ryu-tag-sketch-bg: #431407;   --ryu-tag-sketch-fg: #FDBA74;
+  --ryu-tag-wip-bg: #422006;      --ryu-tag-wip-fg: #FDE047;
+  --ryu-tag-meme-bg: #022C22;     --ryu-tag-meme-fg: #6EE7B7;
+  --ryu-tag-fanart-bg: #500724;   --ryu-tag-fanart-fg: #F9A8D4;
+  --ryu-tag-announce-bg: #172554; --ryu-tag-announce-fg: #93C5FD;
   --ryu-on-danger: #1C1917; /* dark text on the lighter dark-mode red (white only reaches ~2.8:1) */
 
   /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */

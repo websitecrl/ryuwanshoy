@@ -6,12 +6,13 @@ type Post = {
   post_type: string | null; created_at: string | null
 }
 
+// Tokens in globals.css (--ryu-tag-*), so the tags follow dark mode.
 const typeColors: Record<string, { bg: string; color: string }> = {
-  sketch:   { bg: '#FFF7ED', color: '#9A3412' },
-  wip:      { bg: '#FEF08A', color: '#713F12' },
-  meme:     { bg: '#E1F5EE', color: '#085041' },
-  fanart:   { bg: '#FBEAF0', color: '#72243E' },
-  announce: { bg: '#E6F1FB', color: '#0C447C' },
+  sketch:   { bg: 'var(--ryu-tag-sketch-bg)',   color: 'var(--ryu-tag-sketch-fg)' },
+  wip:      { bg: 'var(--ryu-tag-wip-bg)',      color: 'var(--ryu-tag-wip-fg)' },
+  meme:     { bg: 'var(--ryu-tag-meme-bg)',     color: 'var(--ryu-tag-meme-fg)' },
+  fanart:   { bg: 'var(--ryu-tag-fanart-bg)',   color: 'var(--ryu-tag-fanart-fg)' },
+  announce: { bg: 'var(--ryu-tag-announce-bg)', color: 'var(--ryu-tag-announce-fg)' },
 }
 
 export default function SketchbookPreview({ posts }: { posts: Post[] }) {
