@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
+import { THEME_INIT_SCRIPT } from '@/lib/theme'
 // global-error REPLACES the root layout, so the layout's stylesheet (and the
 // --ryu-* tokens in it) must be imported here, and it must render its own
 // <html> and <body>.
@@ -24,7 +25,13 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <html lang="en">
+    // Same theme bootstrap as the root layout, so dark-mode readers get the
+    // dark tokens here too. suppressHydrationWarning: the script adds `dark`
+    // to <html> before React hydrates (same reason as in layout.tsx).
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body
         style={{
           margin: 0,

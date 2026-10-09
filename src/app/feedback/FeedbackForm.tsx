@@ -7,6 +7,7 @@ import {
   FEEDBACK_FORM_KINDS,
   FEEDBACK_LABELS,
   FEEDBACK_LIMITS,
+  isSafeSitePath,
   isValidEmail,
   type FeedbackPayload,
 } from '@/lib/feedback'
@@ -22,11 +23,12 @@ const PLACEHOLDERS: Record<FormKind, string> = {
 
 /**
  * The page the reader came from, passed by the footer link as ?from=/path.
- * Only same-site paths are kept (the API checks this again).
+ * Anyone can craft that link, so only strict same-site paths are kept
+ * (isSafeSitePath; the API checks again).
  */
 function sourcePage(): string | undefined {
   const from = new URLSearchParams(window.location.search).get('from')
-  return from && from.startsWith('/') && !from.startsWith('//') ? from : undefined
+  return isSafeSitePath(from) ? from : undefined
 }
 
 export default function FeedbackForm() {
@@ -59,8 +61,8 @@ export default function FeedbackForm() {
       if (res.status === 429) { toastRateLimited(); return }
       const data = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Could not send. Please try again.')
-      toast.success('Thanks! Your feedback was sent.')
-      setSent(true)
+      setSent(true) // the thank-you panel below is the confirmation
+
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not send. Please try again.')
     } finally {
@@ -91,31 +93,34 @@ export default function FeedbackForm() {
       onSubmit={handleSubmit}
       className="rounded-xl border border-[var(--ryu-border)] bg-[var(--ryu-surface-1)] p-5 space-y-5"
     >
-      {/* Type */}
+      {/* Type: native radios (one tab stop, arrow keys, announced as a group
+          by the fieldset legend), styled as pills via `peer`. */}
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Type
         </legend>
-        <div className="flex flex-wrap gap-2" role="radiogroup">
-          {FEEDBACK_FORM_KINDS.map(k => {
-            const active = k === kind
-            return (
-              <button
-                key={k}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => setKind(k)}
-                className={`rounded-full px-4 py-1.5 text-sm transition-colors border ${
-                  active
-                    ? 'border-[var(--ryu-primary)] bg-[var(--ryu-primary-soft)] text-[var(--ryu-primary-deep)] font-semibold'
-                    : 'border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]'
-                }`}
+        <div className="flex flex-wrap gap-2">
+          {FEEDBACK_FORM_KINDS.map(k => (
+            <label key={k} className="cursor-pointer">
+              <input
+                type="radio"
+                name="feedback-kind"
+                value={k}
+                checked={k === kind}
+                onChange={() => setKind(k)}
+                className="peer sr-only"
+              />
+              <span
+                className="inline-block rounded-full px-4 py-1.5 text-sm transition-colors border
+                           border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]
+                           peer-checked:border-[var(--ryu-primary)] peer-checked:bg-[var(--ryu-primary-soft)]
+                           peer-checked:text-[var(--ryu-primary-deep)] peer-checked:font-semibold
+                           peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ryu-primary)]"
               >
                 {FEEDBACK_LABELS[k]}
-              </button>
-            )
-          })}
+              </span>
+            </label>
+          ))}
         </div>
       </fieldset>
 

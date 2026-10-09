@@ -14,7 +14,7 @@ type Status =
  * "Send report" box for the error screens (error.tsx, global-error.tsx).
  *
  * Nothing is sent until the reader taps Send. The report holds: the page
- * path, the error message, Next's error digest (also printed in the
+ * path (no query string), the error message, Next's error digest (also printed in the
  * Cloudflare Workers logs, so a report can be matched to its server log
  * line), the reader's optional note; the server adds the user agent.
  *
@@ -32,7 +32,8 @@ export default function CrashReport({ error }: { error: Error & { digest?: strin
     const payload: FeedbackPayload = {
       kind: 'crash',
       message: note.trim(),
-      pageUrl: window.location.pathname + window.location.search,
+      // Path only: a query string can carry values the reader didn't mean to share.
+      pageUrl: window.location.pathname,
       errorMessage: error.message,
       errorDigest: error.digest,
     }
@@ -111,7 +112,8 @@ export default function CrashReport({ error }: { error: Error & { digest?: strin
         }}
       />
       <p style={{ fontSize: 12, color: 'var(--ryu-text-3)', textAlign: 'left' }}>
-        Sends this page&apos;s address, the error and your browser type. No personal data.
+        Sends this page&apos;s address, the error message, your browser type and your note.
+        Only the site admin sees it.
       </p>
       {status.state === 'failed' && (
         <p role="alert" style={{ fontSize: 13, color: 'var(--ryu-primary-deep)', textAlign: 'left' }}>

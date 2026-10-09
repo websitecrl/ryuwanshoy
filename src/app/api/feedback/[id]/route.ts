@@ -2,6 +2,7 @@ import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { countUnreadFeedback } from '@/lib/feedback-server'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -38,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: 'Failed to update.' }, { status: 500 })
   }
   if (!data) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, unread: await unreadOrNull() })
 }
 
 // ─── DELETE /api/feedback/[id] ────────────────────────────────────────────────
@@ -55,5 +56,16 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     console.error('DELETE /api/feedback/[id] error:', error)
     return NextResponse.json({ error: 'Failed to delete.' }, { status: 500 })
   }
-  return NextResponse.json({ ok: true })
+  return NextResponse.json({ ok: true, unread: await unreadOrNull() })
+}
+
+/** Fresh unread count, or null if counting failed (the action itself already
+ *  succeeded, so it isn't turned into an error; the inbox keeps its count). */
+async function unreadOrNull(): Promise<number | null> {
+  try {
+    return await countUnreadFeedback()
+  } catch (err) {
+    console.error('feedback unread count error:', err)
+    return null
+  }
 }

@@ -3,12 +3,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { rateLimit } from '@/lib/rate-limit-cf'
+import { countUnreadFeedback } from '@/lib/feedback-server'
 import { isProfane } from '@/lib/profanity'
-import { FEEDBACK_LIMITS, isFeedbackKind, isValidEmail } from '@/lib/feedback'
+import { FEEDBACK_LIMITS, isFeedbackKind, isSafeSitePath, isValidEmail } from '@/lib/feedback'
 
-// Admin list size: newest first. Feedback is low volume; older rows can be
-// deleted from the admin page.
-const ADMIN_LIST_LIMIT = 100
+// Admin reads cookies (requireAdmin) and must never be cached.
+export const dynamic = 'force-dynamic'
+
+// Admin inbox page size, newest first; "Load older" pages through the rest.
+const ADMIN_PAGE_SIZE = 50
+// Most ids "Mark all read" can send at once (what's loaded in the inbox).
+const MAX_MARK_IDS = 500
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+// Next.js error digests are short numeric/word ids; anything else is dropped.
+const DIGEST_RE = /^[\w-]{1,100}$/
+
 
 /**
  * Trims a free-text value and caps its length.
@@ -25,8 +35,10 @@ function cleanText(value: unknown, max: number): string | null {
 // - kind: 'bug' | 'idea' | 'other' from the form, 'crash' from the error screen
 // - message: required (1..1000) except for 'crash', where it's an optional note
 // - email: optional, only for a reply
-// - pageUrl: a path on this site (e.g. /comics/x/1), never a full URL
-// User agent is read from the request header, not trusted from the body.
+// - pageUrl: a path on this site (e.g. /comics/x/1), never a full URL;
+//   anything else is stored as null (see isSafeSitePath)
+// User agent is read from the request header (not from the body). It's only
+// a hint: any client can set that header.
 // Nothing about the visitor's IP is stored; the IP is only used by the rate
 // limiter (3 per minute).
 export async function POST(req: NextRequest) {
@@ -74,12 +86,12 @@ export async function POST(req: NextRequest) {
     replyTo = email.trim().toLowerCase()
   }
 
-  // Only a path on this site: keeps full external URLs (and anything with a
-  // scheme) out of the admin page.
-  const page = cleanText(pageUrl, FEEDBACK_LIMITS.pageUrl)
-  const safePage = page && page.startsWith('/') && !page.startsWith('//') ? page : null
+  // Only a strict same-site path, never a full or disguised external URL
+  // (e.g. "/<tab>/evil.com"), so the admin inbox can't be fed a phishing link.
+  const safePage = isSafeSitePath(pageUrl) ? pageUrl : null
 
   const isCrash = kind === 'crash'
+  const digest = cleanText(errorDigest, FEEDBACK_LIMITS.errorDigest)
   const { error } = await supabaseAdmin.from('feedback').insert({
     kind,
     message: text,
@@ -87,7 +99,7 @@ export async function POST(req: NextRequest) {
     page_url: safePage,
     user_agent: cleanText(req.headers.get('user-agent'), FEEDBACK_LIMITS.userAgent),
     error_message: isCrash ? cleanText(errorMessage, FEEDBACK_LIMITS.errorMessage) : null,
-    error_digest: isCrash ? cleanText(errorDigest, FEEDBACK_LIMITS.errorDigest) : null,
+    error_digest: isCrash && digest && DIGEST_RE.test(digest) ? digest : null,
   })
 
   if (error) {
@@ -98,46 +110,88 @@ export async function POST(req: NextRequest) {
 }
 
 // ─── GET /api/feedback ────────────────────────────────────────────────────────
-// Admin only. { feedback: Row[] (newest first, max 100), unread: number }
-// `unread` counts ALL unread rows, not just the ones returned.
-export async function GET() {
+// Admin only. One page, newest first:  [?before=<created_at of the oldest shown>]
+// → { feedback: Row[], unread: number, total: number, nextCursor: string | null }
+// `unread` and `total` cover ALL rows, not just this page, so the inbox can
+// say how much is not loaded yet.
+export async function GET(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
-  const [listRes, unreadRes] = await Promise.all([
-    supabaseAdmin
-      .from('feedback')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(ADMIN_LIST_LIMIT),
-    supabaseAdmin
-      .from('feedback')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_read', false),
-  ])
+  // created_at is timestamptz, so the cursor is any valid timestamp string.
+  const before = req.nextUrl.searchParams.get('before')
+  if (before !== null && (before.length > 40 || Number.isNaN(Date.parse(before)))) {
+    return NextResponse.json({ error: 'Invalid cursor.' }, { status: 400 })
+  }
 
-  const error = listRes.error ?? unreadRes.error
-  if (error) {
+  let pageQuery = supabaseAdmin
+    .from('feedback')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(ADMIN_PAGE_SIZE + 1) // one extra row tells us if more exist
+  if (before) pageQuery = pageQuery.lt('created_at', before)
+
+  try {
+    const [pageRes, totalRes, unread] = await Promise.all([
+      pageQuery,
+      supabaseAdmin.from('feedback').select('id', { count: 'exact', head: true }),
+      countUnreadFeedback(),
+    ])
+    if (pageRes.error) throw pageRes.error
+    if (totalRes.error) throw totalRes.error
+
+    const hasMore = pageRes.data.length > ADMIN_PAGE_SIZE
+    const rows = hasMore ? pageRes.data.slice(0, ADMIN_PAGE_SIZE) : pageRes.data
+    const oldest = rows[rows.length - 1]
+    return NextResponse.json({
+      feedback: rows,
+      unread,
+      total: totalRes.count ?? 0,
+      nextCursor: hasMore && oldest ? oldest.created_at : null,
+    })
+  } catch (error) {
     console.error('GET /api/feedback error:', error)
     return NextResponse.json({ error: 'Failed to load feedback.' }, { status: 500 })
   }
-  return NextResponse.json({ feedback: listRes.data, unread: unreadRes.count ?? 0 })
 }
 
 // ─── PATCH /api/feedback ──────────────────────────────────────────────────────
-// Admin only. Marks every unread report as read ("Mark all read").
-export async function PATCH() {
+// Admin only. Body: { ids: string[] } → marks exactly those reports read
+// ("Mark all read" sends the ids loaded in the inbox, so reports the admin
+// hasn't seen yet are never marked read by accident). → { ok, unread }
+export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
+
+  let body: { ids?: unknown }
+  try {
+    body = (await req.json()) as { ids?: unknown }
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
+  }
+  const ids = body?.ids
+  if (
+    !Array.isArray(ids) || ids.length === 0 || ids.length > MAX_MARK_IDS ||
+    !ids.every(id => typeof id === 'string' && UUID_RE.test(id))
+  ) {
+    return NextResponse.json({ error: `ids must be 1 to ${MAX_MARK_IDS} uuids.` }, { status: 400 })
+  }
 
   const { error } = await supabaseAdmin
     .from('feedback')
     .update({ is_read: true })
-    .eq('is_read', false)
-
+    .in('id', ids)
   if (error) {
     console.error('PATCH /api/feedback error:', error)
     return NextResponse.json({ error: 'Failed to update feedback.' }, { status: 500 })
   }
-  return NextResponse.json({ ok: true })
+
+  // The update worked; a failed recount shouldn't turn that into an error.
+  let unread: number | null = null
+  try {
+    unread = await countUnreadFeedback()
+  } catch (err) {
+    console.error('feedback unread count error:', err)
+  }
+  return NextResponse.json({ ok: true, unread })
 }

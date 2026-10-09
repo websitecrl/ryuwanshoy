@@ -65,7 +65,7 @@ All under `src/app/admin/`. `admin/layout.tsx` calls `auth.getUser()`; with no u
 | `/admin/posts/new` | `admin/posts/new/page.tsx` | client | Create illustration (image ≤1600 px, original format kept) | `/api/posts` |
 | `/admin/posts/[id]` | `admin/posts/[id]/page.tsx` | client | Edit/replace image/delete | `/api/posts/[id]` |
 | `/admin/drafts` | `admin/drafts/page.tsx` | server | Draft series and draft chapters with completeness checklists; bulk and per-row delete | session client; `/api/drafts` |
-| `/admin/feedback` | `admin/feedback/page.tsx` | client | Reader feedback + crash reports inbox: All/Unread filter, mark read/unread, mark all read, delete (inline confirm). Unread count also on the notification bell | `/api/feedback`, `/api/feedback/[id]` |
+| `/admin/feedback` | `admin/feedback/page.tsx` | client | Reader feedback + crash reports inbox: 50 per page + "Load older", All/Unread filter, mark read/unread, "Mark shown as read" (only loaded reports), delete (inline confirm). Page paths link only when same-site. Unread count also on the notification bell | `/api/feedback`, `/api/feedback/[id]` |
 | `/admin/early-access` | `admin/early-access/page.tsx` | client | Signup list, delete, **Export CSV** (`early-access-emails.csv`). Sidebar link only shown when the flag is on. | `/api/early-access` |
 | `/admin/settings` | `admin/settings/page.tsx` | client | Sections: *The basics*, *Reader support*, *Where to find you*, *Reward your supporters* (EA only), *Admin account* | `/api/settings`, `/api/upload-logo`, Supabase Auth |
 | `/admin/help` | `admin/help/page.tsx` | server (static) | Help center: what each Settings field does | none |

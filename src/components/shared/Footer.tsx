@@ -83,6 +83,7 @@ export default function Footer({
           </nav>
           <Link
             href={feedbackHref}
+            prefetch={false} // static page; avoid prefetching a separate ?from= URL per page
             className="font-reader transition-colors"
             style={{ fontSize: 13, color: 'var(--ryu-text-3)' }}
             onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary)')}

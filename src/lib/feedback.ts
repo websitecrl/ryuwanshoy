@@ -24,8 +24,17 @@ export const FEEDBACK_LIMITS = {
   errorDigest: 100,
 } as const
 
-// Same shape check as the Early Access form: something@something.tld.
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// something@something.tld, and none of the characters that would let the
+// address change a `mailto:` link (extra recipients with , or ;, headers
+// with ? or &, escapes with %), or break out of HTML.
+const EMAIL_PART = `[^\\s@,;?&%<>"'()\\\\]+`
+const EMAIL_RE = new RegExp(`^${EMAIL_PART}@${EMAIL_PART}\\.${EMAIL_PART}$`)
+
+// A path on THIS site: "/" then not another "/" or "\" (which browsers treat
+// as another site), and no whitespace, control characters or backslashes
+// anywhere (browsers silently drop tabs/newlines, so "/<tab>/evil.com" would
+// otherwise become //evil.com).
+const SAFE_PATH = /^\/(?![/\\])[^\s\\\u0000-\u001f\u007f]*$/
 
 export function isFeedbackKind(value: unknown): value is FeedbackKind {
   return typeof value === 'string' && (FEEDBACK_KINDS as readonly string[]).includes(value)
@@ -35,13 +44,29 @@ export function isValidEmail(value: string): boolean {
   return value.length <= FEEDBACK_LIMITS.email && EMAIL_RE.test(value)
 }
 
-/** What the browser sends to POST /api/feedback. */
+/**
+ * True only for a same-site path like "/comics/x/1?page=2".
+ * Two layers: the strict pattern above, then a real URL parse that must stay
+ * on the same origin. Used by the form, the API and the admin page.
+ */
+export function isSafeSitePath(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length > FEEDBACK_LIMITS.pageUrl || !SAFE_PATH.test(value)) {
+    return false
+  }
+  try {
+    return new URL(value, 'https://site.invalid').origin === 'https://site.invalid'
+  } catch {
+    return false
+  }
+}
+
+/** What the browser sends to POST /api/feedback (the user agent is read
+ *  from the request header on the server, never from the body). */
 export type FeedbackPayload = {
   kind: FeedbackKind
   message: string
   email?: string
   pageUrl?: string
-  userAgent?: string
   errorMessage?: string
   errorDigest?: string
 }

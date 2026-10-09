@@ -4,35 +4,50 @@ import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { CheckCheck, Mail, Trash2, Circle, CircleCheck } from 'lucide-react'
 import type { Tables } from '@/types/database'
-import { FEEDBACK_LABELS, isFeedbackKind } from '@/lib/feedback'
+import { FEEDBACK_LABELS, isFeedbackKind, isSafeSitePath, isValidEmail } from '@/lib/feedback'
 import { timeAgo } from '@/lib/time'
 
 type Feedback = Tables<'feedback'>
 type Filter = 'all' | 'unread'
+type Page = { feedback: Feedback[]; unread: number; total: number; nextCursor: string | null }
 
 /**
  * Admin inbox for reader feedback and crash reports (spec 0001).
- * Data: GET /api/feedback (newest 100 + total unread). Actions go through
- * PATCH/DELETE /api/feedback/[id] and PATCH /api/feedback (mark all read);
- * every one of them is admin-checked on the server.
+ * Data: GET /api/feedback, 50 per page, "Load older" for more. Actions go
+ * through PATCH/DELETE /api/feedback/[id] and PATCH /api/feedback (mark the
+ * LOADED reports read); every one is admin-checked on the server and returns
+ * the server's unread count, which the header shows as is (no local math).
+ *
+ * Reader-supplied values are shown as text (React escapes them); the page
+ * path only becomes a link after isSafeSitePath, and the reply link only for
+ * a valid email, even though the API already filtered both.
  */
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([])
   const [unread, setUnread] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [loading, setLoading] = useState(true)
+  const [loadingOlder, setLoadingOlder] = useState(false)
   const [failed, setFailed] = useState(false)
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
+  async function fetchPage(before?: string): Promise<Page> {
+    const res = await fetch(`/api/feedback${before ? `?before=${encodeURIComponent(before)}` : ''}`)
+    if (!res.ok) throw new Error()
+    return (await res.json()) as Page
+  }
+
   const load = useCallback(async () => {
     setFailed(false)
     try {
-      const res = await fetch('/api/feedback')
-      if (!res.ok) throw new Error()
-      const json = (await res.json()) as { feedback: Feedback[]; unread: number }
-      setItems(json.feedback)
-      setUnread(json.unread)
+      const page = await fetchPage()
+      setItems(page.feedback)
+      setUnread(page.unread)
+      setTotal(page.total)
+      setNextCursor(page.nextCursor)
     } catch {
       setFailed(true)
     } finally {
@@ -41,6 +56,30 @@ export default function AdminFeedbackPage() {
   }, [])
 
   useEffect(() => { void load() }, [load])
+
+  async function loadOlder() {
+    if (!nextCursor || loadingOlder) return
+    setLoadingOlder(true)
+    try {
+      const page = await fetchPage(nextCursor)
+      setItems(prev => {
+        const seen = new Set(prev.map(f => f.id))
+        return [...prev, ...page.feedback.filter(f => !seen.has(f.id))]
+      })
+      setUnread(page.unread)
+      setTotal(page.total)
+      setNextCursor(page.nextCursor)
+    } catch {
+      toast.error('Could not load older feedback.')
+    } finally {
+      setLoadingOlder(false)
+    }
+  }
+
+  /** Applies the server's unread count when the API returned one. */
+  function syncUnread(json: { unread?: number | null }) {
+    if (typeof json.unread === 'number') setUnread(json.unread)
+  }
 
   async function setRead(item: Feedback, isRead: boolean) {
     setBusyId(item.id)
@@ -52,7 +91,7 @@ export default function AdminFeedbackPage() {
       })
       if (!res.ok) throw new Error()
       setItems(prev => prev.map(f => (f.id === item.id ? { ...f, is_read: isRead } : f)))
-      setUnread(n => Math.max(0, n + (isRead ? -1 : 1)))
+      syncUnread(await res.json())
     } catch {
       toast.error('Could not update. Please try again.')
     } finally {
@@ -60,13 +99,22 @@ export default function AdminFeedbackPage() {
     }
   }
 
+  // Marks only the reports loaded on this page, never ones the admin hasn't
+  // seen (older pages or reports that arrived after loading).
+  const loadedUnreadIds = items.filter(f => !f.is_read).map(f => f.id)
   async function markAllRead() {
+    if (loadedUnreadIds.length === 0) return
     try {
-      const res = await fetch('/api/feedback', { method: 'PATCH' })
+      const res = await fetch('/api/feedback', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: loadedUnreadIds }),
+      })
       if (!res.ok) throw new Error()
-      setItems(prev => prev.map(f => ({ ...f, is_read: true })))
-      setUnread(0)
-      toast.success('All marked as read')
+      const marked = new Set(loadedUnreadIds)
+      setItems(prev => prev.map(f => (marked.has(f.id) ? { ...f, is_read: true } : f)))
+      syncUnread(await res.json())
+      toast.success('Marked as read')
     } catch {
       toast.error('Could not update. Please try again.')
     }
@@ -78,7 +126,8 @@ export default function AdminFeedbackPage() {
       const res = await fetch(`/api/feedback/${item.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       setItems(prev => prev.filter(f => f.id !== item.id))
-      if (!item.is_read) setUnread(n => Math.max(0, n - 1))
+      setTotal(n => Math.max(0, n - 1))
+      syncUnread(await res.json())
       toast.success('Deleted')
     } catch {
       toast.error('Could not delete. Please try again.')
@@ -119,12 +168,13 @@ export default function AdminFeedbackPage() {
           <button
             type="button"
             onClick={() => void markAllRead()}
-            disabled={unread === 0}
+            disabled={loadedUnreadIds.length === 0}
+            title="Marks the reports loaded below as read"
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
                        border-[var(--ryu-border)] text-[var(--ryu-text)] bg-[var(--ryu-surface-1)]
                        disabled:opacity-40 hover:bg-[var(--ryu-surface-2)] transition-colors"
           >
-            <CheckCheck size={14} /> Mark all read
+            <CheckCheck size={14} /> Mark shown as read
           </button>
         </div>
       </div>
@@ -169,14 +219,19 @@ export default function AdminFeedbackPage() {
                   {!item.is_read && <span className="font-semibold text-[var(--ryu-primary-deep)]">New</span>}
                   <span title={new Date(item.created_at).toLocaleString()}>{timeAgo(item.created_at)}</span>
                   {item.page_url && (
-                    <a
-                      href={item.page_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline hover:text-[var(--ryu-text)] truncate max-w-xs"
-                    >
-                      {item.page_url}
-                    </a>
+                    isSafeSitePath(item.page_url) ? (
+                      <a
+                        href={item.page_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline hover:text-[var(--ryu-text)] truncate max-w-xs"
+                      >
+                        {item.page_url}
+                      </a>
+                    ) : (
+                      // Never a link: shown as text so an odd value can't send the admin anywhere.
+                      <span className="truncate max-w-xs">{item.page_url}</span>
+                    )
                   )}
                 </div>
 
@@ -203,12 +258,15 @@ export default function AdminFeedbackPage() {
                 )}
 
                 {item.user_agent && (
-                  <p className="text-xs text-[var(--ryu-text-3)] break-words">{item.user_agent}</p>
+                  // Reported by the reader's browser: a hint, not proof.
+                  <p className="text-xs text-[var(--ryu-text-3)] break-words">
+                    Browser (as reported): {item.user_agent}
+                  </p>
                 )}
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {item.email && (
+                  {item.email && isValidEmail(item.email) && (
                     <a
                       href={`mailto:${item.email}`}
                       className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
@@ -265,6 +323,27 @@ export default function AdminFeedbackPage() {
             )
           })}
         </ul>
+      )}
+
+      {/* Paging: everything older than what's loaded */}
+      {!loading && !failed && items.length > 0 && (
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <p className="text-xs text-[var(--ryu-text-3)]">
+            Showing {items.length} of {total} report{total === 1 ? '' : 's'}.
+          </p>
+          {nextCursor && (
+            <button
+              type="button"
+              onClick={() => void loadOlder()}
+              disabled={loadingOlder}
+              className="rounded-lg px-4 py-2 text-sm font-semibold border border-[var(--ryu-border)]
+                         text-[var(--ryu-text)] bg-[var(--ryu-surface-1)] hover:bg-[var(--ryu-surface-2)]
+                         disabled:opacity-50"
+            >
+              {loadingOlder ? 'Loading…' : 'Load older'}
+            </button>
+          )}
+        </div>
       )}
     </div>
   )
