@@ -95,6 +95,12 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
   )
 }
 
+/** @returns the route's `{ error }` message, or `fallback` when the body has none */
+async function errorMessage(res: Response, fallback: string): Promise<string> {
+  const body = await res.json().catch(() => null) as { error?: unknown } | null
+  return typeof body?.error === 'string' ? body.error : fallback
+}
+
 // ─── Main PageUploader ────────────────────────────────────────────────────────
 
 interface PageUploaderProps {
@@ -192,7 +198,7 @@ export default function PageUploader({
     setDeletingId(id)
     try {
       const res = await fetch(`/api/pages/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete page')
+      if (!res.ok) throw new Error(await errorMessage(res, 'Failed to delete page'))
       setPages(prev =>
         prev.filter(p => p.id !== id).map((p, i) => ({ ...p, page_number: i + 1 }))
       )
@@ -220,7 +226,7 @@ export default function PageUploader({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pages: reordered.map(p => ({ id: p.id, page_number: p.page_number })) }),
       })
-      if (!res.ok) throw new Error('Failed to reorder pages')
+      if (!res.ok) throw new Error(await errorMessage(res, 'Failed to reorder pages'))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Reorder failed')
     }

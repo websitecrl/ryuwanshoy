@@ -73,7 +73,7 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
       aria-labelledby="age-gate-title"
       style={{
         position: 'fixed', inset: 0, zIndex: 9999,
-        background: 'rgba(0,0,0,0.92)',
+        background: 'var(--ryu-overlay)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '1.5rem',
       }}
