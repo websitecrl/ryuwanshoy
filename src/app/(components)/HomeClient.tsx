@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import HeroBanner from "@/components/admin/reader/HeroBanner";
 import ContinueReading from "@/components/admin/reader/ContinueReading";
 import LatestReleases from "@/components/admin/reader/LatestReleases";
@@ -8,6 +8,7 @@ import SketchbookPreview from "@/components/admin/reader/SketchbookPreview";
 import Link from "next/link";
 import { SiKofi } from "react-icons/si";
 import SocialLinks from "@/components/shared/SocialLinks";
+import { useMaxAge } from "@/hooks/useSavedAge";
 
 type HeroSlide = {
   id: string;
@@ -68,20 +69,15 @@ export default function HomeClient({
   const heroSlides = initialHeroSlides;
   const chapters = initialChapters;
   const posts = initialPosts;
-  const [maxAge, setMaxAge] = useState<number | null>(null);
+  // All ages until the saved age is read (the cached HTML is shared).
+  const maxAge = useMaxAge();
   // Same stale-logo-url guard as Navbar — falls back to the initial-letter
   // avatar if settings.logo_url doesn't actually resolve.
   const [logoFailed, setLogoFailed] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('ryu-age')
-    setMaxAge (stored !== null ? Number(stored) : 18)
-  }, [])
-
   const creatorName = settings?.creator_name ?? "Ryu"
   const siteDescription = settings?.site_description ?? "Original comics and art by a Filipino creator."
-  const visibleChapters = maxAge === null ? [] 
-    : chapters.filter(ch => {
+  const visibleChapters = chapters.filter(ch => {
       const age = ch.series?.min_age ?? 13
       return age <= maxAge
     })

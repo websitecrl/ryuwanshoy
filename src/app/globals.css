@@ -223,6 +223,18 @@
   }
 }
 
+/* ─── Age gate (src/components/shared/AgeGate.tsx) ──────────────────────── */
+/* The gate is in every page's HTML. AGE_INIT_SCRIPT sets the attribute before
+   first paint for readers who already picked an age, so it never flashes.
+   !important beats the gate's inline display: flex. */
+html[data-age-confirmed] .age-gate {
+  display: none !important;
+}
+/* While the gate shows, the page behind it doesn't scroll. */
+html:not([data-age-confirmed]):has(.age-gate) {
+  overflow: hidden;
+}
+
 /* ─── Typography utilities ──────────────────────────────────────────────── */
 .font-heading {
   font-family: var(--font-fredoka), sans-serif;

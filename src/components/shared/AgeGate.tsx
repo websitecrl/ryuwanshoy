@@ -1,9 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
-
-const STORAGE_KEY = 'ryu-age'
+import { saveAge, useSavedAge } from '@/hooks/useSavedAge'
 
 // Age tier colors mapped to CSS variables
 const TIERS = [
@@ -30,33 +29,55 @@ const TIERS = [
   },
 ]
 
+// The page always renders, on the server too, so the cached HTML has real
+// content for search engines and link previews. The gate is an overlay on
+// top, and the HTML is the same for every visitor: whether it shows is
+// decided in the browser. Before React loads, AGE_INIT_SCRIPT + globals.css
+// hide it for readers who already picked an age; after, useSavedAge does.
 export default function AgeGate({ children }: { children: React.ReactNode }) {
-  const [confirmed, setConfirmed] = useState<boolean | null>(null)
-  const [selected,  setSelected]  = useState<number | null>(null)
+  const savedAge = useSavedAge()
+  const [selected, setSelected] = useState<number | null>(null)
   const pathname = usePathname()
 
-  useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    setConfirmed(stored !== null)
-  }, [])
+  const showGate = !pathname.startsWith('/admin') && savedAge == null
+  // Only once we KNOW no age is saved (null, not undefined): blocking the
+  // page in the shared HTML would also block returning readers until JS loads.
+  const blockPage = showGate && savedAge === null
 
-  if (pathname.startsWith('/admin')) return <>{children}</>
-  if (confirmed === null) return null
-  if (confirmed) return <>{children}</>
+  return (
+    <>
+      {/* display: contents keeps the body's flex layout; inert stops keyboard
+          and clicks from reaching the page behind the gate. */}
+      <div style={{ display: 'contents' }} inert={blockPage}>
+        {children}
+      </div>
+      {showGate && <AgeGateDialog selected={selected} onSelect={setSelected} />}
+    </>
+  )
+}
 
+function AgeGateDialog({ selected, onSelect: setSelected }: {
+  selected: number | null
+  onSelect: (age: number) => void
+}) {
   function confirm() {
     if (selected === null) return
-    localStorage.setItem(STORAGE_KEY, String(selected))
-    setConfirmed(true)
+    saveAge(selected)
   }
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.92)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: '1.5rem',
-    }}>
+    <div
+      className="age-gate"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="age-gate-title"
+      style={{
+        position: 'fixed', inset: 0, zIndex: 9999,
+        background: 'rgba(0,0,0,0.92)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1.5rem',
+      }}
+    >
       <div style={{
         background: 'var(--ryu-surface-1)',
         borderRadius: 20,
@@ -88,15 +109,16 @@ export default function AgeGate({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* Heading */}
-        <h1 style={{
+        {/* Heading. h2, not h1: this is in every page's HTML, and the page's
+            own h1 is what search engines should read as its title. */}
+        <h2 id="age-gate-title" style={{
           fontFamily: "var(--font-fredoka), sans-serif",
           fontWeight: 600,
           fontSize: 36, letterSpacing: '0.02em',
           color: 'var(--ryu-text)', margin: '0 0 10px',
         }}>
           HOW OLD ARE YOU?
-        </h1>
+        </h2>
         <p style={{
           fontSize: 14, color: 'var(--ryu-text-2)', lineHeight: 1.6,
           margin: '0 0 24px',

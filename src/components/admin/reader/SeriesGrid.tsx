@@ -5,6 +5,7 @@ import { Search, Menu, X } from 'lucide-react'
 import SeriesCard from '@/components/admin/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import BookmarksNavLink from '@/components/shared/BookmarksNavLink'
+import { useMaxAge } from '@/hooks/useSavedAge'
 
 type Series = Database['public']['Tables']['series']['Row']
 type ChapterCounts = Record<string, number>
@@ -27,13 +28,9 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [search, setSearch] = useState('')
-  const [maxAge, setMaxAge] = useState<number | null>(null)
+  // All ages until the saved age is read (the cached HTML is shared).
+  const maxAge = useMaxAge()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
-
-  useEffect(() => {
-    const stored = localStorage.getItem('ryu-age')
-    setMaxAge(stored !== null ? Number(stored) : 18)
-  }, [])
 
   useEffect(() => {
     if (filterSheetOpen) {
@@ -67,7 +64,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
   const filtered = useMemo(() => {
     let r = series.filter(s => {
       const seriesAge = s.min_age && s.min_age > 0 ? s.min_age : null
-      if (seriesAge !== null && maxAge !== null && seriesAge > maxAge) return false
+      if (seriesAge !== null && seriesAge > maxAge) return false
       if (search) {
         const q = search.toLowerCase()
         const matchTitle = s.title.toLowerCase().includes(q)
@@ -268,7 +265,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
 
       {/* ── Grid ─────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-6">
-        {maxAge === null ? null : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div
             className="flex flex-col items-center justify-center py-24 gap-3 rounded-xl border"
             style={{ borderColor: 'var(--ryu-border)', color: 'var(--ryu-text-muted)' }}
