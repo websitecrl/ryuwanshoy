@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { Bookmark, BookImage } from 'lucide-react'
 import type { Database } from '@/types/database'
+import { getBookmarkMap, setSeriesBookmarked } from '@/lib/bookmarks'
 
 type Series = Database['public']['Tables']['series']['Row']
 
@@ -18,27 +19,15 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
 
   // Read bookmark state from localStorage on mount
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('ryu.bookmarks.series')
-      if (saved) {
-        const parsed = JSON.parse(saved) as Record<string, boolean>
-        setBookmarked(!!parsed[series.id])
-      }
-    } catch {}
+    setBookmarked(getBookmarkMap()[series.id] === true)
   }, [series.id])
 
   function toggleBookmark(e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    try {
-      const saved = localStorage.getItem('ryu.bookmarks.series')
-      const parsed: Record<string, boolean> = saved ? JSON.parse(saved) : {}
-      const next = !bookmarked
-      parsed[series.id] = next
-      localStorage.setItem('ryu.bookmarks.series', JSON.stringify(parsed))
-      setBookmarked(next)
-      window.dispatchEvent(new StorageEvent('storage'))
-    } catch {}
+    const next = !bookmarked
+    setSeriesBookmarked(series.id, next)
+    setBookmarked(next)
   }
 
   const chapterLabel = chapterCount === 1 ? '1 chapter' : `${chapterCount} chapters`

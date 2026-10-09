@@ -119,6 +119,7 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
     } finally {
       if (gen === generation.current) setLoadingOlder(false)
     }
+    // Same as reload: `key` stands in for `target` (a new object every render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, state, loadingOlder])
 

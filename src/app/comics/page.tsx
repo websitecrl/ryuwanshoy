@@ -1,6 +1,6 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
-import SeriesGrid from '@/components/admin/reader/SeriesGrid'
+import SeriesGrid from '@/components/reader/SeriesGrid'
 
 export async function generateMetadata() {
   return {

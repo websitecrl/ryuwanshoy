@@ -15,16 +15,6 @@ import SeriesComments from '@/components/reader/SeriesComments'
 // 404 (notFound() below); that only works because AgeGate renders the page
 // on the server, otherwise the not found signal never fired and Next sent 200.
 
-// Raw shape Supabase returns before we map it —
-// pages(count) comes back as [{ count: number | string }]
-type RawChapter = Tables<'chapters'> & {
-  pages: { count: number | string }[]
-}
-
-type RawSeries = Tables<'series'> & {
-  chapters: RawChapter[]
-}
-
 // Cached across requests. A missing series throws PublicNotFoundError so it
 // is not cached (bots probing random slugs must not fill the cache); a
 // Supabase error throws so a hiccup is never cached either.
@@ -61,14 +51,18 @@ chapters (
   if (error) throw error
   if (!data) throw new PublicNotFoundError(`series "${slug}"`)
 
-  const raw = data as unknown as RawSeries
+  // Supabase types the embedded rows from the select string, so no cast is
+  // needed. Split chapters off: the series prop goes to the client, and it
+  // would otherwise carry the whole chapter list a second time.
+  const { chapters: rawChapters, ...series } = data
 
-// Filter drafts server-side — only pass published chapters to the client
-  const chapters: ChapterWithPageCount[] = (raw.chapters ?? [])
+  // Filter drafts server-side — only pass published chapters to the client
+  const chapters: ChapterWithPageCount[] = (rawChapters ?? [])
     .filter(ch => ch.is_published === true && ch.is_draft === false)
-    .map(ch => ({
+    .map(({ pages, ...ch }) => ({
       ...ch,
-      page_count: Number(ch.pages?.[0]?.count ?? 0),
+      // Number(): kept from before, in case PostgREST sends the count as a string
+      page_count: Number(pages?.[0]?.count ?? 0),
     }))
 
   const totalPages = chapters.reduce((sum, ch) => sum + ch.page_count, 0)
@@ -83,7 +77,7 @@ chapters (
       : null
 
   return {
-    series: data as Tables<'series'>,
+    series,
     chapters,
     totalPages,
     lastPublishedAt,

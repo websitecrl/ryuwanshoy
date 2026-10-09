@@ -4,10 +4,11 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useComments } from '@/hooks/useComments'
 import Image from 'next/image'
 import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
-import { timeAgo } from '@/lib/time'
+import { timeAgo, formatDate } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
+import { getToken, getTokenMap, saveToken } from '@/lib/comment-tokens'
 
 type Post = {
   id: string
@@ -27,13 +28,6 @@ type Comment = {
   parent_id: string | null
 }
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-PH', {
-    year: 'numeric', month: 'short', day: 'numeric',
-  })
-}
-
 function getLikeToken(): string {
   const key = 'ryu.like_token'
   try {
@@ -43,35 +37,6 @@ function getLikeToken(): string {
     localStorage.setItem(key, token)
     return token
   } catch { return uuidv4() }
-}
-
-// ─── Comment ownership (edit_token) storage ──────────────────────────────────
-// Same mechanism as SeriesComments.tsx: POST /api/comments issues a one-time
-// edit_token, which we keep in localStorage so this browser (and only this
-// browser) can later PATCH/DELETE that specific comment. There are no reader
-// accounts — this token is the only proof of ownership.
-const TOKEN_STORE = 'ryu.comment.tokens'
-
-function getTokenMap(): Record<string, string> {
-  try {
-    const raw = localStorage.getItem(TOKEN_STORE)
-    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
-  } catch { return {} }
-}
-
-function saveToken(commentId: string, token: string) {
-  try {
-    const map = getTokenMap()
-    map[commentId] = token
-    localStorage.setItem(TOKEN_STORE, JSON.stringify(map))
-  } catch {
-    // Not worth surfacing — worst case, edit/delete just won't persist
-    // across a reload for this comment.
-  }
-}
-
-function getToken(commentId: string): string | null {
-  return getTokenMap()[commentId] ?? null
 }
 
 /**

@@ -123,6 +123,9 @@ export default function PageUploader({
 
   useEffect(() => {
     onPagesChange?.(pages)
+    // Only on page changes. Listing onPagesChange would also fire on every
+    // render when a parent passes an inline function (the edit page passes
+    // setPages, which is stable, so nothing is missed).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages])
 
@@ -140,8 +143,6 @@ export default function PageUploader({
 
 
   const uploadFiles = useCallback(async (files: File[]) => {
-    // TEMP: checking whether the browser order matches the selection order
-    console.log('[PageUploader upload order]', files.map(f => f.name))
     // Upload in the exact order the browser hands over — no filename sort
     const imgs = files.filter(f => f.type.startsWith('image/'))
     if (!imgs.length) return

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import HeroBanner from "@/components/admin/reader/HeroBanner";
-import ContinueReading from "@/components/admin/reader/ContinueReading";
-import LatestReleases from "@/components/admin/reader/LatestReleases";
-import SketchbookPreview from "@/components/admin/reader/SketchbookPreview";
+import HeroBanner from "@/components/reader/HeroBanner";
+import ContinueReading from "@/components/reader/ContinueReading";
+import LatestReleases from "@/components/reader/LatestReleases";
+import SketchbookPreview from "@/components/reader/SketchbookPreview";
 import Link from "next/link";
 import { SiKofi } from "react-icons/si";
 import SocialLinks from "@/components/shared/SocialLinks";

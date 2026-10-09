@@ -3,22 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Bookmark } from 'lucide-react'
-import SeriesCard from '@/components/admin/reader/SeriesCard'
+import SeriesCard from '@/components/reader/SeriesCard'
 import type { Database } from '@/types/database'
+import { getBookmarkMap, saveBookmarkMap } from '@/lib/bookmarks'
 
 type Series = Database['public']['Tables']['series']['Row']
 
-const STORAGE_KEY = 'ryu.bookmarks.series'
 const FEW_THRESHOLD = 3
-
-function getBookmarkMap(): Record<string, boolean> {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
-  } catch {
-    return {}
-  }
-}
 
 type Props = {
   /** Every published series. */
@@ -43,10 +34,7 @@ export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: P
       const stale = Object.keys(map).filter(id => !live.has(id))
       if (stale.length) {
         for (const id of stale) delete map[id]
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
-          window.dispatchEvent(new Event('storage')) // keep BookmarksNavLink in sync
-        } catch {}
+        saveBookmarkMap(map) // also keeps BookmarksNavLink in sync
       }
     }
     setBookmarkMap(map)

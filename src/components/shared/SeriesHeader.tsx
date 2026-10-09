@@ -7,6 +7,7 @@ import { Bookmark, Share2, Bell, BookOpen, RotateCcw } from 'lucide-react'
 import { timeAgo } from '@/lib/time'
 import type { Tables } from '@/types/database'
 import type { ReadingProgress } from '@/types/reader'
+import { getBookmarkMap, setSeriesBookmarked } from '@/lib/bookmarks'
 
 type Props = {
   series: Tables<'series'>
@@ -16,17 +17,6 @@ type Props = {
   firstChapterNumber: number
   /** Published chapter ids — progress pointing anywhere else is stale. */
   chapterIds: string[]
-}
-
-const STORAGE_KEY = 'ryu.bookmarks.series'
-
-function getBookmarkMap(): Record<string, boolean> {
-  if (typeof window === 'undefined') return {}
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
-  } catch {
-    return {}
-  }
 }
 
 // Same key/shape as ContinueReadingBar and ChapterList — reading-progress-{seriesId}
@@ -81,18 +71,10 @@ export default function SeriesHeader({
   }
 
   function toggleBookmark() {
-    const map = getBookmarkMap()
     const next = !bookmarked
-    if (next) {
-      map[series.id] = true
-    } else {
-      delete map[series.id]
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map))
+    // Also notifies BookmarksNavLink/BookmarksGrid on the same page
+    setSeriesBookmarked(series.id, next)
     setBookmarked(next)
-
-    // Notify BookmarksNavLink/BookmarksGrid on the same page (they listen to 'storage' event)
-    window.dispatchEvent(new Event('storage'))
   }
 
   async function handleShare() {

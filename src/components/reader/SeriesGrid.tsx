@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { Search, Menu, X } from 'lucide-react'
-import SeriesCard from '@/components/admin/reader/SeriesCard'
+import SeriesCard from '@/components/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import BookmarksNavLink from '@/components/shared/BookmarksNavLink'
 import { useMaxAge } from '@/hooks/useSavedAge'
