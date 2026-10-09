@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery, nullIfNotFound, PublicNotFoundError } from '@/lib/cache/public-cache'
 import ReaderShell from '@/components/reader/ReaderShell'
+import AgeRestricted from '@/components/shared/AgeRestricted'
 
 // The HTML is rendered per request, like before caching (see connection() in
 // the page); only the Supabase reads are cached. Unknown series and chapters
@@ -17,13 +18,16 @@ type AdjacentChapter = { chapter_number: number } | null
 // Cached across requests. A missing series/chapter throws PublicNotFoundError
 // so it is not cached (bots probing random URLs must not fill the cache); a
 // Supabase error throws so a hiccup is never cached either.
-const queryChapterData = cachedPublicQuery('comics:chapter', async (slug: string, chapterNumber: number) => {
+// The name is part of the cache key. ':v2' since the series select gained
+// min_age (spec 0003): an older cached result has no min_age, which would
+// skip the age check. Bump it again whenever the returned shape changes.
+const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: string, chapterNumber: number) => {
   const supabase = createPublicClient()
 
   // 1. Series (published only)
   const { data: series, error: seriesError } = await supabase
     .from('series')
-    .select('id, title, slug, cover_image, status')
+    .select('id, title, slug, cover_image, status, min_age')
     .eq('slug', slug)
     .eq('is_published', true)
     .maybeSingle()
@@ -187,13 +191,15 @@ export default async function ChapterReaderPage({
   }
 
   return (
-    <ReaderShell
-      series={data.series}
-      chapter={data.chapter}
-      pages={data.pages}
-      allChapters={data.allChapters}
-      prevChapter={data.prevChapter}
-      nextChapter={data.nextChapter}
-    />
+    <AgeRestricted minAge={data.series.min_age}>
+      <ReaderShell
+        series={data.series}
+        chapter={data.chapter}
+        pages={data.pages}
+        allChapters={data.allChapters}
+        prevChapter={data.prevChapter}
+        nextChapter={data.nextChapter}
+      />
+    </AgeRestricted>
   )
 }

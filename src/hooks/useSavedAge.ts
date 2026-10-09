@@ -1,7 +1,7 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import { AGE_CONFIRMED_ATTR, AGE_KEY, ALL_AGES } from '@/lib/age'
+import { AGE_CONFIRMED_ATTR, AGE_KEY, ALL_AGES, READER_AGE_ATTR } from '@/lib/age'
 
 // Fallback when localStorage is blocked (private mode), so picking an age
 // still closes the gate for this visit.
@@ -34,6 +34,16 @@ export function saveAge(age: number) {
   memoryAge = age
   try { localStorage.setItem(AGE_KEY, String(age)) } catch {}
   document.documentElement.setAttribute(AGE_CONFIRMED_ATTR, '')
+  document.documentElement.setAttribute(READER_AGE_ATTR, String(age))
+  listeners.forEach(listener => listener())
+}
+
+/** Forgets the saved age band, so the AgeGate asks again ("I picked the wrong age"). */
+export function clearAge() {
+  memoryAge = null
+  try { localStorage.removeItem(AGE_KEY) } catch {}
+  document.documentElement.removeAttribute(AGE_CONFIRMED_ATTR)
+  document.documentElement.removeAttribute(READER_AGE_ATTR)
   listeners.forEach(listener => listener())
 }
 

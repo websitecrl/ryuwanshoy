@@ -25,6 +25,11 @@ cached pages and queries; the next visitor gets a fresh render.
 **Adding a new public read?** Wrap it in `cachedPublicQuery`, use `createPublicClient()`, and throw
 on a Supabase error (never return `[]`/`null` for an error, or the empty result gets cached).
 
+**Changing what a cached query returns?** (a new column, a renamed field) Bump its name, e.g.
+`'comics:chapter'` to `'comics:chapter:v2'`. The name is part of the cache key, and the key doesn't
+change with the code, so without a bump an old result missing the new field can be served for up
+to 60 s (and locally, until the cache is cleared).
+
 ## Infra (OpenNext)
 
 `open-next.config.ts` + `wrangler.jsonc`:
