@@ -13,7 +13,7 @@ All routes use the Next.js App Router under `src/app/`. Dynamic params are `Prom
 | `/posts` | `app/posts/page.tsx` → `(components)/PostsClient.tsx` | ISR 60 s | `posts`, optional `?type=` filter | Realtime; opens `PostModal` |
 | `/bookmarks` | `app/bookmarks/page.tsx` → `BookmarksGrid` | dynamic | Published series + chapter counts | Filters by ids from `localStorage` |
 | `/donate` | `app/donate/page.tsx` | client | `GET /api/settings` | Ko-fi card, FAQ, empty state |
-| `/feedback` | `app/feedback/page.tsx` | static | none (form posts to `POST /api/feedback`) | Bug / Idea / Other + optional email; linked from the footer with `?from=<path>`. `noindex` |
+| `/feedback` | `app/feedback/page.tsx` | static | none (form posts to `POST /api/feedback`) | Bug / Idea / Other + required "Where did it happen?" (Web, Phone, or both). No email collected; linked from the footer with `?from=<path>`. `noindex` |
 | `/early-access` | `app/early-access/page.tsx` | client | `GET /api/settings`, `POST /api/early-access` | Redirects to `/` unless the flag is `"true"` |
 | `/sitemap.xml` | `app/sitemap.ts` | ISR 1 h | Series + chapters | Static pages + every published series and chapter |
 | `/robots.txt` | `app/robots.ts` | static | — | Allows `/`, disallows `/admin`, `/api/`; links the sitemap |

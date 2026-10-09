@@ -153,7 +153,7 @@ export type Database = {
       feedback: {
         Row: {
           created_at: string
-          email: string | null
+          device: string | null
           error_digest: string | null
           error_message: string | null
           id: string
@@ -165,7 +165,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          email?: string | null
+          device?: string | null
           error_digest?: string | null
           error_message?: string | null
           id?: string
@@ -177,7 +177,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          email?: string | null
+          device?: string | null
           error_digest?: string | null
           error_message?: string | null
           id?: string

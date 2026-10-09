@@ -1,6 +1,7 @@
 // Rules shared by the feedback form, the crash report button and
 // POST /api/feedback, so the browser and the server can't disagree.
-// The database enforces the same limits again (20261009120000_create_feedback.sql).
+// The database enforces the same limits again
+// (20261009120000_create_feedback.sql, 20261009140000_feedback_device_drop_email.sql).
 
 /** Kinds a reader can pick in the form. 'crash' is only sent by the error screen. */
 export const FEEDBACK_FORM_KINDS = ['bug', 'idea', 'other'] as const
@@ -15,20 +16,27 @@ export const FEEDBACK_LABELS: Record<FeedbackKind, string> = {
   crash: 'Crash report',
 }
 
+/**
+ * Where the reader noticed it. The form has two checkboxes (Web, Phone) and
+ * at least one is required; ticking both is stored as 'both'. Required for
+ * every form kind; crash reports don't ask (the user agent shows it).
+ */
+export const FEEDBACK_DEVICES = ['web', 'phone', 'both'] as const
+export type FeedbackDevice = (typeof FEEDBACK_DEVICES)[number]
+
+export const DEVICE_LABELS: Record<FeedbackDevice, string> = {
+  web: 'Web (computer)',
+  phone: 'Phone',
+  both: 'Web and phone',
+}
+
 export const FEEDBACK_LIMITS = {
   message: 1000,
-  email: 254,
   pageUrl: 500,
   userAgent: 500,
   errorMessage: 1000,
   errorDigest: 100,
 } as const
-
-// something@something.tld, and none of the characters that would let the
-// address change a `mailto:` link (extra recipients with , or ;, headers
-// with ? or &, escapes with %), or break out of HTML.
-const EMAIL_PART = `[^\\s@,;?&%<>"'()\\\\]+`
-const EMAIL_RE = new RegExp(`^${EMAIL_PART}@${EMAIL_PART}\\.${EMAIL_PART}$`)
 
 // A path on THIS site: "/" then not another "/" or "\" (which browsers treat
 // as another site), and no whitespace, control characters or backslashes
@@ -40,8 +48,16 @@ export function isFeedbackKind(value: unknown): value is FeedbackKind {
   return typeof value === 'string' && (FEEDBACK_KINDS as readonly string[]).includes(value)
 }
 
-export function isValidEmail(value: string): boolean {
-  return value.length <= FEEDBACK_LIMITS.email && EMAIL_RE.test(value)
+export function isFeedbackDevice(value: unknown): value is FeedbackDevice {
+  return typeof value === 'string' && (FEEDBACK_DEVICES as readonly string[]).includes(value)
+}
+
+/** The two form checkboxes → the stored value (null when neither is ticked). */
+export function toFeedbackDevice(web: boolean, phone: boolean): FeedbackDevice | null {
+  if (web && phone) return 'both'
+  if (web) return 'web'
+  if (phone) return 'phone'
+  return null
 }
 
 /**
@@ -65,7 +81,8 @@ export function isSafeSitePath(value: unknown): value is string {
 export type FeedbackPayload = {
   kind: FeedbackKind
   message: string
-  email?: string
+  /** Required unless kind is 'crash'. */
+  device?: FeedbackDevice
   pageUrl?: string
   errorMessage?: string
   errorDigest?: string

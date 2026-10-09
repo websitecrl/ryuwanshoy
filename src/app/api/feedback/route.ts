@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/require-admin'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { countUnreadFeedback } from '@/lib/feedback-server'
 import { isProfane } from '@/lib/profanity'
-import { FEEDBACK_LIMITS, isFeedbackKind, isSafeSitePath, isValidEmail } from '@/lib/feedback'
+import { FEEDBACK_LIMITS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } from '@/lib/feedback'
 
 // Admin reads cookies (requireAdmin) and must never be cached.
 export const dynamic = 'force-dynamic'
@@ -31,10 +31,12 @@ function cleanText(value: unknown, max: number): string | null {
 }
 
 // ─── POST /api/feedback ───────────────────────────────────────────────────────
-// Public. Body: { kind, message, email?, pageUrl?, errorMessage?, errorDigest? }
+// Public. Body: { kind, message, device?, pageUrl?, errorMessage?, errorDigest? }
 // - kind: 'bug' | 'idea' | 'other' from the form, 'crash' from the error screen
 // - message: required (1..1000) except for 'crash', where it's an optional note
-// - email: optional, only for a reply
+// - device: 'web' | 'phone' | 'both', required except for 'crash' (the reader
+//   isn't asked there; the user agent shows it). No email is collected: any
+//   `email` field sent by an old copy of the form is ignored.
 // - pageUrl: a path on this site (e.g. /comics/x/1), never a full URL;
 //   anything else is stored as null (see isSafeSitePath)
 // User agent is read from the request header (not from the body). It's only
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body.' }, { status: 400 })
   }
 
-  const { kind, message, email, pageUrl, errorMessage, errorDigest } = body ?? {}
+  const { kind, message, device, pageUrl, errorMessage, errorDigest } = body ?? {}
 
   if (!isFeedbackKind(kind)) {
     return NextResponse.json({ error: 'Please choose a feedback type.' }, { status: 400 })
@@ -78,24 +80,23 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  let replyTo: string | null = null
-  if (email !== undefined && email !== null && email !== '') {
-    if (typeof email !== 'string' || !isValidEmail(email.trim().toLowerCase())) {
-      return NextResponse.json({ error: 'Please enter a valid email, or leave it empty.' }, { status: 400 })
-    }
-    replyTo = email.trim().toLowerCase()
+  const isCrash = kind === 'crash'
+  if (!isCrash && !isFeedbackDevice(device)) {
+    return NextResponse.json(
+      { error: 'Please choose where it happened: Web, Phone, or both.' },
+      { status: 400 }
+    )
   }
 
   // Only a strict same-site path, never a full or disguised external URL
   // (e.g. "/<tab>/evil.com"), so the admin inbox can't be fed a phishing link.
   const safePage = isSafeSitePath(pageUrl) ? pageUrl : null
 
-  const isCrash = kind === 'crash'
   const digest = cleanText(errorDigest, FEEDBACK_LIMITS.errorDigest)
   const { error } = await supabaseAdmin.from('feedback').insert({
     kind,
     message: text,
-    email: replyTo,
+    device: !isCrash && isFeedbackDevice(device) ? device : null,
     page_url: safePage,
     user_agent: cleanText(req.headers.get('user-agent'), FEEDBACK_LIMITS.userAgent),
     error_message: isCrash ? cleanText(errorMessage, FEEDBACK_LIMITS.errorMessage) : null,
