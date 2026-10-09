@@ -79,7 +79,6 @@ useEffect(() => {
   fetch('/api/settings', { cache: 'no-store' })
     .then(r => r.json())
     .then(data => {
-      console.log('SIDEBAR SETTINGS RESPONSE:', data)
       const s = data.settings ?? data
       setSiteTitle(s.site_title ?? '')
       setLogoUrl(s.logo_url ?? null)

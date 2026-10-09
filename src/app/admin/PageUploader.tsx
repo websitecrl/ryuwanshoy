@@ -140,8 +140,6 @@ export default function PageUploader({
 
 
   const uploadFiles = useCallback(async (files: File[]) => {
-    // TEMP: checking whether the browser order matches the selection order
-    console.log('[PageUploader upload order]', files.map(f => f.name))
     // Upload in the exact order the browser hands over — no filename sort
     const imgs = files.filter(f => f.type.startsWith('image/'))
     if (!imgs.length) return
