@@ -56,6 +56,20 @@ export function useSavedAge(): number | null | undefined {
   return useSyncExternalStore(subscribe, readSavedAge, () => undefined)
 }
 
+/**
+ * For effects that SAVE reader state (progress, continue reading). Reads
+ * storage directly instead of useSavedAge: on first load React mounts the
+ * page once before it knows the age (to match the shared HTML), and effects
+ * run in that moment, before AgeRestricted unmounts a blocked page.
+ * @returns true when nothing is restricted or the saved age reaches minAge
+ */
+export function savedAgeAllows(minAge: number | null): boolean {
+  const required = minAge ?? ALL_AGES
+  if (required <= ALL_AGES) return true
+  const age = readSavedAge()
+  return age !== null && age >= required
+}
+
 /** Highest min_age a list may show: the saved age, or all ages until one is known. */
 export function useMaxAge(): number {
   return useSavedAge() ?? ALL_AGES

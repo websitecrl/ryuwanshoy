@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
+import { useMaxAge } from '@/hooks/useSavedAge'
+import { ALL_AGES } from '@/lib/age'
 
 type ContinueReadingData = {
   seriesSlug: string
@@ -16,6 +18,9 @@ type ContinueReadingData = {
 export default function ContinueReading() {
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<ContinueReadingData | null>(null)
+  // The series min_age, from the same /api/series call that checks it's live
+  const [minAge, setMinAge] = useState<number | null>(null)
+  const maxAge = useMaxAge()
 
   // Stale entry (series/chapter gone): drop it so it never comes back
   const forget = useCallback(() => {
@@ -41,10 +46,12 @@ export default function ContinueReading() {
         if (cancelled) return
         if (res.status === 404) { forget(); return }
         if (!res.ok) return
-        const json = await res.json() as { data: { chapters?: { chapter_number: number }[] } | null }
+        const json = await res.json() as {
+          data: { min_age?: number | null; chapters?: { chapter_number: number }[] } | null
+        }
         if (cancelled) return
         const live = json.data?.chapters?.some(c => c.chapter_number === entry.chapterNumber)
-        if (live) setData(entry)
+        if (live) { setData(entry); setMinAge(json.data?.min_age ?? null) }
         else forget()
       })
       .catch(() => { /* offline — keep the entry, just don't show it */ })
@@ -52,6 +59,9 @@ export default function ContinueReading() {
   }, [forget])
 
   if (!mounted || !data) return null
+  // Hidden, not forgotten: a series above the reader's saved age (spec 0003)
+  // never shows its cover here; it comes back if they pick an older age.
+  if ((minAge ?? ALL_AGES) > maxAge) return null
 
   const href = `/comics/${data.seriesSlug}/${data.chapterNumber}${
     data.currentPage && data.currentPage > 1 ? `?page=${data.currentPage}` : ''
