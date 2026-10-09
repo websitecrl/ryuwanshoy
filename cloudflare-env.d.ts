@@ -9,6 +9,7 @@ interface __BaseEnv_CloudflareEnv {
 	EARLY_ACCESS_LIMITER: RateLimit;
 	COMMENT_EDIT_LIMITER: RateLimit;
 	EA_PAGE_LIMITER: RateLimit;
+	FEEDBACK_LIMITER: RateLimit;
 	IMAGES: ImagesBinding;
 	ASSETS: Fetcher;
 	NEXT_PUBLIC_SUPABASE_URL: string;

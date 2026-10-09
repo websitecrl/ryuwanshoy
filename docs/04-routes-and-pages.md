@@ -13,6 +13,7 @@ All routes use the Next.js App Router under `src/app/`. Dynamic params are `Prom
 | `/posts` | `app/posts/page.tsx` → `(components)/PostsClient.tsx` | ISR 60 s | `posts`, optional `?type=` filter | Realtime; opens `PostModal` |
 | `/bookmarks` | `app/bookmarks/page.tsx` → `BookmarksGrid` | dynamic | Published series + chapter counts | Filters by ids from `localStorage` |
 | `/donate` | `app/donate/page.tsx` | client | `GET /api/settings` | Ko-fi card, FAQ, empty state |
+| `/feedback` | `app/feedback/page.tsx` | static | none (form posts to `POST /api/feedback`) | Bug / Idea / Other + optional email; linked from the footer with `?from=<path>`. `noindex` |
 | `/early-access` | `app/early-access/page.tsx` | client | `GET /api/settings`, `POST /api/early-access` | Redirects to `/` unless the flag is `"true"` |
 | `/sitemap.xml` | `app/sitemap.ts` | ISR 1 h | Series + chapters | Static pages + every published series and chapter |
 | `/robots.txt` | `app/robots.ts` | static | — | Allows `/`, disallows `/admin`, `/api/`; links the sitemap |
@@ -43,7 +44,7 @@ Only chapters with `is_published = true` are passed to the client; drafts are fi
 | `/comics/<slug>/<chapter>` (regex `^/comics/[^/]+/[^/]+`) | no | no |
 | everything else | yes | yes |
 
-Navbar links: **Home**, **Comics**, **Illustrations** (`/posts`), a bookmarks link with count badge, a **theme toggle**, and a **Support** button (`/donate`). Footer links: Home, Comics, Illustrations, Support, plus social icons (a platform appears only if its URL is set in settings).
+Navbar links: **Home**, **Comics**, **Illustrations** (`/posts`), a bookmarks link with count badge, a **theme toggle**, and a **Support** button (`/donate`). Footer links: Home, Comics, Illustrations, Support (hidden on phones), **Feedback** (always shown, links to `/feedback?from=<current path>`), plus social icons (a platform appears only if its URL is set in settings). Crashes show `error.tsx` (inside the layout) or `global-error.tsx` (root layout crashed), both with a reader-triggered "Send a crash report" box.
 
 ## Admin routes
 
@@ -64,6 +65,7 @@ All under `src/app/admin/`. `admin/layout.tsx` calls `auth.getUser()`; with no u
 | `/admin/posts/new` | `admin/posts/new/page.tsx` | client | Create illustration (image ≤1600 px, original format kept) | `/api/posts` |
 | `/admin/posts/[id]` | `admin/posts/[id]/page.tsx` | client | Edit/replace image/delete | `/api/posts/[id]` |
 | `/admin/drafts` | `admin/drafts/page.tsx` | server | Draft series and draft chapters with completeness checklists; bulk and per-row delete | session client; `/api/drafts` |
+| `/admin/feedback` | `admin/feedback/page.tsx` | client | Reader feedback + crash reports inbox: All/Unread filter, mark read/unread, mark all read, delete (inline confirm). Unread count also on the notification bell | `/api/feedback`, `/api/feedback/[id]` |
 | `/admin/early-access` | `admin/early-access/page.tsx` | client | Signup list, delete, **Export CSV** (`early-access-emails.csv`). Sidebar link only shown when the flag is on. | `/api/early-access` |
 | `/admin/settings` | `admin/settings/page.tsx` | client | Sections: *The basics*, *Reader support*, *Where to find you*, *Reward your supporters* (EA only), *Admin account* | `/api/settings`, `/api/upload-logo`, Supabase Auth |
 | `/admin/help` | `admin/help/page.tsx` | server (static) | Help center: what each Settings field does | none |

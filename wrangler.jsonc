@@ -82,6 +82,12 @@
 			"name": "EA_PAGE_LIMITER",
 			"namespace_id": "1005",
 			"simple": { "limit": 60, "period": 60 }
+		},
+		{
+			// POST /api/feedback (feedback form + crash reports)
+			"name": "FEEDBACK_LIMITER",
+			"namespace_id": "1006",
+			"simple": { "limit": 3, "period": 60 }
 		}
 	],
 	"images": {
