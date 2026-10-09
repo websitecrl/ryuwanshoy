@@ -239,6 +239,25 @@ html:not([data-age-confirmed]):has(.age-gate) {
   overflow: hidden;
 }
 
+/* Age restricted pages (src/components/shared/AgeRestricted.tsx, spec 0003).
+   Before React loads, data-reader-age (set by AGE_INIT_SCRIPT) picks the page
+   or the block screen, so a younger reader never sees a flash of the page.
+   Bands are 13, 16, 18 (the admin min_age choices). !important beats the
+   content wrapper's inline display: contents. */
+.age-restricted-block {
+  display: none;
+}
+html[data-reader-age="13"] .age-restricted[data-min-age="16"] > .age-restricted-content,
+html[data-reader-age="13"] .age-restricted[data-min-age="18"] > .age-restricted-content,
+html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-content {
+  display: none !important;
+}
+html[data-reader-age="13"] .age-restricted[data-min-age="16"] > .age-restricted-block,
+html[data-reader-age="13"] .age-restricted[data-min-age="18"] > .age-restricted-block,
+html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-block {
+  display: flex;
+}
+
 /* ─── Typography utilities ──────────────────────────────────────────────── */
 .font-heading {
   font-family: var(--font-fredoka), sans-serif;

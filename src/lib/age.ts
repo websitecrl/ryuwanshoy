@@ -11,6 +11,10 @@ export const ALL_AGES = 13
 // so a returning reader never sees the gate flash before React loads.
 export const AGE_CONFIRMED_ATTR = 'data-age-confirmed'
 
-// Inlined in <head> next to THEME_INIT_SCRIPT, so the attribute is set before
-// first paint.
-export const AGE_INIT_SCRIPT = `(function(){try{if(localStorage.getItem('${AGE_KEY}')!==null)document.documentElement.setAttribute('${AGE_CONFIRMED_ATTR}','')}catch(e){}})()`
+// Set on <html> to the saved age band ("13", "16" or "18"). CSS hides age
+// restricted pages off it before first paint (globals.css, AgeRestricted).
+export const READER_AGE_ATTR = 'data-reader-age'
+
+// Inlined in <head> next to THEME_INIT_SCRIPT, so the attributes are set
+// before first paint.
+export const AGE_INIT_SCRIPT = `(function(){try{var a=localStorage.getItem('${AGE_KEY}');if(a!==null){var h=document.documentElement;h.setAttribute('${AGE_CONFIRMED_ATTR}','');h.setAttribute('${READER_AGE_ATTR}',a)}}catch(e){}})()`

@@ -9,6 +9,7 @@ import type { ChapterWithPageCount } from '@/types/reader'
 import SeriesHeader from '@/components/shared/SeriesHeader'
 import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
+import AgeRestricted from '@/components/shared/AgeRestricted'
 
 // The HTML is rendered per request, like before caching (see connection() in
 // the page); only the Supabase read is cached. Unknown slugs return a real
@@ -140,6 +141,7 @@ export default async function SeriesDetailPage({
   const firstChapterNumber = chapters[0]?.chapter_number ?? 1
 
   return (
+    <AgeRestricted minAge={series.min_age}>
     <main className="min-h-screen bg-[var(--background)] animate-page-in">
       <SeriesHeader
         series={series}
@@ -157,5 +159,6 @@ export default async function SeriesDetailPage({
       />
       <SeriesComments seriesId={series.id} />
     </main>
+    </AgeRestricted>
   )
 }
