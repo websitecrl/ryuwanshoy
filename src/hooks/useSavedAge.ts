@@ -38,15 +38,6 @@ export function saveAge(age: number) {
   listeners.forEach(listener => listener())
 }
 
-/** Forgets the saved age band, so the AgeGate asks again ("I picked the wrong age"). */
-export function clearAge() {
-  memoryAge = null
-  try { localStorage.removeItem(AGE_KEY) } catch {}
-  document.documentElement.removeAttribute(AGE_CONFIRMED_ATTR)
-  document.documentElement.removeAttribute(READER_AGE_ATTR)
-  listeners.forEach(listener => listener())
-}
-
 /**
  * The reader's saved age band.
  * @returns undefined while unknown (server HTML and the hydration render, so

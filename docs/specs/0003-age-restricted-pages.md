@@ -16,8 +16,9 @@ series `min_age` (for example a reader who picked 13 opening a direct link to an
   content is replaced by a "not for your age" screen.
 - No flash: `AGE_INIT_SCRIPT` also writes the saved age to `<html data-reader-age>`, and CSS
   hides the content (and shows the block screen) before first paint.
-- The block screen offers "Back to comics" and "I picked the wrong age". The second clears the
-  saved age, so the age gate asks again.
+- The block screen offers only "Back to comics". The reader can't change their age from the
+  block screen (an "I picked the wrong age" button was removed after #31: it was a one tap way
+  around the block).
 - No saved age yet: the age gate shows as before; after picking, the rule above applies.
 - Added after #28: a blocked page is unmounted, not just hidden, so its reader can't run
   (`?page=N`, flip mode arrow keys). The reader's saves (mode, progress, chapter done, continue
@@ -35,7 +36,7 @@ series `min_age` (for example a reader who picked 13 opening a direct link to an
   screen, never the content, not even before React loads.
 - AC-2: A reader with saved age 16 is blocked from 18+ only; a reader with 18 is never blocked.
 - AC-3: 13+ series (or `min_age` null) are never blocked.
-- AC-4: "I picked the wrong age" clears the saved age and shows the age gate again.
+- AC-4: The block screen has only "Back to comics"; it offers no way to change the saved age.
 - AC-5: The HTML is identical for every visitor and still contains the page content.
 
 ## Ratify

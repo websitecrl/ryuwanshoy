@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { clearAge, useSavedAge } from '@/hooks/useSavedAge'
+import { useSavedAge } from '@/hooks/useSavedAge'
 import { ALL_AGES } from '@/lib/age'
 
 /**
@@ -101,21 +101,8 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
       >
         Back to comics
       </Link>
-      <button
-        type="button"
-        onClick={clearAge}
-        style={{
-          background: 'none',
-          border: 'none',
-          padding: 8,
-          color: 'var(--ryu-text-2)',
-          fontSize: 14,
-          textDecoration: 'underline',
-          cursor: 'pointer',
-        }}
-      >
-        I picked the wrong age
-      </button>
+      {/* No way to change the age from here on purpose (spec 0003): it would
+          be a one tap way around the block. */}
     </div>
   )
 }
