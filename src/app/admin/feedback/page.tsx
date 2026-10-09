@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { CheckCheck, Trash2, Circle, CircleCheck } from 'lucide-react'
+import { CheckCheck, Circle, CircleCheck, MessageSquare } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import type { Tables } from '@/types/database'
 import { DEVICE_LABELS, FEEDBACK_LABELS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } from '@/lib/feedback'
 import { timeAgo } from '@/lib/time'
@@ -31,7 +32,6 @@ export default function AdminFeedbackPage() {
   const [loading, setLoading] = useState(true)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
   async function fetchPage(before?: string): Promise<Page> {
@@ -120,36 +120,40 @@ export default function AdminFeedbackPage() {
     }
   }
 
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
   async function remove(item: Feedback) {
-    setBusyId(item.id)
-    try {
-      const res = await fetch(`/api/feedback/${item.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
-      setItems(prev => prev.filter(f => f.id !== item.id))
-      setTotal(n => Math.max(0, n - 1))
-      syncUnread(await res.json())
-      toast.success('Deleted')
-    } catch {
-      toast.error('Could not delete. Please try again.')
-    } finally {
-      setBusyId(null)
-      setConfirmingId(null)
+    const res = await fetch(`/api/feedback/${item.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Could not delete. Please try again.')
     }
+    setItems(prev => prev.filter(f => f.id !== item.id))
+    setTotal(n => Math.max(0, n - 1))
+    syncUnread(await res.json())
   }
 
   const shown = filter === 'unread' ? items.filter(f => !f.is_read) : items
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-4xl">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="p-8 animate-page-in">
+      {/* Header: same layout as the other admin pages (eyebrow, 38px title,
+          subtitle on the left; actions on the right). */}
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--ryu-text)]">Feedback</h1>
-          <p className="text-sm text-[var(--ryu-text-2)]">
-            Bug reports, ideas and crash reports from readers. {unread > 0 ? `${unread} unread.` : 'All read.'}
+          <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 text-[var(--ryu-primary-deep)]">
+            Inbox · {total} {total === 1 ? 'report' : 'reports'} · {unread} unread
+          </div>
+          <h1
+            className="font-heading font-bold leading-tight text-[var(--ryu-text)]"
+            style={{ fontSize: 38, letterSpacing: -0.8 }}
+          >
+            Feedback
+          </h1>
+          <p className="mt-1.5 text-sm text-[var(--ryu-text-2)]">
+            Bug reports, ideas and crash reports from readers
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
           {(['all', 'unread'] as const).map(f => (
             <button
               key={f}
@@ -181,18 +185,36 @@ export default function AdminFeedbackPage() {
 
       {/* List */}
       {loading ? (
-        <p className="text-sm text-[var(--ryu-text-3)]">Loading…</p>
+        <div className="space-y-3">
+          {[1, 2, 3].map(n => (
+            <div key={n} className="h-24 rounded-xl animate-pulse border border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]" />
+          ))}
+        </div>
       ) : failed ? (
-        <div className="space-y-2">
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center gap-2
+                        border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <p className="text-sm text-[var(--ryu-text-2)]">Couldn&apos;t load feedback.</p>
           <button type="button" onClick={() => void load()} className="text-sm font-semibold text-[var(--ryu-primary)]">
             Retry
           </button>
         </div>
       ) : shown.length === 0 ? (
-        <p className="text-sm text-[var(--ryu-text-3)] py-10 text-center">
-          {filter === 'unread' ? 'Nothing unread.' : 'No feedback yet.'}
-        </p>
+        // Centered empty state, same card as the other admin lists.
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center
+                        border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
+          <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4
+                           bg-[var(--ryu-primary-soft)] text-[var(--ryu-primary-deep)]">
+            <MessageSquare size={26} />
+          </span>
+          <div className="font-heading font-semibold text-lg mb-1 text-[var(--ryu-text)]">
+            {filter === 'unread' ? 'Nothing unread' : 'No feedback yet'}
+          </div>
+          <p className="text-sm text-[var(--ryu-text-2)] max-w-xs">
+            {filter === 'unread'
+              ? 'You’re all caught up.'
+              : 'Reports from the Feedback page and the crash screen will show up here.'}
+          </p>
+        </div>
       ) : (
         <ul className="space-y-3">
           {shown.map(item => {
@@ -283,37 +305,16 @@ export default function AdminFeedbackPage() {
                     {item.is_read ? 'Mark unread' : 'Mark read'}
                   </button>
 
-                  {/* Inline confirm instead of window.confirm (no blocking dialogs). */}
-                  {confirmingId === item.id ? (
-                    <span className="flex items-center gap-2 text-xs text-[var(--ryu-text-2)]">
-                      Delete?
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => void remove(item)}
-                        className="rounded-lg px-3 py-1.5 font-semibold bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)] disabled:opacity-40"
-                      >
-                        Yes, delete
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingId(null)}
-                        className="rounded-lg px-3 py-1.5 font-semibold border border-[var(--ryu-border)]"
-                      >
-                        Cancel
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmingId(item.id)}
-                      className="ml-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold
-                                 text-[var(--ryu-text-3)] hover:text-[var(--ryu-primary-deep)]"
-                      aria-label="Delete this feedback"
-                    >
-                      <Trash2 size={14} /> Delete
-                    </button>
-                  )}
+                  <div className="ml-auto">
+                    <DeleteButton
+                      label="Delete this report"
+                      disabled={busy}
+                      title={`Delete this ${kind.toLowerCase()}?`}
+                      description="This permanently deletes the report. This cannot be undone."
+                      successMessage="Report deleted"
+                      onConfirm={() => remove(item)}
+                    />
+                  </div>
                 </div>
               </li>
             )

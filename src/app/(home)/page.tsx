@@ -1,6 +1,6 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
-import HomeClient from './(components)/HomeClient'
+import HomeClient from '@/app/(components)/HomeClient'
 import { getSettingsOrThrow } from '@/lib/settings'
 
 // ISR: served from cache, refreshed in the background at most once a minute,

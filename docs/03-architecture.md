@@ -104,7 +104,7 @@ Practical implications for contributors:
 |------|-----------|
 | `src/app/error.tsx` | Client error boundary with a retry button; logs the error to the console |
 | `src/app/not-found.tsx` | 404 page |
-| `src/app/loading.tsx` | Skeleton for the home page (includes a "continue bar" skeleton) |
+| `src/app/(home)/loading.tsx` | Skeleton for the home page only (route group `(home)`, so it doesn't show while other routes load) |
 
 There is no `global-error.tsx`.
 
@@ -125,5 +125,6 @@ View them in the Cloudflare dashboard (Workers → ryuwanshoy → Logs) or with 
 - **Admin check first:** mutating handlers begin with `const auth = await requireAdmin(); if (auth instanceof NextResponse) return auth`.
 - **Fire-and-forget cleanup:** after a successful DB delete, R2 objects are deleted without awaiting (`deleteFromR2(...).catch(console.error)`), so an orphaned file is possible but a failed R2 delete never blocks the admin.
 - **Cache-busting URLs:** `uploadToR2` returns `…?v=<timestamp>`; stable filenames (e.g. `cover-<slug>`) are reused on re-upload while URLs still change.
+- **One delete control:** every admin delete uses `src/components/admin/DeleteButton.tsx` (confirm dialog, spinner, success toast, and the dialog stays open with the error on failure). Pass an `onConfirm` that **throws** on failure. Looks: `icon` (lists), `text` (edit pages), `pill` (bulk). Colors come from `--ryu-danger` / `--ryu-on-danger`. Exception: `PageUploader` removes a page without a confirm on purpose (see its comment).
 - **Mutate through the API, purge the cache:** admin actions go through `/api/*` routes, which call `revalidatePublicContent()`; public pages pick up the change on the next load.
 - **`localStorage` as the reader's database:** see [Reader & client state](./11-reader-and-client-state.md).

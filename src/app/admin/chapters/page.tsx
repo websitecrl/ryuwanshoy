@@ -2,13 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Pencil, BookOpen, Trash2, Loader2, Search } from 'lucide-react'
-import { toast } from 'sonner'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { Plus, Pencil, BookOpen, Search } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import type { Tables } from '@/types/database'
 
 type Chapter = Tables<'chapters'> & { series: { title: string } | null }
@@ -17,8 +12,6 @@ export default function AdminChaptersPage() {
   const [chapters,   setChapters]   = useState<Chapter[]>([])
   const [loading,    setLoading]    = useState(true)
   const [error,      setError]      = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [pendingDelete, setPendingDelete] = useState<Chapter | null>(null)
   const [search,     setSearch]     = useState('')
 
   const filteredChapters = chapters.filter(c => {
@@ -53,23 +46,17 @@ export default function AdminChaptersPage() {
     fetchChapters()
   }, [])
 
-  async function confirmDelete() {
-    if (!pendingDelete) return
-    const chapter = pendingDelete
-    const label = `Chapter ${chapter.chapter_number}${chapter.title ? ` — ${chapter.title}` : ''}`
-    setPendingDelete(null)
-    setDeletingId(chapter.id)
-    try {
-      const res = await fetch(`/api/chapters/${chapter.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete')
-      setChapters(prev => prev.filter(c => c.id !== chapter.id))
-      toast.success(`${label} deleted`)
-    } catch {
-      toast.error('Failed to delete chapter')
-    } finally {
-      setDeletingId(null)
+  // Throws on failure; DeleteButton shows the error and the success toast.
+  async function deleteChapter(chapter: Chapter) {
+    const res = await fetch(`/api/chapters/${chapter.id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Failed to delete chapter')
     }
+    setChapters(prev => prev.filter(c => c.id !== chapter.id))
   }
+
+  const chapterLabel = (c: Chapter) => `Chapter ${c.chapter_number}${c.title ? ` — ${c.title}` : ''}`
 
   if (loading) {
     return (
@@ -232,44 +219,14 @@ export default function AdminChaptersPage() {
                         </button>
                       </Link>
 
-                      {/* Delete — AlertDialog, no nested button */}
-                      <AlertDialog
-                        open={pendingDelete?.id === c.id}
-                        onOpenChange={open => { if (!open) setPendingDelete(null) }}
-                      >
-                        <AlertDialogTrigger
-                          disabled={deletingId === c.id}
-                          onClick={() => setPendingDelete(c)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
-                          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#FECACA'; el.style.color = '#DC2626' }}
-                          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border)'; el.style.color = 'var(--ryu-text-2)' }}
-                        >
-                          {deletingId === c.id
-                            ? <Loader2 size={14} className="animate-spin" />
-                            : <Trash2 size={14} />
-                          }
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete Chapter {c.chapter_number}{c.title ? ` — ${c.title}` : ''}?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This permanently deletes the chapter and all its pages. This cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={confirmDelete}
-                              style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      {/* Delete */}
+                      <DeleteButton
+                        label="Delete chapter"
+                        title={`Delete ${chapterLabel(c)}?`}
+                        description="This permanently deletes the chapter and all its pages. This cannot be undone."
+                        successMessage={`${chapterLabel(c)} deleted`}
+                        onConfirm={() => deleteChapter(c)}
+                      />
 
                     </div>
                   </td>

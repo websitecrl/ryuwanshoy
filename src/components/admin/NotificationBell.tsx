@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, Trash2, CheckCheck, Heart, MessageSquare } from 'lucide-react'
+import { Bell, CheckCheck, Heart, MessageSquare } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import { timeAgo } from '@/lib/time'
 
 type NotifType = 'comment' | 'like'
@@ -93,11 +94,15 @@ export default function NotificationBell() {
     setUnread(0)
   }
 
+  // Deletes the real comment or like (not just the notification). Throws on
+  // failure so DeleteButton shows the error; before, a failed delete still
+  // disappeared from the list.
   async function deleteNotif(n: Notification) {
-    if (n.type === 'comment') {
-      await fetch(`/api/comments/${n.id}`, { method: 'DELETE' })
-    } else {
-      await fetch(`/api/likes/${n.id}`, { method: 'DELETE' })
+    const url = n.type === 'comment' ? `/api/comments/${n.id}` : `/api/likes/${n.id}`
+    const res = await fetch(url, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? `Failed to delete ${n.type}`)
     }
     setNotifs(prev => prev.filter(x => x.id !== n.id))
     if (n.is_read !== true) setUnread(prev => Math.max(0, prev - 1))
@@ -125,6 +130,10 @@ export default function NotificationBell() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
+      // The delete confirm dialog renders in a portal outside the dropdown;
+      // clicks in it must not close the dropdown (that would unmount the
+      // dialog mid-delete).
+      if ((e.target as Element | null)?.closest?.('[data-slot^="alert-dialog"]')) return
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false)
       }
@@ -304,15 +313,21 @@ export default function NotificationBell() {
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => deleteNotif(n)}
-                    className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color: 'var(--ryu-text-3)', background: 'none', border: 'none' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-primary-deep)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {/* Shown on hover, or when reached by keyboard. */}
+                  <div className="shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                    <DeleteButton
+                      size={24}
+                      label={n.type === 'comment' ? 'Delete comment' : 'Delete like'}
+                      title={n.type === 'comment' ? 'Delete this comment?' : 'Delete this like?'}
+                      description={
+                        n.type === 'comment'
+                          ? 'This permanently deletes the reader’s comment (and its replies) from the site. This cannot be undone.'
+                          : 'This permanently removes the like from the post. This cannot be undone.'
+                      }
+                      successMessage={n.type === 'comment' ? 'Comment deleted' : 'Like removed'}
+                      onConfirm={() => deleteNotif(n)}
+                    />
+                  </div>
                 </div>
               ))
             )}
