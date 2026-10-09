@@ -8,7 +8,7 @@ import {
   FEEDBACK_LABELS,
   FEEDBACK_LIMITS,
   isSafeSitePath,
-  isValidEmail,
+  toFeedbackDevice,
   type FeedbackPayload,
 } from '@/lib/feedback'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
@@ -34,22 +34,24 @@ function sourcePage(): string | undefined {
 export default function FeedbackForm() {
   const [kind, setKind] = useState<FormKind>('bug')
   const [message, setMessage] = useState('')
-  const [email, setEmail] = useState('')
+  // Where the reader noticed it; at least one is required, both is allowed
+  // (e.g. they saw it on their phone, then again on a computer).
+  const [onWeb, setOnWeb] = useState(false)
+  const [onPhone, setOnPhone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [sent, setSent] = useState(false)
 
-  const trimmedEmail = email.trim()
-  const emailInvalid = trimmedEmail !== '' && !isValidEmail(trimmedEmail.toLowerCase())
-  const canSubmit = message.trim() !== '' && !emailInvalid && !submitting
+  const device = toFeedbackDevice(onWeb, onPhone)
+  const canSubmit = message.trim() !== '' && device !== null && !submitting
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || device === null) return
     setSubmitting(true)
     const payload: FeedbackPayload = {
       kind,
       message: message.trim(),
-      email: trimmedEmail || undefined,
+      device,
       pageUrl: sourcePage(),
     }
     try {
@@ -74,9 +76,7 @@ export default function FeedbackForm() {
     return (
       <div className="rounded-xl border border-[var(--ryu-border)] bg-[var(--ryu-surface-1)] p-6 text-center space-y-3">
         <p className="text-base font-semibold text-[var(--ryu-text)]">Thank you!</p>
-        <p className="text-sm text-[var(--ryu-text-2)]">
-          Your feedback was sent{trimmedEmail ? ', and we may reply to the email you gave' : ''}.
-        </p>
+        <p className="text-sm text-[var(--ryu-text-2)]">Your feedback was sent.</p>
         <button
           type="button"
           onClick={() => { setSent(false); setMessage('') }}
@@ -124,6 +124,43 @@ export default function FeedbackForm() {
         </div>
       </fieldset>
 
+      {/* Device: native checkboxes styled as pills; at least one required,
+          both allowed. Stored as 'web' | 'phone' | 'both'. */}
+      <fieldset className="space-y-2" aria-describedby="feedback-device-note">
+        <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
+          Where did it happen?
+        </legend>
+        <div className="flex flex-wrap gap-2">
+          {([
+            ['web', 'Web (computer)', onWeb, setOnWeb],
+            ['phone', 'Phone', onPhone, setOnPhone],
+          ] as const).map(([value, label, checked, set]) => (
+            <label key={value} className="cursor-pointer">
+              <input
+                type="checkbox"
+                name="feedback-device"
+                value={value}
+                checked={checked}
+                onChange={e => set(e.target.checked)}
+                className="peer sr-only"
+              />
+              <span
+                className="inline-block rounded-full px-4 py-1.5 text-sm transition-colors border
+                           border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]
+                           peer-checked:border-[var(--ryu-primary)] peer-checked:bg-[var(--ryu-primary-soft)]
+                           peer-checked:text-[var(--ryu-primary-deep)] peer-checked:font-semibold
+                           peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--ryu-primary)]"
+              >
+                {label}
+              </span>
+            </label>
+          ))}
+        </div>
+        <p id="feedback-device-note" className="text-xs text-[var(--ryu-text-3)]">
+          Pick one, or both if you noticed it on both.
+        </p>
+      </fieldset>
+
       {/* Message */}
       <div className="space-y-1">
         <label htmlFor="feedback-message" className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
@@ -143,33 +180,6 @@ export default function FeedbackForm() {
         />
         <p className="text-right text-xs text-[var(--ryu-text-3)]">
           {message.length} / {FEEDBACK_LIMITS.message}
-        </p>
-      </div>
-
-      {/* Email (optional) */}
-      <div className="space-y-1">
-        <label htmlFor="feedback-email" className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
-          Email <span className="normal-case font-normal">(optional)</span>
-        </label>
-        <input
-          id="feedback-email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          maxLength={FEEDBACK_LIMITS.email}
-          aria-invalid={emailInvalid}
-          aria-describedby="feedback-email-note"
-          placeholder="you@example.com"
-          className="w-full text-sm rounded-lg border px-3 py-2 outline-none transition-colors
-                     bg-[var(--ryu-surface-2)] border-[var(--ryu-border)] text-[var(--ryu-text)]
-                     placeholder:text-[var(--ryu-text-3)] focus:border-[var(--ryu-primary)]"
-        />
-        <p id="feedback-email-note" className="text-xs text-[var(--ryu-text-3)]">
-          {emailInvalid
-            ? 'That email doesn’t look right. Fix it or leave it empty.'
-            : 'Only if you want a reply. It’s only seen by the admin and never shared.'}
         </p>
       </div>
 

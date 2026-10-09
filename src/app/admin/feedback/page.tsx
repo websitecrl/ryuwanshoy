@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { CheckCheck, Mail, Trash2, Circle, CircleCheck } from 'lucide-react'
+import { CheckCheck, Trash2, Circle, CircleCheck } from 'lucide-react'
 import type { Tables } from '@/types/database'
-import { FEEDBACK_LABELS, isFeedbackKind, isSafeSitePath, isValidEmail } from '@/lib/feedback'
+import { DEVICE_LABELS, FEEDBACK_LABELS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } from '@/lib/feedback'
 import { timeAgo } from '@/lib/time'
 
 type Feedback = Tables<'feedback'>
@@ -19,8 +19,8 @@ type Page = { feedback: Feedback[]; unread: number; total: number; nextCursor: s
  * the server's unread count, which the header shows as is (no local math).
  *
  * Reader-supplied values are shown as text (React escapes them); the page
- * path only becomes a link after isSafeSitePath, and the reply link only for
- * a valid email, even though the API already filtered both.
+ * path only becomes a link after isSafeSitePath, even though the API already
+ * filtered it. No email is collected, so there is no reply link.
  */
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([])
@@ -216,6 +216,11 @@ export default function AdminFeedbackPage() {
                   >
                     {kind}
                   </span>
+                  {isFeedbackDevice(item.device) && (
+                    <span className="rounded-full px-2 py-0.5 border border-[var(--ryu-border)] text-[var(--ryu-text-2)]">
+                      {DEVICE_LABELS[item.device]}
+                    </span>
+                  )}
                   {!item.is_read && <span className="font-semibold text-[var(--ryu-primary-deep)]">New</span>}
                   <span title={new Date(item.created_at).toLocaleString()}>{timeAgo(item.created_at)}</span>
                   {item.page_url && (
@@ -266,15 +271,6 @@ export default function AdminFeedbackPage() {
 
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  {item.email && isValidEmail(item.email) && (
-                    <a
-                      href={`mailto:${item.email}`}
-                      className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
-                                 border-[var(--ryu-border)] text-[var(--ryu-text)] hover:bg-[var(--ryu-surface-2)]"
-                    >
-                      <Mail size={14} /> Reply to {item.email}
-                    </a>
-                  )}
                   <button
                     type="button"
                     disabled={busy}

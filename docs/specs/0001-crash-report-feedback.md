@@ -29,6 +29,18 @@ sees them.
   links to that page.
 - **Privacy:** no IP stored; email optional; reports are only visible to the
   admin.
+- **Change, 2026-10-09 (owner decision): no email, ask the device instead.**
+  A reply by email rarely helps (if the reader can't describe the bug in the
+  form, a back and forth won't either, and one-off bugs can't be reproduced
+  later), and it was personal data in the database. The form now asks
+  "Where did it happen?" with two checkboxes, Web (computer) and Phone, at
+  least one required for every form kind, both allowed (stored as
+  `device` = 'web' | 'phone' | 'both'; NULL for crash reports, where the
+  reader isn't asked). The `email` column was dropped
+  (`20261009140000_feedback_device_drop_email.sql`, owner approved erasing the
+  1 saved test address). This replaces the email parts of the bullets above
+  and AC-3, which now reads: "A form submission without a device is
+  rejected; Web, Phone and both are accepted."
 
 ## Code area
 - `supabase/migrations/20261009120000_create_feedback.sql`, `src/types/database.ts` (regenerated)
