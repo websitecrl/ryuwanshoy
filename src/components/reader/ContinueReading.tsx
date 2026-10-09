@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 import { useMaxAge } from '@/hooks/useSavedAge'
-import { ALL_AGES } from '@/lib/age'
+import { fitsAge } from '@/lib/age'
 
 type ContinueReadingData = {
   seriesSlug: string
@@ -61,7 +61,7 @@ export default function ContinueReading() {
   if (!mounted || !data) return null
   // Hidden, not forgotten: a series above the reader's saved age (spec 0003)
   // never shows its cover here; it comes back if they pick an older age.
-  if ((minAge ?? ALL_AGES) > maxAge) return null
+  if (!fitsAge(minAge, maxAge)) return null
 
   const href = `/comics/${data.seriesSlug}/${data.chapterNumber}${
     data.currentPage && data.currentPage > 1 ? `?page=${data.currentPage}` : ''

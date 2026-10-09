@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useMaxAge } from '@/hooks/useSavedAge'
+import { fitsAge } from '@/lib/age'
 
 type Series = { title: string; slug: string; min_age: number | null }
 type Chapter = { id: string; chapter_number: number }
@@ -24,8 +25,7 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
 
   // Filter slides by reader's confirmed age
   const visibleSlides = slides.filter(s => {
-    const age = s.series?.min_age ?? 13
-    return age <= maxAge
+    return fitsAge(s.series?.min_age, maxAge)
   })
 
   // Auto-advance carousel

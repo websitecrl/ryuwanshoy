@@ -9,6 +9,7 @@ import Link from "next/link";
 import { SiKofi } from "react-icons/si";
 import SocialLinks from "@/components/shared/SocialLinks";
 import { useMaxAge } from "@/hooks/useSavedAge";
+import { fitsAge } from "@/lib/age";
 
 type HeroSlide = {
   id: string;
@@ -78,8 +79,7 @@ export default function HomeClient({
   const creatorName = settings?.creator_name ?? "Ryu"
   const siteDescription = settings?.site_description ?? "Original comics and art by a Filipino creator."
   const visibleChapters = chapters.filter(ch => {
-      const age = ch.series?.min_age ?? 13
-      return age <= maxAge
+      return fitsAge(ch.series?.min_age, maxAge)
     })
 
   return (
