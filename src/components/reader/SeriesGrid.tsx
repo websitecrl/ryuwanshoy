@@ -6,6 +6,7 @@ import SeriesCard from '@/components/reader/SeriesCard'
 import type { Database } from '@/types/database'
 import BookmarksNavLink from '@/components/shared/BookmarksNavLink'
 import { useMaxAge } from '@/hooks/useSavedAge'
+import { fitsAge } from '@/lib/age'
 
 type Series = Database['public']['Tables']['series']['Row']
 type ChapterCounts = Record<string, number>
@@ -63,8 +64,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
 
   const filtered = useMemo(() => {
     let r = series.filter(s => {
-      const seriesAge = s.min_age && s.min_age > 0 ? s.min_age : null
-      if (seriesAge !== null && seriesAge > maxAge) return false
+      if (!fitsAge(s.min_age, maxAge)) return false
       if (search) {
         const q = search.toLowerCase()
         const matchTitle = s.title.toLowerCase().includes(q)

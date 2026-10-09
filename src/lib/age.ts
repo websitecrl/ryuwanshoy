@@ -7,6 +7,17 @@ export const AGE_KEY = 'ryu-age'
 // may see. A series with no min_age counts as all ages.
 export const ALL_AGES = 13
 
+/**
+ * The one rule for every age filtered list (home, /comics, /bookmarks,
+ * Continue reading): does a series fit the reader's age limit?
+ * @param minAge - the series min_age; null or 0 counts as all ages
+ * @param maxAge - from useMaxAge(): the saved age band, or ALL_AGES while
+ *   it isn't known yet (always 13 or more)
+ */
+export function fitsAge(minAge: number | null | undefined, maxAge: number): boolean {
+  return (minAge ?? ALL_AGES) <= maxAge
+}
+
 // Set on <html> when an age is saved. CSS hides the gate off it (globals.css),
 // so a returning reader never sees the gate flash before React loads.
 export const AGE_CONFIRMED_ATTR = 'data-age-confirmed'
