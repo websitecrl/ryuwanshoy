@@ -1,13 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2 } from 'lucide-react'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import DeleteButton from '@/components/admin/DeleteButton'
 
 type Props = {
   kind: 'series' | 'chapter'
@@ -15,58 +9,30 @@ type Props = {
   label: string
 }
 
+/** Deletes one draft series or chapter, then refreshes the drafts list. */
 export default function DeleteDraftRowButton({ kind, id, label }: Props) {
   const router = useRouter()
-  const [deleting, setDeleting] = useState(false)
 
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error
+  // (this used to fail silently with only a console.error).
   async function handleDelete() {
-    setDeleting(true)
-    try {
-      const endpoint = kind === 'series' ? `/api/series/${id}` : `/api/chapters/${id}`
-      const res = await fetch(endpoint, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete')
-      router.refresh()
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setDeleting(false)
+    const endpoint = kind === 'series' ? `/api/series/${id}` : `/api/chapters/${id}`
+    const res = await fetch(endpoint, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Failed to delete draft')
     }
+    router.refresh()
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger
-        disabled={deleting}
-        className="flex items-center justify-center rounded-lg shrink-0 disabled:opacity-50"
-        style={{
-          width: 28, height: 28, cursor: 'pointer',
-          background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)',
-        }}
-        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#DC2626'}
-        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
-        title="Delete"
-      >
-        <Trash2 size={13} />
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete this {kind === 'series' ? 'draft series' : 'draft chapter'}?</AlertDialogTitle>
-          <AlertDialogDescription>
-            "{label}" will be permanently deleted. This cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={deleting}
-            style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
-          >
-            <Trash2 size={13} />
-            {deleting ? 'Deleting...' : 'Yes, delete'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteButton
+      size={28}
+      label={kind === 'series' ? 'Delete draft series' : 'Delete draft chapter'}
+      title={`Delete this ${kind === 'series' ? 'draft series' : 'draft chapter'}?`}
+      description={`“${label}” will be permanently deleted. This cannot be undone.`}
+      successMessage="Draft deleted"
+      onConfirm={handleDelete}
+    />
   )
 }

@@ -4,12 +4,8 @@ import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Plus, Pencil, Trash2, Loader2, BookOpen, Search, BookMarked } from 'lucide-react'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import { Plus, Pencil, BookOpen, Search, BookMarked } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import { timeAgo } from '@/lib/time'
 import type { Tables } from '@/types/database'
 
@@ -57,7 +53,6 @@ type SeriesWithCount = Series & { chapter_count?: number }
 export default function AdminSeriesPage() {
   const [series, setSeries]       = useState<SeriesWithCount[]>([])
   const [loading, setLoading]     = useState(true)
-  const [deleting, setDeleting]   = useState<string | null>(null)
   const [search, setSearch]       = useState('')
   const [statusFilter, setStatus] = useState<'all' | 'ongoing' | 'completed' | 'hiatus'>('all')
 
@@ -74,13 +69,12 @@ export default function AdminSeriesPage() {
   }, [])
 
   // ── Delete ─────────────────────────────────────────────────────────────
+  // Throws on failure; DeleteButton shows the error and the success toast.
   async function handleDelete(id: string) {
-    setDeleting(id)
     const res  = await fetch(`/api/series/${id}`, { method: 'DELETE' })
-    const json = await res.json()
-    if (json.error) { toast.error(json.error) }
-    else { setSeries(prev => prev.filter(s => s.id !== id)); toast.success('Series deleted') }
-    setDeleting(null)
+    const json = await res.json().catch(() => ({})) as { error?: string }
+    if (!res.ok || json.error) throw new Error(json.error ?? 'Failed to delete series')
+    setSeries(prev => prev.filter(s => s.id !== id))
   }
 
   // ── Filter in memory ───────────────────────────────────────────────────
@@ -289,7 +283,6 @@ export default function AdminSeriesPage() {
             <SeriesCard
               key={s.id}
               series={s}
-              deleting={deleting === s.id}
               onDelete={handleDelete}
             />
           ))}
@@ -303,11 +296,10 @@ export default function AdminSeriesPage() {
 
 interface SeriesCardProps {
   series: SeriesWithCount
-  deleting: boolean
-  onDelete: (id: string) => void
+  onDelete: (id: string) => Promise<void>
 }
 
-function SeriesCard({ series: s, deleting, onDelete }: SeriesCardProps) {
+function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
   const chapterCount = s.chapter_count ?? 0
 
   return (
@@ -433,45 +425,14 @@ function SeriesCard({ series: s, deleting, onDelete }: SeriesCardProps) {
           </Link>
 
           {/* Delete */}
-          <AlertDialog>
-            <AlertDialogTrigger
-              disabled={deleting}
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
-              title="Delete series"
-              style={{ border: '1px solid var(--ryu-border-soft)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-3)' }}
-              onMouseEnter={e => {
-                const el = e.currentTarget as HTMLElement
-                el.style.borderColor = '#FECACA'
-                el.style.background  = '#FEF2F2'
-                el.style.color       = '#DC2626'
-              }}
-              onMouseLeave={e => {
-                const el = e.currentTarget as HTMLElement
-                el.style.borderColor = 'var(--ryu-border-soft)'
-                el.style.background  = 'var(--ryu-surface-1)'
-                el.style.color       = 'var(--ryu-text-3)'
-              }}
-            >
-              {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete &ldquo;{s.title}&rdquo;?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This permanently deletes the series and all its chapters and pages. This cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(s.id)}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteButton
+            size={36}
+            label="Delete series"
+            title={`Delete “${s.title}”?`}
+            description="This permanently deletes the series and all its chapters and pages. This cannot be undone."
+            successMessage="Series deleted"
+            onConfirm={() => onDelete(s.id)}
+          />
 
         </div>
       </div>

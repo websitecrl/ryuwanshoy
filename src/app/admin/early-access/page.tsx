@@ -1,24 +1,40 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Trash2, Download, Search, Mail } from 'lucide-react'
+import { toast } from 'sonner'
+import { Download, Search, Mail } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 
 type EarlyAccessEntry = {
   id: string; email: string; created_at: string
+}
+
+/**
+ * One CSV cell: quoted (commas/quotes can't break columns) and, if it starts
+ * with = + - @ (or a tab/CR), prefixed with ' so Excel/Sheets show it as text
+ * instead of running it as a formula (CSV injection).
+ */
+function csvCell(value: string): string {
+  const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
+  return `"${safe.replace(/"/g, '""')}"`
 }
 
 export default function EarlyAccessPage() {
   const [entries, setEntries]     = useState<EarlyAccessEntry[]>([])
   const [search, setSearch]       = useState('')
   const [loading, setLoading]     = useState(true)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function fetchEntries() {
     try {
       const res  = await fetch('/api/early-access')
-      const data = await res.json()
-      setEntries(data)
-    } catch (err) { console.error('Failed to fetch entries:', err) }
+      // The route returns { emails: [...] } (this used to store the whole
+      // object and crash on .filter).
+      const json = await res.json() as { emails?: EarlyAccessEntry[]; error?: string }
+      if (!res.ok) throw new Error(json.error ?? 'Failed to load signups')
+      setEntries(json.emails ?? [])
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load signups')
+    }
     finally { setLoading(false) }
   }
 
@@ -26,19 +42,22 @@ export default function EarlyAccessPage() {
 
   const filtered = entries.filter(e => e.email.toLowerCase().includes(search.toLowerCase()))
 
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error
+  // (replaces window.confirm + alert, which the design system forbids).
   async function handleDelete(id: string) {
-    if (!window.confirm('Remove this email?')) return
-    setDeletingId(id)
-    try {
-      const res = await fetch(`/api/early-access/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Delete failed')
-      setEntries(prev => prev.filter(e => e.id !== id))
-    } catch (err) { console.error(err); alert('Failed to delete. Please try again.') }
-    finally { setDeletingId(null) }
+    const res = await fetch(`/api/early-access/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Failed to remove email')
+    }
+    setEntries(prev => prev.filter(e => e.id !== id))
   }
 
   function handleExportCSV() {
-    const csv = ['Email,Date Signed Up', ...entries.map(e => `${e.email},${new Date(e.created_at).toLocaleDateString('en-PH')}`)].join('\n')
+    const rows = entries.map(e =>
+      [csvCell(e.email), csvCell(new Date(e.created_at).toLocaleDateString('en-PH'))].join(',')
+    )
+    const csv = ['Email,Date Signed Up', ...rows].join('\n')
     const link = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: 'early-access-emails.csv' })
     link.click(); URL.revokeObjectURL(link.href)
   }
@@ -101,14 +120,17 @@ export default function EarlyAccessPage() {
                   <td className="px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-2)' }}>
                     {new Date(entry.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </td>
-                  <td className="px-5 py-3.5 text-right">
-                    <button onClick={() => handleDelete(entry.id)} disabled={deletingId === entry.id}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center ml-auto transition-colors"
-                      style={{ border: '1px solid var(--ryu-border-soft)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-3)', cursor: 'pointer' }}
-                      onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#FECACA'; el.style.background = '#FEF2F2'; el.style.color = '#DC2626' }}
-                      onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border-soft)'; el.style.background = 'var(--ryu-surface-1)'; el.style.color = 'var(--ryu-text-3)' }}>
-                      <Trash2 size={14} />
-                    </button>
+                  <td className="px-5 py-3.5">
+                    <div className="flex justify-end">
+                      <DeleteButton
+                        label="Remove email"
+                        title="Remove this email?"
+                        description={`${entry.email} will be removed from the Early Access list. This cannot be undone.`}
+                        confirmLabel="Remove"
+                        successMessage="Email removed"
+                        onConfirm={() => handleDelete(entry.id)}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

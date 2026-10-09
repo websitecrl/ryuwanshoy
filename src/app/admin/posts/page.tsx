@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus, Pencil, Trash2, Image as ImageIcon } from 'lucide-react'
-import { toast } from 'sonner'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Plus, Pencil, Image as ImageIcon } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 
 type Post = {
   id: string; title: string | null; description: string | null
@@ -16,7 +15,6 @@ export default function AdminPostsPage() {
   const [posts, setPosts]           = useState<Post[]>([])
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState<string | null>(null)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchPosts() {
@@ -32,15 +30,14 @@ export default function AdminPostsPage() {
     fetchPosts()
   }, [])
 
+  // Throws on failure; DeleteButton shows the error and the success toast.
   async function handleDelete(id: string) {
-    setDeletingId(id)
-    try {
-      const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
-      if (!res.ok) { const j = await res.json(); throw new Error(j.error || 'Delete failed') }
-      setPosts(prev => prev.filter(p => p.id !== id))
-      toast.success('Post deleted')
-    } catch (err) { console.error(err); toast.error('Failed to delete post. Please try again.') }
-    finally { setDeletingId(null) }
+    const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(j.error ?? 'Failed to delete illustration')
+    }
+    setPosts(prev => prev.filter(p => p.id !== id))
   }
 
   function formatDate(iso: string) {
@@ -156,32 +153,13 @@ export default function AdminPostsPage() {
                           <Pencil size={14} />
                         </button>
                       </Link>
-                      <AlertDialog>
-                        <AlertDialogTrigger
-                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ border: '1px solid var(--ryu-border-soft)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-3)', cursor: 'pointer' }}
-                          disabled={deletingId === post.id}
-                          onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = '#FECACA'; el.style.background = '#FEF2F2'; el.style.color = '#DC2626' }}
-                          onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border-soft)'; el.style.background = 'var(--ryu-surface-1)'; el.style.color = 'var(--ryu-text-3)' }}>
-                          <Trash2 size={14} />
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete illustration?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will permanently delete the illustration and its image. This cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(post.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              {deletingId === post.id ? 'Deleting…' : 'Delete'}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <DeleteButton
+                        label="Delete illustration"
+                        title="Delete illustration?"
+                        description="This permanently deletes the illustration and its image. This cannot be undone."
+                        successMessage="Illustration deleted"
+                        onConfirm={() => handleDelete(post.id)}
+                      />
                     </div>
                   </td>
                 </tr>

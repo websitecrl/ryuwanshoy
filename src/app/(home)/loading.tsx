@@ -1,3 +1,5 @@
+// In the (home) route group (no effect on the URL) so its loading.tsx
+// skeleton, which mirrors the home layout, only shows for "/".
 export default function Loading() {
   return (
     <div className="flex flex-col gap-10 pb-16">

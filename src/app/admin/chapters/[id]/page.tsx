@@ -1,10 +1,6 @@
 'use client'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { useState, useEffect } from 'react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
@@ -37,7 +33,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
   const [publishedAt,     setPublishedAt]     = useState('')
   const [loading,         setLoading]         = useState(false)
   const [fetching,        setFetching]        = useState(true)
-  const [deleteOpen,      setDeleteOpen]      = useState(false)
   const [error,           setError]           = useState<string | null>(null)
   const [chapterId,       setChapterId]       = useState<string | null>(null)
   const [pages,           setPages]           = useState<Page[]>([])
@@ -88,15 +83,15 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     } finally { setLoading(false) }
   }
 
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
   async function handleDelete() {
     if (!chapterId) return
-    try {
-      const res = await fetch(`/api/chapters/${chapterId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete chapter')
-      router.push('/admin/chapters')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong ')
+    const res = await fetch(`/api/chapters/${chapterId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Failed to delete chapter')
     }
+    router.push('/admin/chapters')
   }
 
   // ── Loading / error states ────────────────────────────────────────────────
@@ -322,7 +317,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* ── Fixed bottom action bar ──────────────────────────────────────── */}
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--background) 60%, transparent)',
@@ -330,15 +324,14 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           {/* Left — destructive */}
-            <AlertDialogTrigger
-              disabled={loading}
-              style={{
-                fontSize: 13.5, fontWeight: 600, color: '#DC2626',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}
-            >
-              Delete chapter
-            </AlertDialogTrigger>
+          <DeleteButton
+            variant="text"
+            label="Delete chapter"
+            disabled={loading}
+            title={`Delete Chapter ${chapter?.chapter_number ?? ''}?`}
+            description="This permanently deletes the chapter and all its pages from R2. This cannot be undone."
+            onConfirm={handleDelete}
+          />
 
           {/* Right — cancel + save */}
           <div style={{ display: 'flex', gap: 10 }}>
@@ -375,25 +368,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             </button>
           </div>
         </div>
-
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Chapter {chapter?.chapter_number}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This permanently deletes the chapter and all its pages from R2. This cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
     </div>
   )

@@ -10,11 +10,7 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel,
-  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
-  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+import DeleteButton from '@/components/admin/DeleteButton'
 import type { Tables } from '@/types/database'
 import { compressImage } from '@/lib/image-compress'
 
@@ -138,16 +134,15 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   }
 
   // ── Delete ─────────────────────────────────────────────────────────────────
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
   async function handleDelete() {
     if (!postId) return
-    try {
-      const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete post')
-      toast.success('Post deleted')
-      router.push('/admin/posts')
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Delete failed')
+    const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(j.error ?? 'Failed to delete illustration')
     }
+    router.push('/admin/posts')
   }
 
   // ── Loading / error guards ─────────────────────────────────────────────────
@@ -370,33 +365,14 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         {/* Left — delete */}
-        <AlertDialog>
-          <AlertDialogTrigger
-            style={{
-              fontSize: 13.5, fontWeight: 600, color: '#DC2626',
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            }}
-          >
-            Delete post
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete this post?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This will permanently delete the post and its image from R2. This cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <DeleteButton
+          variant="text"
+          label="Delete illustration"
+          title="Delete this illustration?"
+          description="This permanently deletes the illustration and its image from R2. This cannot be undone."
+          successMessage="Illustration deleted"
+          onConfirm={handleDelete}
+        />
 
         {/* Right — cancel + save */}
         <div style={{ display: 'flex', gap: 10 }}>

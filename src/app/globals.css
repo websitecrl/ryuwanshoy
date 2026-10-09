@@ -92,6 +92,22 @@
   --ryu-text-3: #A8A29E;
   --ryu-ink: #1C1917; /* outlines + hard offset shadows on cartoon-style buttons/cards */
 
+  /* Aliases for names used across the app that were never defined (the
+     browser silently ignored them, e.g. see-through backgrounds). They point
+     at the real tokens, so they follow .dark automatically (the .dark class
+     sits on <html>, the same element as :root). Prefer the real names in
+     new code. */
+  --ryu-bg: var(--background);
+  --ryu-text-muted: var(--ryu-text-3);
+  --ryu-text-secondary: var(--ryu-text-2);
+  --ryu-border-hover: var(--ryu-primary);
+
+  /* Delete / destructive actions (DeleteButton). The red follows shadcn's
+     --destructive; text on it is white in light mode and dark in dark mode,
+     because white on the lighter dark-mode red (#F87171) only reaches ~2.8:1. */
+  --ryu-danger: var(--destructive);
+  --ryu-on-danger: #FFFFFF;
+
   /* shadcn tokens — remapped to warm palette.
      The primary/accent family aliases the --ryu-* tokens so the two systems can't drift. */
   --background: #FFFBF5;
@@ -158,6 +174,7 @@
   --ryu-text-2: #BFB1A0;
   --ryu-text-3: #8A7A6B;
   --ryu-ink: #4A3E33; /* lighter-dark outline — cream (--ryu-text) glared as a border in dark */
+  --ryu-on-danger: #1C1917; /* dark text on the lighter dark-mode red (white only reaches ~2.8:1) */
 
   /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
   --background: #14110F;

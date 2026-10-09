@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Eye, EyeOff, Trash2, Plus, GripVertical, Search, X, Monitor, Pencil } from 'lucide-react'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Eye, EyeOff, Plus, GripVertical, Search, X, Monitor, Pencil } from 'lucide-react'
+import DeleteButton from '@/components/admin/DeleteButton'
 import { compressImage } from '@/lib/image-compress'
 
 type HeroSlide = {
@@ -31,7 +31,6 @@ export default function HeroBannerManager() {
   const [showForm, setShowForm]       = useState(false)
   const [actioningId, setActioningId] = useState<string | null>(null)
   const [previewSlide, setPreviewSlide] = useState<HeroSlide | null>(null)
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
 
   // Form fields
   const [seriesSearch, setSeriesSearch]       = useState('')
@@ -104,20 +103,15 @@ export default function HeroBannerManager() {
     }
   }
 
-  async function confirmDelete() {
-    if (!pendingDeleteId) return
-    const id = pendingDeleteId
-    setPendingDeleteId(null)
-    setActioningId(id)
-    try {
-      const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to delete slide')
-      setSlides(prev => prev.filter(s => s.id !== id))
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setActioningId(null)
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error
+  // (this used to fail silently with only a console.error).
+  async function deleteSlide(id: string) {
+    const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({})) as { error?: string }
+      throw new Error(json.error ?? 'Failed to delete slide')
     }
+    setSlides(prev => prev.filter(s => s.id !== id))
   }
 
   function startEdit(slide: HeroSlide) {
@@ -460,42 +454,21 @@ return (
                 </button>
 
                 {/* Delete */}
-                <AlertDialog
-                  open={pendingDeleteId === slide.id}
-                  onOpenChange={open => { if (!open) setPendingDeleteId(null) }}
-                >
-                  <AlertDialogTrigger
-                    disabled={actioningId === slide.id}
-                    onClick={() => setPendingDeleteId(slide.id)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
-                    style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#DC2626'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--ryu-text-3)'}
-                    title="Delete"
-                  >
-                    <Trash2 size={15} />
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete this slide?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {slide.headline
-                          ? <>The slide "<strong>{slide.headline}</strong>" will be permanently removed.</>
-                          : 'This slide will be permanently removed.'
-                        } This cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={confirmDelete}
-                        style={{ background: '#DC2626', border: '1px solid #B91C1C' }}
-                      >
-                        Delete
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <DeleteButton
+                  label="Delete slide"
+                  disabled={actioningId === slide.id}
+                  title="Delete this slide?"
+                  description={
+                    <>
+                      {slide.headline
+                        ? <>The slide &ldquo;<strong>{slide.headline}</strong>&rdquo; will be permanently removed.</>
+                        : 'This slide will be permanently removed.'}
+                      {' '}This cannot be undone.
+                    </>
+                  }
+                  successMessage="Slide deleted"
+                  onConfirm={() => deleteSlide(slide.id)}
+                />
 
               </div>
             </div>
