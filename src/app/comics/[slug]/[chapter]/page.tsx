@@ -7,9 +7,10 @@ import { cachedPublicQuery, nullIfNotFound, PublicNotFoundError } from '@/lib/ca
 import ReaderShell from '@/components/reader/ReaderShell'
 
 // The HTML is rendered per request, like before caching (see connection() in
-// the page); only the Supabase reads are cached. Page level ISR would also
-// store a page for every random URL, because unknown chapters currently
-// render the not-found page with a 200 status (a known soft 404, see Plan.md).
+// the page); only the Supabase reads are cached. Unknown series and chapters
+// return a real 404 (notFound() below); that only works because AgeGate
+// renders the page on the server, otherwise the not found signal never fired
+// and Next sent 200.
 
 type AdjacentChapter = { chapter_number: number } | null
 
@@ -102,6 +103,16 @@ const queryChapterData = cachedPublicQuery('comics:chapter', async (slug: string
   }
 })
 
+/**
+ * Only a plain whole number is a chapter URL. parseInt alone would read
+ * "1abc" (and Number would read "01") as 1, showing chapter 1 at a second
+ * URL (duplicate content).
+ * @returns the chapter number, or null when the segment isn't one
+ */
+function parseChapterNumber(segment: string): number | null {
+  return /^(0|[1-9]\d*)$/.test(segment) ? Number(segment) : null
+}
+
 // cache() dedupes the call between generateMetadata and the page render.
 // Returns null when the series or chapter doesn't exist (or isn't published).
 const getChapterData = cache((slug: string, chapterNumber: number) =>
@@ -114,8 +125,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string; chapter: string }>
 }): Promise<Metadata> {
   const { slug, chapter } = await params
-  const chapterNumber = parseInt(chapter, 10)
-  if (isNaN(chapterNumber)) return { title: 'Not Found' }
+  const chapterNumber = parseChapterNumber(chapter)
+  if (chapterNumber === null) return { title: 'Not Found' }
 
   const data = await getChapterData(slug, chapterNumber)
   if (!data) return { title: 'Chapter Not Found' }
@@ -157,9 +168,9 @@ export default async function ChapterReaderPage({
   await connection()
 
   const { slug, chapter } = await params
-  const chapterNumber = parseInt(chapter, 10)
+  const chapterNumber = parseChapterNumber(chapter)
 
-  if (isNaN(chapterNumber)) notFound()
+  if (chapterNumber === null) notFound()
 
   const data = await getChapterData(slug, chapterNumber)
   if (!data) notFound()

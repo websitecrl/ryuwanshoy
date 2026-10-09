@@ -11,9 +11,9 @@ import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
 
 // The HTML is rendered per request, like before caching (see connection() in
-// the page); only the Supabase read is cached. Page level ISR would also
-// store a page for every random slug, because unknown slugs currently render
-// the not-found page with a 200 status (a known soft 404, see Plan.md).
+// the page); only the Supabase read is cached. Unknown slugs return a real
+// 404 (notFound() below); that only works because AgeGate renders the page
+// on the server, otherwise the not found signal never fired and Next sent 200.
 
 // Raw shape Supabase returns before we map it —
 // pages(count) comes back as [{ count: number | string }]
