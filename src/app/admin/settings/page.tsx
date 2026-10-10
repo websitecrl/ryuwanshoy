@@ -3,8 +3,9 @@
 import React, { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2, BookOpen } from 'lucide-react'
+import { HeartHandshake, Link2, Star, Shield, Info, Save, CheckCircle2, BookOpen, HardDrive } from 'lucide-react'
 import { compressImage } from '@/lib/image-compress'
+import StorageCleanup from '@/components/admin/StorageCleanup'
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
 
@@ -21,6 +22,7 @@ const SECTIONS = [
   { key: 'donations', label: 'Donations',       Icon: HeartHandshake },
   { key: 'social',    label: 'Social links',    Icon: Link2 },
   { key: 'early',     label: 'Early access',    Icon: Star },
+  { key: 'storage',   label: 'Storage',         Icon: HardDrive },
   { key: 'danger',    label: 'Danger zone',     Icon: Shield, danger: true },
 ]
 
@@ -264,6 +266,9 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* ── Storage ── */}
+          {section === 'storage' && <StorageCleanup />}
 
           {/* ── Site info ── */}
           {section === 'site' && (

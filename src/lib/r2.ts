@@ -308,21 +308,29 @@ export function extractR2Key(url: string): string {
   return keyFromPublicUrl(url, publicUrl) ?? ''
 }
 
+/** One object in the public bucket, as ListObjectsV2 reports it. */
+export type R2ObjectInfo = { key: string; size: number; lastModified: Date }
+
+const xmlUnescape = (s: string) =>
+  s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+   .replace(/&apos;/g, "'").replace(/&amp;/g, '&')
+
 /**
- * Returns total storage used in the R2 bucket in bytes.
- * Paginates through ListObjectsV2 and sums every object's size.
+ * Lists every object in the public bucket (not the EA bucket).
+ * Paginates through ListObjectsV2, 1000 keys per request.
  *
- * With the old AWS SDK this came back as an already-parsed JS object.
  * aws4fetch is a thin fetch() wrapper, so ListObjectsV2 hands back the raw
- * S3 XML response body instead — we pull out just the three fields we need
- * (<Size>, <IsTruncated>, <NextContinuationToken>) with regex rather than
- * pulling in a full XML parser for three fields from a response we fully
- * control (it's always Cloudflare's own well-formed XML, never user input).
+ * S3 XML; we pull out the few fields we need with regex rather than pulling
+ * in an XML parser for a response we fully control (Cloudflare's own
+ * well-formed XML, never user input).
+ *
+ * @throws if any page of the listing fails; never returns a partial list,
+ *   because callers (the unused-files cleanup) must not act on one
  */
-export async function getR2StorageBytes(): Promise<number> {
+export async function listR2Objects(): Promise<R2ObjectInfo[]> {
   const { client, bucket, endpoint } = getR2()
 
-  let totalBytes = 0
+  const objects: R2ObjectInfo[] = []
   let continuationToken: string | undefined = undefined
 
   do {
@@ -338,16 +346,59 @@ export async function getR2StorageBytes(): Promise<number> {
     }
     const xml = await res.text()
 
-    for (const match of xml.matchAll(/<Size>(\d+)<\/Size>/g)) {
-      totalBytes += Number(match[1])
+    for (const [, block = ''] of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+      const key  = block.match(/<Key>([\s\S]*?)<\/Key>/)?.[1]
+      const size = block.match(/<Size>(\d+)<\/Size>/)?.[1]
+      const date = block.match(/<LastModified>([\s\S]*?)<\/LastModified>/)?.[1]
+      if (key === undefined || size === undefined || date === undefined) {
+        throw new Error('R2 list: unexpected <Contents> entry')
+      }
+      objects.push({ key: xmlUnescape(key), size: Number(size), lastModified: new Date(date) })
     }
 
     const isTruncated = /<IsTruncated>true<\/IsTruncated>/.test(xml)
     const tokenMatch  = xml.match(/<NextContinuationToken>(.*?)<\/NextContinuationToken>/)
     continuationToken = isTruncated ? tokenMatch?.[1] : undefined
+    if (isTruncated && !continuationToken) {
+      throw new Error('R2 list: truncated response without a continuation token')
+    }
   } while (continuationToken)
 
-  return totalBytes
+  return objects
+}
+
+/**
+ * Public-bucket keys for many stored refs at once (current or legacy origin).
+ * EA refs ("ea:...") and non-R2 URLs have no key here and are left out.
+ * Reads the config once, unlike calling extractR2Key per ref, which matters
+ * for thousands of page URLs under the Workers CPU limit.
+ */
+export function publicKeysFromRefs(refs: string[]): Set<string> {
+  const { publicUrl } = getR2()
+  const keys = new Set<string>()
+  for (const ref of refs) {
+    const key = keyFromPublicUrl(ref, publicUrl)
+    if (key) keys.add(key)
+  }
+  return keys
+}
+
+/** Returns total storage used in the public R2 bucket, in bytes. */
+export async function getR2StorageBytes(): Promise<number> {
+  const objects = await listR2Objects()
+  return objects.reduce((sum, o) => sum + o.size, 0)
+}
+
+/**
+ * Deletes objects in the public bucket by key (not URL). Same batching and
+ * failure reporting as deleteManyFromR2.
+ * @returns failed - the keys that could not be deleted
+ */
+export async function deleteR2Keys(keys: string[]): Promise<{ failed: string[] }> {
+  const { publicUrl } = getR2()
+  const base = publicUrl.replace(/\/$/, '')
+  const { failed } = await deleteManyFromR2(keys.map(k => `${base}/${k}`))
+  return { failed: failed.map(ref => ref.slice(base.length + 1)) }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
