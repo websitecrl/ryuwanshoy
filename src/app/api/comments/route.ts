@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { isUuid } from '@/lib/validation'
 import { isProfane } from '@/lib/profanity'
 import { isCursor, readLimit } from '@/lib/cursor'
-import { isUuid } from '@/lib/validation'
 
 // Comments live on a series (one section per series) or on a post (one per
 // illustration). Chapters have no comments; the chapter_id column is a
