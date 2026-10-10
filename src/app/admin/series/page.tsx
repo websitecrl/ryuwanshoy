@@ -339,17 +339,14 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="absolute top-3 right-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={
-              s.status === 'ongoing'
-                ? { background: 'color-mix(in srgb, var(--ryu-success) 92%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }
-                : s.status === 'completed'
-                ? { background: 'color-mix(in srgb, var(--ryu-text-3) 88%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }
-                : { background: 'color-mix(in srgb, var(--ryu-warning) 88%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }
-            }
+            // Dark glass in both themes (it sits on cover art); the dot carries
+            // the status color, so white text stays readable in dark mode,
+            // where the status colors are light.
+            style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 65%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ background: s.status === 'ongoing' ? 'var(--ryu-success-border)' : s.status === 'completed' ? 'var(--ryu-text-3)' : 'var(--ryu-warning-border)' }}
+              style={{ background: s.status === 'ongoing' ? 'var(--ryu-success)' : s.status === 'completed' ? 'color-mix(in srgb, var(--ryu-on-image) 60%, transparent)' : 'var(--ryu-warning)' }}
             />
             {s.status === 'ongoing' ? 'Ongoing' : s.status === 'completed' ? 'Completed' : 'Hiatus'}
           </span>
