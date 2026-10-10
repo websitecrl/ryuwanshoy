@@ -124,14 +124,14 @@ useEffect(() => {
       >
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-          style={{ background: '#1C1917' }}
+          style={{ background: 'var(--ryu-text)' }}
         >
           {logoUrl ? (
             <img src={logoUrl} alt={siteTitle} className="w-full h-full object-cover" />
           ) : (
             <span
               className="font-heading font-bold text-sm tracking-tight"
-              style={{ color: '#FFFBF5' }}
+              style={{ color: 'var(--ryu-bg)' }}
             >
               {siteTitle ? siteTitle.slice(0, 2).toUpperCase() : '...'}
             </span>
@@ -175,11 +175,11 @@ useEffect(() => {
               href={href}
               className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-100"
               style={{
-                background: active ? 'rgba(249,115,22,0.10)' : 'transparent',
+                background: active ? 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)' : 'transparent',
                 color:      active ? 'var(--ryu-primary-deep)' : 'var(--ryu-text)',
               }}
               onMouseEnter={e => {
-                if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.05)'
+                if (!active) (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--ryu-primary) 5%, transparent)'
               }}
               onMouseLeave={e => {
                 if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -201,7 +201,7 @@ useEffect(() => {
                   className="flex items-center justify-center font-mono-ryu text-[10px] font-bold rounded-full shrink-0"
                   style={{
                     minWidth: 18, height: 18, padding: '0 5px',
-                    background: 'var(--ryu-primary)', color: '#fff',
+                    background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)',
                   }}
                 >
                   {draftCount}
@@ -219,11 +219,11 @@ useEffect(() => {
               href="/admin/early-access"
               className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-100"
               style={{
-                background: active ? 'rgba(249,115,22,0.10)' : 'transparent',
+                background: active ? 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)' : 'transparent',
                 color:      active ? 'var(--ryu-primary-deep)' : 'var(--ryu-text)',
               }}
               onMouseEnter={e => {
-                if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(249,115,22,0.05)'
+                if (!active) (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--ryu-primary) 5%, transparent)'
               }}
               onMouseLeave={e => {
                 if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
@@ -252,7 +252,7 @@ useEffect(() => {
         <div className="flex items-center gap-2 mb-2">
           <span
             className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-            style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+            style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
           >
             <Cloud size={13} />
           </span>
@@ -294,7 +294,7 @@ useEffect(() => {
           }}
         >
           {/* Avatar */}
-         <div className="flex items-center gap-1.5" style={{ color: '#DC2626' }}>
+         <div className="flex items-center gap-1.5" style={{ color: 'var(--ryu-danger)' }}>
             <LogOut size={14} />
             <span className="text-[11px] font-semibold">Log out</span>
           </div>

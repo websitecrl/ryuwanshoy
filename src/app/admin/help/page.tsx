@@ -94,8 +94,8 @@ export default function AdminHelpPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <span style={{
                 width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: section.danger ? '#FEE2E2' : 'rgba(249,115,22,0.10)',
-                color: section.danger ? '#DC2626' : 'var(--ryu-primary-deep)',
+                background: section.danger ? 'var(--ryu-danger-soft)' : 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)',
+                color: section.danger ? 'var(--ryu-danger)' : 'var(--ryu-primary-deep)',
               }}>
                 <section.Icon size={15} />
               </span>

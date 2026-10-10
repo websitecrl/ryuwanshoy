@@ -63,8 +63,8 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           className="font-mono-ryu"
           style={{
             position: 'absolute', bottom: 4, left: 4, zIndex: 20,
-            fontSize: 8, background: 'rgba(28,25,23,0.78)',
-            color: '#FFFBF5', padding: '1px 5px', borderRadius: 3,
+            fontSize: 8, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)',
+            color: 'var(--ryu-bg)', padding: '1px 5px', borderRadius: 3,
           }}
         >
           P{String(page.page_number).padStart(2, '0')}
@@ -79,9 +79,9 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           style={{
             position: 'absolute', top: 4, right: 4, zIndex: 20,
             width: 22, height: 22, borderRadius: 99,
-            background: 'rgba(220,38,38,0.9)', color: '#fff',
-            border: '1.5px solid rgba(255,255,255,0.9)',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+            background: 'var(--ryu-danger)', color: 'var(--ryu-on-danger)',
+            border: '1.5px solid color-mix(in srgb, var(--ryu-on-image) 90%, transparent)',
+            boxShadow: '0 1px 3px color-mix(in srgb, var(--ryu-shadow) 30%, transparent)',
             display: 'flex', alignItems: 'center',
             justifyContent: 'center', cursor: 'pointer',
             opacity: isDeleting ? 0.6 : 1, transition: 'transform 100ms ease',
@@ -228,7 +228,7 @@ export default function PageUploader({
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
           borderRadius: 8, padding: '10px 14px', fontSize: 13,
-          background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626',
+          background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)',
         }}>
           <AlertCircle size={14} style={{ flexShrink: 0 }} />
           {error}

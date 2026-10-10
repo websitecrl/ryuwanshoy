@@ -52,7 +52,7 @@ export default function AdminPostsPage() {
     )
   }
 
-  if (error) return <div className="p-8 text-sm" style={{ color: '#DC2626' }}>{error}</div>
+  if (error) return <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
 
   return (
     <div className="p-8 animate-page-in">
@@ -75,9 +75,9 @@ export default function AdminPostsPage() {
         <Link href="/admin/posts/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
             style={{
-              background: '#FEF08A', color: '#1E1E1E',
-              border: '1px solid #D4B800', cursor: 'pointer',
-              boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+              background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)',
+              border: '1px solid var(--ryu-accent-deep)', cursor: 'pointer',
+              boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
             }}>
             <Plus size={16} strokeWidth={2.5} /> New Illustration
           </Link>
@@ -97,7 +97,7 @@ export default function AdminPostsPage() {
             Upload your first illustration or artwork.
           </p>
           <Link href="/admin/posts/new" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
-              style={{ background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', cursor: 'pointer' }}>
+              style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', cursor: 'pointer' }}>
               <Plus size={15} strokeWidth={2.5} /> Create first illustration
             </Link>
         </div>

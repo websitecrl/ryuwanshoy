@@ -46,11 +46,11 @@ function SortablePage({
 
       {/* Page number + spread badge */}
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
-        <span style={{ background: 'rgba(0,0,0,0.7)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
+        <span style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 70%, transparent)', color: 'var(--ryu-on-image)', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
           P{String(idx + 1).padStart(2, '0')}
         </span>
         {page.is_spread && (
-          <span style={{ background: 'var(--ryu-primary)', color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, letterSpacing: 0.5 }}>
+          <span style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, letterSpacing: 0.5 }}>
             SPREAD
           </span>
         )}
@@ -60,13 +60,13 @@ function SortablePage({
       <button
         onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
-        style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'rgba(28,25,23,0.8)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
+        style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 80%, transparent)', color: 'var(--ryu-on-image)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
 >
   <X size={13} />
       </button>
 
       {/* Drag hint */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.5)', padding: '4px 0', textAlign: 'center', fontSize: 8, fontWeight: 700, color: '#fff', letterSpacing: 0.5, textTransform: 'uppercase', zIndex: 3 }}>
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', padding: '4px 0', textAlign: 'center', fontSize: 8, fontWeight: 700, color: 'var(--ryu-on-image)', letterSpacing: 0.5, textTransform: 'uppercase', zIndex: 3 }}>
         drag to reorder
       </div>
     </div>
@@ -223,7 +223,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} page{pages.length === 1 ? '' : 's'} added</span>}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
+                style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 + Browse files
               </button>
@@ -308,7 +308,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-3" style={{ color: 'var(--ryu-text-2)' }}>Quick Check</div>
               {quickCheck.map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0' }}>
-                  {item.done ? <CheckCircle2 size={14} style={{ color: '#16A34A', flexShrink: 0 }} /> : <Circle size={14} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />}
+                  {item.done ? <CheckCircle2 size={14} style={{ color: 'var(--ryu-success)', flexShrink: 0 }} /> : <Circle size={14} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />}
                   <span style={{ fontSize: 12.5, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
                 </div>
               ))}
@@ -338,7 +338,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
           <button
             disabled={submitting || pages.length === 0}
             onClick={() => proceed('next')}
-            style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}
+            style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)' }}
           >
             Next — Preview →
           </button>

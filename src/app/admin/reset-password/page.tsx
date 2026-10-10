@@ -113,16 +113,16 @@ export default function ResetPasswordPage() {
         {/* Dark overlay */}
         <div style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(28, 25, 23, 0.55)', zIndex: 1,
+          background: 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)', zIndex: 1,
         }} />
 
         {/* Card */}
         <div className="fade-up" style={{
           position: 'relative', zIndex: 2,
           width: '100%', maxWidth: 400,
-          background: '#FFFBF5', borderRadius: 20,
+          background: 'var(--ryu-bg)', borderRadius: 20,
           padding: '40px 36px',
-          boxShadow: '0 32px 80px -16px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.06)',
+          boxShadow: '0 32px 80px -16px color-mix(in srgb, var(--ryu-shadow) 55%, transparent), 0 0 0 1px color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
         }}>
 
           {/* ── MODE: request — enter email ──────────────────────────── */}
@@ -131,46 +131,46 @@ export default function ResetPasswordPage() {
               <div style={{ marginBottom: 20 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  background: '#FEF3C7', display: 'flex',
+                  background: 'var(--ryu-warning-soft)', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16,
                 }}>
-                  <KeyRound size={20} color="#D97706" />
+                  <KeyRound size={20} color="var(--ryu-warning)" />
                 </div>
                 <h2 style={{
                   fontFamily: 'var(--font-heading)', fontWeight: 700,
                   fontSize: 28, letterSpacing: -0.6,
-                  color: '#1C1917', margin: 0,
+                  color: 'var(--ryu-text)', margin: 0,
                 }}>
                   Reset your password
                 </h2>
-                <p style={{ fontSize: 13.5, color: '#78716C', marginTop: 8, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--ryu-text-2)', marginTop: 8, lineHeight: 1.5 }}>
                   Enter your admin email and we'll send you a reset link.
                 </p>
               </div>
 
               <form onSubmit={handleRequest} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: '#1C1917' }}>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                     Email <span style={{ color: 'var(--ryu-primary)' }}>*</span>
                   </label>
                   <div
                     style={{
                       display: 'flex', alignItems: 'center', borderRadius: 8,
-                      overflow: 'hidden', background: '#F5F0EB',
-                      border: '1px solid #E7E0D8',
+                      overflow: 'hidden', background: 'var(--ryu-surface-2)',
+                      border: '1px solid var(--ryu-border)',
                       transition: 'border-color 150ms, box-shadow 150ms',
                     }}
                     onFocusCapture={e => {
                       (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-primary)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px rgba(249,115,22,0.14)'
+                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px color-mix(in srgb, var(--ryu-primary) 14%, transparent)'
                     }}
                     onBlurCapture={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = '#E7E0D8'
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-border)'
                       ;(e.currentTarget as HTMLElement).style.boxShadow  = 'none'
                     }}
                   >
-                    <span style={{ paddingLeft: 12, color: '#78716C', display: 'flex', alignItems: 'center' }}>
+                    <span style={{ paddingLeft: 12, color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center' }}>
                       <AtSign size={15} />
                     </span>
                     <input
@@ -178,14 +178,14 @@ export default function ResetPasswordPage() {
                       placeholder="hello@ryuwanshoy.com" required disabled={isLoading}
                       style={{
                         flex: 1, background: 'transparent', padding: '11px 12px',
-                        fontSize: 14, color: '#1C1917', outline: 'none', border: 'none',
+                        fontSize: 14, color: 'var(--ryu-text)', outline: 'none', border: 'none',
                       }}
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <p style={{ fontSize: 13.5, textAlign: 'center', color: '#DC2626', margin: 0 }}>
+                  <p style={{ fontSize: 13.5, textAlign: 'center', color: 'var(--ryu-danger)', margin: 0 }}>
                     {error}
                   </p>
                 )}
@@ -198,9 +198,9 @@ export default function ResetPasswordPage() {
                     padding: '13px 20px', borderRadius: 10,
                     fontSize: 14, fontWeight: 600,
                     cursor: isLoading ? 'not-allowed' : 'pointer',
-                    background: 'var(--ryu-primary)', color: '#fff',
+                    background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)',
                     border: '1px solid var(--ryu-primary-deep)',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+                    boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
                     opacity: isLoading ? 0.65 : 1, transition: 'opacity 150ms',
                   }}
                 >
@@ -208,8 +208,8 @@ export default function ResetPasswordPage() {
                     <>
                       <span style={{
                         width: 16, height: 16, borderRadius: '50%',
-                        border: '2px solid rgba(255,255,255,0.4)',
-                        borderTopColor: '#fff',
+                        border: '2px solid color-mix(in srgb, var(--ryu-on-primary) 40%, transparent)',
+                        borderTopColor: 'var(--ryu-on-primary)',
                         animation: 'spin 0.7s linear infinite', flexShrink: 0,
                       }} />
                       Sending…
@@ -227,7 +227,7 @@ export default function ResetPasswordPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: 14,
-                background: '#F0FDF4', display: 'flex',
+                background: 'var(--ryu-success-soft)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 20px',
                 fontSize: 24,
@@ -237,15 +237,15 @@ export default function ResetPasswordPage() {
               <h2 style={{
                 fontFamily: 'var(--font-heading)', fontWeight: 700,
                 fontSize: 26, letterSpacing: -0.5,
-                color: '#1C1917', margin: '0 0 10px',
+                color: 'var(--ryu-text)', margin: '0 0 10px',
               }}>
                 Check your email
               </h2>
-              <p style={{ fontSize: 13.5, color: '#78716C', lineHeight: 1.6, margin: '0 0 24px' }}>
-                We sent a reset link to <strong style={{ color: '#1C1917' }}>{email}</strong>.
+              <p style={{ fontSize: 13.5, color: 'var(--ryu-text-2)', lineHeight: 1.6, margin: '0 0 24px' }}>
+                We sent a reset link to <strong style={{ color: 'var(--ryu-text)' }}>{email}</strong>.
                 Click the link in the email to set a new password.
               </p>
-              <p style={{ fontSize: 12, color: '#A8A29E' }}>
+              <p style={{ fontSize: 12, color: 'var(--ryu-text-3)' }}>
                 Didn't get it? Check your spam folder or{' '}
                 <button
                   onClick={() => setSent(false)}
@@ -263,20 +263,20 @@ export default function ResetPasswordPage() {
               <div style={{ marginBottom: 20 }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: 12,
-                  background: '#FEF3C7', display: 'flex',
+                  background: 'var(--ryu-warning-soft)', display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
                   marginBottom: 16,
                 }}>
-                  <KeyRound size={20} color="#D97706" />
+                  <KeyRound size={20} color="var(--ryu-warning)" />
                 </div>
                 <h2 style={{
                   fontFamily: 'var(--font-heading)', fontWeight: 700,
                   fontSize: 28, letterSpacing: -0.6,
-                  color: '#1C1917', margin: 0,
+                  color: 'var(--ryu-text)', margin: 0,
                 }}>
                   Set new password
                 </h2>
-                <p style={{ fontSize: 13.5, color: '#78716C', marginTop: 8, lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13.5, color: 'var(--ryu-text-2)', marginTop: 8, lineHeight: 1.5 }}>
                   Choose a strong password for your studio.
                 </p>
               </div>
@@ -285,21 +285,21 @@ export default function ResetPasswordPage() {
 
                 {/* New password */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: '#1C1917' }}>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                     New password <span style={{ color: 'var(--ryu-primary)' }}>*</span>
                   </label>
                   <div
                     style={{
                       display: 'flex', alignItems: 'center', borderRadius: 8,
-                      background: '#F5F0EB', border: '1px solid #E7E0D8',
+                      background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)',
                       transition: 'border-color 150ms, box-shadow 150ms',
                     }}
                     onFocusCapture={e => {
                       (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-primary)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px rgba(249,115,22,0.14)'
+                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px color-mix(in srgb, var(--ryu-primary) 14%, transparent)'
                     }}
                     onBlurCapture={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = '#E7E0D8'
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-border)'
                       ;(e.currentTarget as HTMLElement).style.boxShadow  = 'none'
                     }}
                   >
@@ -309,11 +309,11 @@ export default function ResetPasswordPage() {
                       placeholder="Min. 8 characters" required disabled={isLoading}
                       style={{
                         flex: 1, background: 'transparent', padding: '11px 12px',
-                        fontSize: 14, color: '#1C1917', outline: 'none', border: 'none',
+                        fontSize: 14, color: 'var(--ryu-text)', outline: 'none', border: 'none',
                       }}
                     />
                     <button type="button" onClick={() => setShowPw(s => !s)}
-                      style={{ paddingRight: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#78716C', display: 'flex', alignItems: 'center' }}>
+                      style={{ paddingRight: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center' }}>
                       {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
@@ -321,21 +321,21 @@ export default function ResetPasswordPage() {
 
                 {/* Confirm password */}
                 <div>
-                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: '#1C1917' }}>
+                  <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                     Confirm password <span style={{ color: 'var(--ryu-primary)' }}>*</span>
                   </label>
                   <div
                     style={{
                       display: 'flex', alignItems: 'center', borderRadius: 8,
-                      background: '#F5F0EB', border: '1px solid #E7E0D8',
+                      background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)',
                       transition: 'border-color 150ms, box-shadow 150ms',
                     }}
                     onFocusCapture={e => {
                       (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-primary)'
-                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px rgba(249,115,22,0.14)'
+                      ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px color-mix(in srgb, var(--ryu-primary) 14%, transparent)'
                     }}
                     onBlurCapture={e => {
-                      (e.currentTarget as HTMLElement).style.borderColor = '#E7E0D8'
+                      (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-border)'
                       ;(e.currentTarget as HTMLElement).style.boxShadow  = 'none'
                     }}
                   >
@@ -345,18 +345,18 @@ export default function ResetPasswordPage() {
                       placeholder="Repeat your password" required disabled={isLoading}
                       style={{
                         flex: 1, background: 'transparent', padding: '11px 12px',
-                        fontSize: 14, color: '#1C1917', outline: 'none', border: 'none',
+                        fontSize: 14, color: 'var(--ryu-text)', outline: 'none', border: 'none',
                       }}
                     />
                     <button type="button" onClick={() => setShowCf(s => !s)}
-                      style={{ paddingRight: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#78716C', display: 'flex', alignItems: 'center' }}>
+                      style={{ paddingRight: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center' }}>
                       {showCf ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
 
                 {error && (
-                  <p style={{ fontSize: 13.5, textAlign: 'center', color: '#DC2626', margin: 0 }}>
+                  <p style={{ fontSize: 13.5, textAlign: 'center', color: 'var(--ryu-danger)', margin: 0 }}>
                     {error}
                   </p>
                 )}
@@ -369,9 +369,9 @@ export default function ResetPasswordPage() {
                     padding: '13px 20px', borderRadius: 10,
                     fontSize: 14, fontWeight: 600,
                     cursor: isLoading ? 'not-allowed' : 'pointer',
-                    background: 'var(--ryu-primary)', color: '#fff',
+                    background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)',
                     border: '1px solid var(--ryu-primary-deep)',
-                    boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+                    boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
                     opacity: isLoading ? 0.65 : 1, transition: 'opacity 150ms',
                   }}
                 >
@@ -379,8 +379,8 @@ export default function ResetPasswordPage() {
                     <>
                       <span style={{
                         width: 16, height: 16, borderRadius: '50%',
-                        border: '2px solid rgba(255,255,255,0.4)',
-                        borderTopColor: '#fff',
+                        border: '2px solid color-mix(in srgb, var(--ryu-on-primary) 40%, transparent)',
+                        borderTopColor: 'var(--ryu-on-primary)',
                         animation: 'spin 0.7s linear infinite', flexShrink: 0,
                       }} />
                       Updating…
@@ -398,7 +398,7 @@ export default function ResetPasswordPage() {
                         padding: '11px 20px', borderRadius: 10,
                         fontSize: 13.5, fontWeight: 500,
                         cursor: 'pointer', background: 'none',
-                        border: '1px solid #E7E0D8', color: '#78716C',
+                        border: '1px solid var(--ryu-border)', color: 'var(--ryu-text-2)',
                         transition: 'border-color 150ms, color 150ms',
                     }}
                     onMouseEnter={e => {
@@ -406,8 +406,8 @@ export default function ResetPasswordPage() {
                         e.currentTarget.style.color = 'var(--ryu-primary-deep)'
                     }}
                     onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = '#E7E0D8'
-                        e.currentTarget.style.color = '#78716C'
+                        e.currentTarget.style.borderColor = 'var(--ryu-border)'
+                        e.currentTarget.style.color = 'var(--ryu-text-2)'
                     }}
                     >
                     <ArrowLeft size={14} /> Back
@@ -421,7 +421,7 @@ export default function ResetPasswordPage() {
             <div style={{ textAlign: 'center' }}>
               <div style={{
                 width: 52, height: 52, borderRadius: 14,
-                background: '#F0FDF4', display: 'flex',
+                background: 'var(--ryu-success-soft)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 20px', fontSize: 24,
               }}>
@@ -430,11 +430,11 @@ export default function ResetPasswordPage() {
               <h2 style={{
                 fontFamily: 'var(--font-heading)', fontWeight: 700,
                 fontSize: 26, letterSpacing: -0.5,
-                color: '#1C1917', margin: '0 0 10px',
+                color: 'var(--ryu-text)', margin: '0 0 10px',
               }}>
                 Password updated!
               </h2>
-              <p style={{ fontSize: 13.5, color: '#78716C', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 13.5, color: 'var(--ryu-text-2)', lineHeight: 1.6 }}>
                 Redirecting you back to the login page…
               </p>
             </div>
@@ -442,15 +442,15 @@ export default function ResetPasswordPage() {
 
           {/* Back to login — shown on request mode only */}
           {mode === 'request' && (
-            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px dashed #E7E0D8' }}>
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px dashed var(--ryu-border)' }}>
               <a
                 href="/admin"
                 style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
-                    fontSize: 12.5, color: '#78716C', textDecoration: 'none', fontWeight: 500,
+                    fontSize: 12.5, color: 'var(--ryu-text-2)', textDecoration: 'none', fontWeight: 500,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary-deep)')}
-                onMouseLeave={e => (e.currentTarget.style.color = '#78716C')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--ryu-text-2)')}
                 >
                 <ArrowLeft size={13} /> Back to login
                 </a>

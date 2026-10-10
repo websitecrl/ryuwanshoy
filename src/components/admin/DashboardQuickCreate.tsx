@@ -4,9 +4,9 @@ import Link from 'next/link'
 import { BookOpen, BookMarked, Image } from 'lucide-react'
 
 const actions = [
-  { label: 'New Series',  icon: BookOpen,   href: '/admin/series/new',   bg: 'var(--ryu-primary-soft)', fg: '#9A3412' },
-  { label: 'New Chapter', icon: BookMarked, href: '/admin/chapters/new', bg: '#CCFBF1',                 fg: '#0F766E' },
-  { label: 'New Post',    icon: Image,      href: '/admin/posts/new',    bg: 'var(--ryu-accent)',       fg: '#713F12' },
+  { label: 'New Series',  icon: BookOpen,   href: '/admin/series/new',   bg: 'var(--ryu-primary-soft)', fg: 'var(--ryu-on-primary-soft)' },
+  { label: 'New Chapter', icon: BookMarked, href: '/admin/chapters/new', bg: 'var(--ryu-tag-meme-bg)',                 fg: 'var(--ryu-tag-meme-fg)' },
+  { label: 'New Post',    icon: Image,      href: '/admin/posts/new',    bg: 'var(--ryu-accent)',       fg: 'var(--ryu-on-accent)' },
 ]
 
 export default function DashboardQuickCreate() {

@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(28, 25, 23, 0.55)',
+          background: 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)',
           zIndex: 1,
         }} />
 
@@ -109,10 +109,10 @@ export default function AdminLoginPage() {
             zIndex: 2,
             width: '100%',
             maxWidth: 400,
-            background: '#FFFBF5',
+            background: 'var(--ryu-bg)',
             borderRadius: 20,
             padding: '40px 36px',
-            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,0,0,0.06)',
+            boxShadow: '0 32px 80px -16px color-mix(in srgb, var(--ryu-shadow) 55%, transparent), 0 0 0 1px color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
           }}
         >
 
@@ -122,7 +122,7 @@ export default function AdminLoginPage() {
               fontFamily: 'var(--font-heading)', fontWeight: 700,
               fontSize: 32, letterSpacing: -0.7,
               marginTop: 0, marginBottom: 24,
-              color: '#1C1917',
+              color: 'var(--ryu-text)',
             }}
           >
             Sign in to your studio
@@ -132,26 +132,26 @@ export default function AdminLoginPage() {
 
             {/* Email */}
             <div className="fade-up fade-up-1">
-              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: '#1C1917' }}>
+              <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                 Email <span style={{ color: 'var(--ryu-primary)' }}>*</span>
               </label>
               <div
                 style={{
                   display: 'flex', alignItems: 'center', borderRadius: 8,
-                  overflow: 'hidden', background: '#F5F0EB',
-                  border: '1px solid #E7E0D8',
+                  overflow: 'hidden', background: 'var(--ryu-surface-2)',
+                  border: '1px solid var(--ryu-border)',
                   transition: 'border-color 150ms, box-shadow 150ms',
                 }}
                 onFocusCapture={e => {
                   (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-primary)'
-                  ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px rgba(249,115,22,0.14)'
+                  ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px color-mix(in srgb, var(--ryu-primary) 14%, transparent)'
                 }}
                 onBlurCapture={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = '#E7E0D8'
+                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-border)'
                   ;(e.currentTarget as HTMLElement).style.boxShadow  = 'none'
                 }}
               >
-                <span style={{ paddingLeft: 12, color: '#78716C', display: 'flex', alignItems: 'center' }}>
+                <span style={{ paddingLeft: 12, color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center' }}>
                   <AtSign size={15} />
                 </span>
                 <input
@@ -159,7 +159,7 @@ export default function AdminLoginPage() {
                   placeholder="hello@ryuwanshoy.com" required disabled={isLoading}
                   style={{
                     flex: 1, background: 'transparent', padding: '11px 12px',
-                    fontSize: 14, color: '#1C1917', outline: 'none', border: 'none',
+                    fontSize: 14, color: 'var(--ryu-text)', outline: 'none', border: 'none',
                   }}
                 />
               </div>
@@ -168,7 +168,7 @@ export default function AdminLoginPage() {
             {/* Password */}
             <div className="fade-up fade-up-2">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ fontSize: 12.5, fontWeight: 600, color: '#1C1917' }}>
+                <label style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ryu-text)' }}>
                   Password <span style={{ color: 'var(--ryu-primary)' }}>*</span>
                 </label>
                 <button
@@ -176,10 +176,10 @@ export default function AdminLoginPage() {
                   onClick={() => router.push('/admin/reset-password')}
                   style={{ 
                     background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: 12, color: '#78716C', padding: 0,
+                    fontSize: 12, color: 'var(--ryu-text-2)', padding: 0,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--ryu-primary-deep)')}
-                  onMouseLeave={e => (e.currentTarget.style.color = '#78716C')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--ryu-text-2)')}
                 >
                   Forgot password?
                 </button>
@@ -187,20 +187,20 @@ export default function AdminLoginPage() {
               <div
                 style={{
                   display: 'flex', alignItems: 'center', borderRadius: 8,
-                  background: '#F5F0EB',
-                  border: '1px solid #E7E0D8',
+                  background: 'var(--ryu-surface-2)',
+                  border: '1px solid var(--ryu-border)',
                   transition: 'border-color 150ms, box-shadow 150ms',
                 }}
                 onFocusCapture={e => {
                   (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-primary)'
-                  ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px rgba(249,115,22,0.14)'
+                  ;(e.currentTarget as HTMLElement).style.boxShadow  = '0 0 0 3px color-mix(in srgb, var(--ryu-primary) 14%, transparent)'
                 }}
                 onBlurCapture={e => {
-                  (e.currentTarget as HTMLElement).style.borderColor = '#E7E0D8'
+                  (e.currentTarget as HTMLElement).style.borderColor = 'var(--ryu-border)'
                   ;(e.currentTarget as HTMLElement).style.boxShadow  = 'none'
                 }}
               >
-                <span style={{ paddingLeft: 12, color: '#78716C', display: 'flex', alignItems: 'center' }}>
+                <span style={{ paddingLeft: 12, color: 'var(--ryu-text-2)', display: 'flex', alignItems: 'center' }}>
                   <Lock size={14} />
                 </span>
                 <input
@@ -208,14 +208,14 @@ export default function AdminLoginPage() {
                   placeholder="Your admin password" required disabled={isLoading}
                   style={{
                     flex: 1, background: 'transparent', padding: '11px 12px',
-                    fontSize: 14, color: '#1C1917', outline: 'none', border: 'none',
+                    fontSize: 14, color: 'var(--ryu-text)', outline: 'none', border: 'none',
                   }}
                 />
                 <button
                   type="button" onClick={() => setShowPw(s => !s)}
                   style={{
                     paddingRight: 12, background: 'none', border: 'none',
-                    cursor: 'pointer', color: '#78716C',
+                    cursor: 'pointer', color: 'var(--ryu-text-2)',
                     display: 'flex', alignItems: 'center',
                   }}
                 >
@@ -226,7 +226,7 @@ export default function AdminLoginPage() {
 
             {/* Error */}
             {error && (
-              <p style={{ fontSize: 13.5, textAlign: 'center', color: '#DC2626', margin: 0 }}>
+              <p style={{ fontSize: 13.5, textAlign: 'center', color: 'var(--ryu-danger)', margin: 0 }}>
                 {error}
               </p>
             )}
@@ -241,9 +241,9 @@ export default function AdminLoginPage() {
                   padding: '13px 20px', borderRadius: 10,
                   fontSize: 14, fontWeight: 600,
                   cursor: isLoading ? 'not-allowed' : 'pointer',
-                  background: 'var(--ryu-primary)', color: '#fff',
+                  background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)',
                   border: '1px solid var(--ryu-primary-deep)',
-                  boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
                   opacity: isLoading ? 0.65 : 1, transition: 'opacity 150ms',
                 }}
               >
@@ -251,8 +251,8 @@ export default function AdminLoginPage() {
                   <>
                     <span style={{
                       width: 16, height: 16, borderRadius: '50%',
-                      border: '2px solid rgba(255,255,255,0.4)',
-                      borderTopColor: '#fff',
+                      border: '2px solid color-mix(in srgb, var(--ryu-on-primary) 40%, transparent)',
+                      borderTopColor: 'var(--ryu-on-primary)',
                       animation: 'spin 0.7s linear infinite', flexShrink: 0,
                     }} />
                     Signing in…
@@ -269,8 +269,8 @@ export default function AdminLoginPage() {
             className="fade-up fade-up-4"
             style={{
               marginTop: 28, paddingTop: 20,
-              borderTop: '1px dashed #E7E0D8',
-              fontSize: 12, color: '#78716C',
+              borderTop: '1px dashed var(--ryu-border)',
+              fontSize: 12, color: 'var(--ryu-text-2)',
             }}
           >
             <span>

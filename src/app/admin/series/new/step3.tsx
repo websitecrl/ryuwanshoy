@@ -28,10 +28,10 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: '#111', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: 'var(--ryu-surface-2)', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
       {pages.map((page, idx) => (
         <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: page.is_spread ? 700 : 500 }}>
-          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+          <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
             P{String(idx + 1).padStart(2, '0')}{page.is_spread ? ' SPREAD' : ''}
           </div>
           <Image
@@ -119,10 +119,10 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         }
       `}</style>
 
-      <div style={{ background: '#111', borderRadius: 10, padding: '20px 16px 20px' }}>
+      <div style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
 
         {/* Spread label */}
-        <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: 1 }}>
+        <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace', letterSpacing: 1 }}>
           P{String(spread * 2 + 1).padStart(2, '0')}
           {rightLeaf ? ` — P${String(spread * 2 + 2).padStart(2, '0')}` : ''}
           {leftLeaf?.is_spread ? ' · SPREAD' : ''}
@@ -132,7 +132,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch' }}>
 
         {/* ── LEFT PAGE ── */}
-        <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: '#1a1a1a', borderRadius: '6px 0 0 6px', overflow: 'hidden', flexShrink: 0 }}>
+        <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: 'var(--ryu-surface-3)', borderRadius: '6px 0 0 6px', overflow: 'hidden', flexShrink: 0 }}>
           {leftLeaf ? (
             <div style={{
               position: 'absolute', inset: 0,
@@ -142,9 +142,9 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
               backgroundRepeat: 'no-repeat',
             }} />
           ) : (
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>—</div>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ryu-text-3)', fontSize: 13 }}>—</div>
           )}
-          <div style={{ position: 'absolute', bottom: 8, left: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+          <div style={{ position: 'absolute', bottom: 8, left: 10, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
             P{String(spread * 2 + 1).padStart(2, '0')}{leftLeaf?.spreadSide ? ' L' : ''}
           </div>
           {flipping && direction === 'prev' && showNext && ghostLeaf && (
@@ -161,10 +161,10 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         </div>
 
           {/* ── SPINE ── */}
-          <div style={{ width: 8, flexShrink: 0, background: 'linear-gradient(to right, #0a0a0a 0%, #3a3a3a 30%, #2a2a2a 70%, #0a0a0a 100%)', boxShadow: '-3px 0 10px rgba(0,0,0,0.6), 3px 0 10px rgba(0,0,0,0.6)', zIndex: 3 }} />
+          <div style={{ width: 8, flexShrink: 0, background: 'linear-gradient(to right, var(--ryu-surface-2) 0%, var(--ryu-border) 30%, var(--ryu-border) 70%, var(--ryu-surface-2) 100%)', boxShadow: '-3px 0 10px color-mix(in srgb, var(--ryu-shadow) 60%, transparent), 3px 0 10px color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', zIndex: 3 }} />
 
           {/* ── RIGHT PAGE ── */}
-          <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: '#1a1a1a', borderRadius: '0 6px 6px 0', overflow: 'hidden', flexShrink: 0 }}>
+          <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: 'var(--ryu-surface-3)', borderRadius: '0 6px 6px 0', overflow: 'hidden', flexShrink: 0 }}>
             {rightLeaf ? (
               <div style={{
                 position: 'absolute', inset: 0,
@@ -174,10 +174,10 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
                 backgroundRepeat: 'no-repeat',
               }} />
             ) : (
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#333', fontSize: 13 }}>End of chapter</div>
+              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ryu-text-3)', fontSize: 13 }}>End of chapter</div>
             )}
             {rightLeaf && (
-              <div style={{ position: 'absolute', bottom: 8, right: 10, background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
+              <div style={{ position: 'absolute', bottom: 8, right: 10, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
                 P{String(spread * 2 + 2).padStart(2, '0')}{rightLeaf.spreadSide ? ' R' : ''}
               </div>
             )}
@@ -199,18 +199,18 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         {/* Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
           <button onClick={() => go('prev')} disabled={spread === 0 || flipping}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? '#1a1a1a' : '#2a2a2a', color: spread === 0 ? '#444' : '#ccc', border: '1px solid #333', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? 'var(--ryu-surface-2)' : 'var(--ryu-surface-1)', color: spread === 0 ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', border: '1px solid var(--ryu-border)', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             <ChevronLeft size={15} /> Prev
           </button>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {Array.from({ length: totalSpreads }).map((_, i) => (
               <button key={i}
                 onClick={() => { if (!flipping && i !== spread) { setDirection(i > spread ? 'next' : 'prev'); setSpread(i) } }}
-                style={{ width: i === spread ? 20 : 6, height: 6, borderRadius: 99, background: i === spread ? 'var(--ryu-primary)' : '#444', border: 'none', cursor: 'pointer', transition: 'all 200ms ease', padding: 0 }} />
+                style={{ width: i === spread ? 20 : 6, height: 6, borderRadius: 99, background: i === spread ? 'var(--ryu-primary)' : 'var(--ryu-border)', border: 'none', cursor: 'pointer', transition: 'all 200ms ease', padding: 0 }} />
             ))}
           </div>
           <button onClick={() => go('next')} disabled={spread === totalSpreads - 1 || flipping}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? '#1a1a1a' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? '#444' : '#fff', border: `1px solid ${spread === totalSpreads - 1 ? '#333' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? 'var(--ryu-surface-2)' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? 'var(--ryu-text-3)' : 'var(--ryu-on-primary)', border: `1px solid ${spread === totalSpreads - 1 ? 'var(--ryu-border)' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             Next <ChevronRight size={15} />
           </button>
         </div>
@@ -249,7 +249,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
 
           {/* Partial save — rows exist unpublished, some pages still need uploading */}
           {hasSavedRows && !publishing && pendingCount > 0 && (
-            <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid #FCA5A5', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
+            <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
               <strong>Nothing is published yet.</strong>{' '}
               {failedPages.length > 0 && <>Page {failedPages.join(', ')} failed to upload. </>}
               {pendingCount} of {uploadedPages.length} pages still need uploading.
@@ -271,11 +271,11 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               {/* Mode toggle */}
               <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 10, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
                 <button onClick={() => setMode('scroll')}
-                  style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? '#fff' : 'var(--ryu-text-2)' }}>
+                  style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   ⊞ Scroll mode
                 </button>
                 <button onClick={() => setMode('flip')}
-                  style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'flip' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'flip' ? '#fff' : 'var(--ryu-text-2)' }}>
+                  style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'flip' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'flip' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   ⊡ Flip 
                 </button>
               </div>
@@ -305,14 +305,14 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
             <Card>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Pre-flight</div>
-                <span style={{ fontSize: 11.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: preflightDone === preflight.length ? '#DCFCE7' : 'var(--ryu-primary-soft)', color: preflightDone === preflight.length ? '#15803D' : 'var(--ryu-primary-deep)', border: '1px solid var(--ryu-border)' }}>
+                <span style={{ fontSize: 11.5, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: preflightDone === preflight.length ? 'var(--ryu-success-soft)' : 'var(--ryu-primary-soft)', color: preflightDone === preflight.length ? 'var(--ryu-success)' : 'var(--ryu-primary-deep)', border: '1px solid var(--ryu-border)' }}>
                   {preflightDone} / {preflight.length} ready
                 </span>
               </div>
               {preflight.map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '5px 0' }}>
                   {item.done
-                    ? <CheckCircle2 size={14} style={{ color: '#16A34A', flexShrink: 0 }} />
+                    ? <CheckCircle2 size={14} style={{ color: 'var(--ryu-success)', flexShrink: 0 }} />
                     : <Circle      size={14} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
                   }
                   <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-3)' }}>{item.label}</span>
@@ -329,8 +329,8 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
                   {seriesData.coverPreview
                     ? <Image src={seriesData.coverPreview} alt="Cover" fill className="object-cover" />
                     : (
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: 6, background: 'linear-gradient(to bottom, #3D1A0E, #7C2D12)' }}>
-                        <p style={{ fontSize: 9.5, fontWeight: 700, color: '#fff', textAlign: 'center', lineHeight: 1.2 }}>{seriesData.title || 'Untitled'}</p>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', padding: 6, background: 'var(--ryu-cover-1)' }}>
+                        <p style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--ryu-on-image)', textAlign: 'center', lineHeight: 1.2 }}>{seriesData.title || 'Untitled'}</p>
                       </div>
                     )
                   }
@@ -384,7 +384,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
             </button>
           )}
           <button disabled={publishing} onClick={onPublish}
-            style={{ padding: '10px 28px', borderRadius: 8, border: '1px solid #15803D', background: '#16A34A', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: publishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.1)' }}>
+            style={{ padding: '10px 28px', borderRadius: 8, border: '1px solid var(--ryu-success)', background: 'var(--ryu-success)', color: 'var(--ryu-on-success)', fontSize: 13.5, fontWeight: 600, cursor: publishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 10%, transparent)' }}>
             {publishing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
             {publishing ? 'Publishing...' : 'Publish series now'}
           </button>
