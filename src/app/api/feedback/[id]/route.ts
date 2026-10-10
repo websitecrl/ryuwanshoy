@@ -3,8 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { countUnreadFeedback } from '@/lib/feedback-server'
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+import { isUuid } from '@/lib/validation'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
@@ -15,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   if (auth instanceof NextResponse) return auth
 
   const { id } = await params
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  if (!isUuid(id)) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
 
   let body: { is_read?: unknown }
   try {
@@ -49,7 +48,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   if (auth instanceof NextResponse) return auth
 
   const { id } = await params
-  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
+  if (!isUuid(id)) return NextResponse.json({ error: 'Not found.' }, { status: 404 })
 
   const { error } = await supabaseAdmin.from('feedback').delete().eq('id', id)
   if (error) {
