@@ -7,8 +7,7 @@ import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'l
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { COMIC_PAGE_MAX_WIDTH } from '@/lib/constants'
-import { keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
+import { isSpreadPage, keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
 
@@ -131,7 +130,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         toast.error(`"${file.name}": ${err instanceof Error ? err.message : 'could not be read.'}`)
         return null
       }
-      const is_spread = dim.width > COMIC_PAGE_MAX_WIDTH
+      const is_spread = isSpreadPage(dim.width, dim.height)
       const oversized = warnIfOversizedPage(file, dim.width, dim.height)
       const preview   = URL.createObjectURL(file)
       return { id: crypto.randomUUID(), file, preview, width: dim.width, height: dim.height, oversized, is_spread }
@@ -166,7 +165,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   const quickCheck = [
     { label: 'Chapter 1 ready',                              done: true },
-    { label: `At least one page uploaded (${pages.length})`, done: pages.length > 0 },
+    { label: `At least one page added (${pages.length})`, done: pages.length > 0 },
     { label: 'Chapter title (optional)',                      done: chapterTitle.trim().length > 0 },
   ]
 
@@ -221,7 +220,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 2 }}>Select comic pages</p>
                 <p style={{ fontSize: 11.5, color: 'var(--ryu-text-3)' }}>Drop multiple files at once · JPG / PNG / WebP · up to 25 MB per page</p>
               </div>
-              {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} uploaded</span>}
+              {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} page{pages.length === 1 ? '' : 's'} added</span>}
               <button
                 onClick={() => fileInputRef.current?.click()}
                 style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}

@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { UNREADABLE_IMAGE_MESSAGE } from '@/lib/image-compress'
-import { describePageError, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
+import { describePageError, isSpreadPage, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -193,7 +193,7 @@ export default function NewChapterPage() {
     newPages.forEach(page => {
       const img = new window.Image()
       img.onload = () => {
-        const isSpread = img.width > img.height
+        const isSpread = isSpreadPage(img.naturalWidth, img.naturalHeight)
         warnIfOversizedPage(page.file, img.naturalWidth, img.naturalHeight)
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, isSpread } : p))
       }
