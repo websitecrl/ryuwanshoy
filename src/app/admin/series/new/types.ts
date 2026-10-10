@@ -69,17 +69,6 @@ export function generateSlug(title: string): string {
     .replace(/-+/g, '-')
 }
 
-export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
-  return new Promise(resolve => {
-    const img = new window.Image()
-    img.onload = () => {
-      resolve({ width: img.naturalWidth, height: img.naturalHeight })
-      URL.revokeObjectURL(img.src)
-    }
-    img.src = URL.createObjectURL(file)
-  })
-}
-
 
 export const BOTTOM_BAR: React.CSSProperties = {
   position: 'sticky',

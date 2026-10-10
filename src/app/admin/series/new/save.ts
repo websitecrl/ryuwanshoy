@@ -1,5 +1,5 @@
 import { compressImage } from '@/lib/image-compress'
-import { type LocalPage, type SeriesFormData } from './types'
+import { type SeriesFormData } from './types'
 
 // Fetch helpers for the wizard's single save point. The wizard writes nothing
 // to the DB until "Save as draft" or "Publish"; rows are always created
@@ -64,28 +64,6 @@ export async function createChapter(seriesId: string, title: string): Promise<st
   const json = await res.json()
   if (json.error) throw new Error(json.error)
   return json.data.id
-}
-
-/**
- * Uploads one page. The API appends it as the chapter's last page, so callers
- * must upload in reading order and stop at the first failure.
- *
- * @returns true when the page was stored
- */
-export async function uploadPage(chapterId: string, page: LocalPage): Promise<boolean> {
-  try {
-    // Same fix as the standalone PageUploader — shrink before sending so
-    // the Worker never has to decode/hash a raw 2550x3300 original.
-    const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
-    const res  = await fetch('/api/pages', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.is_spread ?? false }),
-    })
-    const json = await res.json()
-    return res.ok && !json.error
-  } catch {
-    return false
-  }
 }
 
 /** Sets is_published on a series or chapter. Throws with the API's message. */

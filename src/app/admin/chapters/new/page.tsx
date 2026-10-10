@@ -19,7 +19,8 @@ import {
   SortableContext, arrayMove, rectSortingStrategy, useSortable,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { compressImage } from '@/lib/image-compress'
+import { UNREADABLE_IMAGE_MESSAGE } from '@/lib/image-compress'
+import { describePageError, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -172,7 +173,7 @@ export default function NewChapterPage() {
   }, [selectedSeriesId])
 
   function addFiles(files: File[]) {
-    const imgs = files.filter(f => f.type.startsWith('image/'))
+    const imgs = keepImageFiles(files)
     if (!imgs.length) return
 
     const newPages: PageFile[] = imgs.map(file => ({
@@ -193,7 +194,13 @@ export default function NewChapterPage() {
       const img = new window.Image()
       img.onload = () => {
         const isSpread = img.width > img.height
+        warnIfOversizedPage(page.file, img.naturalWidth, img.naturalHeight)
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, isSpread } : p))
+      }
+      // Flag it now rather than at publish time; the upload would fail on it.
+      img.onerror = () => {
+        setPages(prev => prev.map(p => p.id === page.id ? { ...p, error: UNREADABLE_IMAGE_MESSAGE } : p))
+        toast.error(`"${page.file.name}": ${UNREADABLE_IMAGE_MESSAGE}`)
       }
       img.src = page.preview
     })
@@ -247,17 +254,27 @@ export default function NewChapterPage() {
       // pages[] reflects the current (possibly reordered) sequence. The server
       // assigns page_number as max+1, so uploading strictly one at a time, in
       // order, is what keeps the saved order matching what's shown on screen.
+      const failures: string[] = []
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i]; if (!page) continue
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
         try {
-          const imageBase64 = await compressImage(page.file, { maxDimension: 1600, forceJpeg: true })
-          const pgRes  = await fetch('/api/pages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: page.isSpread }) })
-          const pgJson = await pgRes.json()
-          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: pgRes.ok && !pgJson.error, error: (!pgRes.ok || pgJson.error) ? 'Upload failed' : null } : p))
-        } catch {
-          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, error: 'Upload failed' } : p))
+          await uploadComicPage(chapterId, page.file, page.isSpread)
+          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: true, error: null } : p))
+        } catch (err) {
+          const message = describePageError(i + 1, page.file, err)
+          failures.push(message)
+          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, error: message } : p))
         }
+      }
+
+      // The page redirects below, so per-page errors would never be seen;
+      // the toast survives the navigation (Toaster lives in the root layout).
+      if (failures.length) {
+        toast.error(
+          `${failures.length} page(s) failed to upload. Add them from the chapter's edit page. ${failures.join(' ')}`,
+          { duration: 15_000 }
+        )
       }
 
       if (mode === 'draft') {

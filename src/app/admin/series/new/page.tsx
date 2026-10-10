@@ -9,7 +9,8 @@ import Step1 from './step1'
 import Step2 from './step2'
 import Step3 from './step3'
 import { type SeriesFormData, type LocalPage, type SaveState } from './types'
-import { createSeries, createChapter, uploadPage, setPublished } from './save'
+import { createSeries, createChapter, setPublished } from './save'
+import { describePageError, uploadComicPage } from '@/lib/page-files'
 import { setWizardSaving } from '@/lib/wizard-saving'
 
 // ── Default form state ─────────────────────────────────────────────────────
@@ -124,10 +125,13 @@ function WizardShell() {
         if (!page || page.uploaded) continue
         setSaving({ kind, page: { current: i + 1, total: pages.length } })
         patchPage(page.id, { uploading: true, error: null })
-        const ok = await uploadPage(ids.chapterId, page)
-        patchPage(page.id, { uploading: false, uploaded: ok, error: ok ? null : 'Upload failed' })
-        if (!ok) {
-          toast.error(`Page ${i + 1} failed to upload. Nothing was published. Retry to upload the remaining pages.`)
+        try {
+          await uploadComicPage(ids.chapterId, page.file, page.is_spread ?? false)
+          patchPage(page.id, { uploading: false, uploaded: true, error: null })
+        } catch (err) {
+          const message = describePageError(i + 1, page.file, err)
+          patchPage(page.id, { uploading: false, uploaded: false, error: message })
+          toast.error(`${message} Nothing was published. Retry to upload the remaining pages.`)
           return false
         }
       }
