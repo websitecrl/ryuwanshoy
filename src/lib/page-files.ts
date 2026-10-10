@@ -77,6 +77,20 @@ export function warnIfOversizedPage(file: File, width: number, height: number): 
   return true
 }
 
+/** Every stored page is this many px tall, single or spread (see uploadComicPage). */
+const PAGE_HEIGHT = 1600
+/** Widest a stored spread may get (very wide panoramas). */
+const MAX_SPREAD_WIDTH = 3200
+
+/**
+ * The one spread rule for every uploader: a landscape page (wider than
+ * tall) is a double page spread. The wizard used to call anything wider
+ * than 2550px a spread, which caught tall high resolution portrait scans.
+ */
+export function isSpreadPage(width: number, height: number): boolean {
+  return width > height
+}
+
 /**
  * Compresses one page and appends it to the chapter (POST /api/pages).
  *
@@ -84,8 +98,11 @@ export function warnIfOversizedPage(file: File, width: number, height: number): 
  * at a time, in reading order, and stop or report at the first failure.
  *
  * @param chapterId - the chapter the page belongs to
- * @param file - the original file; shrunk to 1600px JPEG here (pages are
- *   full-bleed art with no transparency, so JPEG is safe)
+ * @param file - the original file; shrunk to PAGE_HEIGHT px tall as a JPEG
+ *   here (pages are full-bleed art with no transparency, so JPEG is safe).
+ *   Spreads get the same height, so each half keeps a single page's detail;
+ *   capping the longest side instead squeezed a spread's two pages into
+ *   one page's width.
  * @param isSpread - landscape double page
  * @returns the stored page row
  * @throws Error whose message is the reason, ready to show the admin:
@@ -96,7 +113,11 @@ export async function uploadComicPage(
   file: File,
   isSpread: boolean
 ): Promise<Tables<'pages'>> {
-  const imageBase64 = await compressImage(file, { maxDimension: 1600, forceJpeg: true })
+  const { width, height } = await readImageSize(file)
+  const maxDimension = isSpread
+    ? Math.min(MAX_SPREAD_WIDTH, Math.max(PAGE_HEIGHT, Math.round(PAGE_HEIGHT * width / height)))
+    : PAGE_HEIGHT
+  const imageBase64 = await compressImage(file, { maxDimension, forceJpeg: true })
 
   let res: Response
   try {

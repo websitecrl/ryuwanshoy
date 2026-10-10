@@ -7,7 +7,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEn
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
-import { keepImageFiles, readImageSize, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
+import { isSpreadPage, keepImageFiles, readImageSize, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -142,7 +142,7 @@ export default function PageUploader({
     for (const [i, file] of imgs.entries()) {
       try {
         const dim       = await readImageSize(file)
-        const is_spread = dim.width > dim.height    // landscape = spread
+        const is_spread = isSpreadPage(dim.width, dim.height)
         warnIfOversizedPage(file, dim.width, dim.height)
         const page = await uploadComicPage(chapterId, file, is_spread)
         // Show each page as soon as it's stored, so a later failure doesn't
