@@ -1,0 +1,30 @@
+-- Revoke INSERT, UPDATE and DELETE from anon on series, chapters and pages.
+--
+-- Visitors never write these tables: every write goes through an admin API
+-- route with the service role, which keeps its privileges. Today RLS is the
+-- only thing stopping an anon write (no policy lets anon write), so a policy
+-- mistake later would open them up. Without the grant, Postgres refuses the
+-- write before RLS is even consulted.
+--
+-- Checked against the live DB on 2026-10-10:
+--   - anon holds INSERT/UPDATE/DELETE on exactly these 3 tables (no other
+--     public table).
+--   - Default privileges for tables created by postgres already give anon
+--     no writes (anon=xtm), so new tables are not affected and no ALTER
+--     DEFAULT PRIVILEGES is needed.
+--   - No code writes through the anon client (lib/supabase/public.ts,
+--     client.ts); comments, likes, feedback and early access writes use the
+--     service role.
+--
+-- authenticated keeps its grants on purpose: the admin's own session uses
+-- the "Admin can ..." policies (see docs/admin-uuid-policies.md).
+--
+-- HOW TO APPLY: do NOT use `supabase db push`. It would also run
+-- 20261003130000_rewrite_r2_public_urls.sql, which must wait for the custom
+-- domain. Run this file on its own:
+--   npx supabase db query --linked -f supabase/migrations/20261010120000_revoke_anon_writes.sql
+--
+-- Idempotent: revoking a privilege that isn't held is a no-op.
+-- No column changes, so src/types/database.ts does not need regenerating.
+
+REVOKE INSERT, UPDATE, DELETE ON public.series, public.chapters, public.pages FROM anon;
