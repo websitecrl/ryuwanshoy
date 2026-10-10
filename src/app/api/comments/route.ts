@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { isUuid } from '@/lib/validation'
 import { isProfane } from '@/lib/profanity'
 import { isCursor, readLimit } from '@/lib/cursor'
 
@@ -44,14 +45,6 @@ async function isPublicTarget({ seriesId, postId }: CommentTarget): Promise<bool
     if (!data) return false
   }
   return true
-}
-
-// Ids are uuids. Checked up front so a malformed id is a clean 400 instead of
-// a Postgres "invalid input syntax for type uuid" 500.
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-function isUuid(value: unknown): value is string {
-  return typeof value === 'string' && UUID_RE.test(value)
 }
 
 /**

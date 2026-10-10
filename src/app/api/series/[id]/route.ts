@@ -10,6 +10,7 @@ import {
 } from '@/lib/cache/public-cache'
 import { createPublicClient } from '@/lib/supabase/public'
 import { filterUnsharedCovers } from '@/lib/series-covers'
+import { isUuid } from '@/lib/validation'
 import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 import type { Tables, TablesUpdate } from '@/types/database'
 
@@ -20,8 +21,6 @@ type SeriesUpdate = TablesUpdate<'series'>
 interface SeriesWithChapters extends Series {
   chapters: Chapter[]
 }
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const CHAPTERS_SELECT = `
   id, series_id, title, chapter_number,
@@ -44,7 +43,7 @@ const queryPublicSeries = cachedPublicQuery('api:series', async (key: string) =>
   const { data, error } = await createPublicClient()
     .from('series')
     .select(`*, chapters (${CHAPTERS_SELECT})`)
-    .eq(UUID_RE.test(key) ? 'id' : 'slug', key)
+    .eq(isUuid(key) ? 'id' : 'slug', key)
     .eq('is_published', true)
     .order('chapter_number', { referencedTable: 'chapters', ascending: true })
     .maybeSingle()
@@ -78,7 +77,7 @@ export async function GET(
       const res = await supabaseAdmin
         .from('series')
         .select(`*, chapters (${CHAPTERS_SELECT})`)
-        .eq(UUID_RE.test(id) ? 'id' : 'slug', id)
+        .eq(isUuid(id) ? 'id' : 'slug', id)
         .order('chapter_number', { referencedTable: 'chapters', ascending: true })
         .maybeSingle()
       if (res.error) throw res.error

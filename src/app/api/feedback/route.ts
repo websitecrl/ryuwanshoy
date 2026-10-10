@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/require-admin'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { countUnreadFeedback } from '@/lib/feedback-server'
 import { isProfane } from '@/lib/profanity'
+import { isUuid } from '@/lib/validation'
 import { FEEDBACK_LIMITS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } from '@/lib/feedback'
 
 // Admin reads cookies (requireAdmin) and must never be cached.
@@ -15,7 +16,6 @@ const ADMIN_PAGE_SIZE = 50
 // Most ids "Mark all read" can send at once (what's loaded in the inbox).
 const MAX_MARK_IDS = 500
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 // Next.js error digests are short numeric/word ids; anything else is dropped.
 const DIGEST_RE = /^[\w-]{1,100}$/
 
@@ -173,7 +173,7 @@ export async function PATCH(req: NextRequest) {
   const ids = body?.ids
   if (
     !Array.isArray(ids) || ids.length === 0 || ids.length > MAX_MARK_IDS ||
-    !ids.every(id => typeof id === 'string' && UUID_RE.test(id))
+    !ids.every(id => isUuid(id))
   ) {
     return NextResponse.json({ error: `ids must be 1 to ${MAX_MARK_IDS} uuids.` }, { status: 400 })
   }
