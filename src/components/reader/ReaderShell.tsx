@@ -181,9 +181,6 @@ export default function ReaderShell({
           <FlipReader
             pages={pages}
             seriesSlug={series.slug}
-            seriesTitle={series.title}
-            coverImage={series.cover_image}
-            chapterNumber={chapter.chapter_number}
             prevHref={prevHref}
             nextHref={nextHref}
             uiVisible={uiVisible}

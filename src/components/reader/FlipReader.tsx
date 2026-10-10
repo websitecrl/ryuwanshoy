@@ -9,12 +9,36 @@ import type { Tables } from '@/types/database'
 
 type Page = Tables<'pages'>
 
+/**
+ * One item in the flip book. A two page spread is split into two items on
+ * desktop, so book indexes and chapter pages don't line up 1:1; `position`
+ * (1 based place in the chapter) is the page number readers see.
+ */
+type DisplayPage = Page & { spreadSide: 'left' | 'right' | null; position: number }
+
+/**
+ * The chapter pages visible at a flip book index.
+ * @param index - the book index from onFlip (e.data)
+ * @param portrait - one item at a time (mobile); otherwise a two item spread,
+ *   paired [0,1], [2,3]... since there is no cover page
+ * @returns first and last visible chapter position, and whether the book is
+ *   at its first or last item
+ */
+function visibleRange(displayPages: DisplayPage[], index: number, portrait: boolean) {
+  const last = displayPages.length - 1
+  const start = Math.min(Math.max(0, portrait ? index : index - (index % 2)), Math.max(0, last))
+  const end = portrait ? start : Math.min(start + 1, last)
+  return {
+    first: displayPages[start]?.position ?? 1,
+    last: displayPages[end]?.position ?? 1,
+    atStart: start <= 0,
+    atEnd: end >= last,
+  }
+}
+
 type Props = {
   pages: Page[]
   seriesSlug: string
-  seriesTitle: string
-  coverImage: string | null
-  chapterNumber: number
   prevHref: string | null
   nextHref: string | null
   uiVisible: boolean
@@ -35,9 +59,6 @@ type FlipBookRef = {
 
 export default function FlipReader({
   pages,
-  seriesTitle,
-  coverImage,
-  chapterNumber,
   nextHref,
   uiVisible,
   onToggleUI,
@@ -47,7 +68,6 @@ export default function FlipReader({
   const bookRef    = useRef<FlipBookRef>(null)
   const didSyncRef = useRef(false)
 
-  const [, setTotalPages] = useState(0)
   const [isMobile,   setIsMobile]   = useState(false)
   const [bookDims,   setBookDims]   = useState({ width: 400, height: 560 })
 
@@ -71,9 +91,29 @@ export default function FlipReader({
     return () => window.removeEventListener('resize', update)
   }, [])
 
+  // Only this chapter's pages, in page_number order. No cover or divider: an
+  // extra item before page 1 is what readers could flip back to and get
+  // stuck on, with the counter still saying page 1.
+  const displayPages: DisplayPage[] = useMemo(() =>
+    [...pages]
+      .sort((a, b) => a.page_number - b.page_number)
+      .flatMap((page, i): DisplayPage[] =>
+        page.is_spread && !isMobile
+          ? [
+              { ...page, spreadSide: 'left',  position: i + 1 },
+              { ...page, spreadSide: 'right', position: i + 1 },
+            ]
+          : [{ ...page, spreadSide: null, position: i + 1 }]
+      ),
+  [pages, isMobile])
+
+  // The flip book index on screen. Set only from the book itself (onFlip, or
+  // the resume jump), so the counter, progress bar and arrows can't drift.
+  const [bookIndex, setBookIndex] = useState(0)
+  const view = visibleRange(displayPages, bookIndex, isMobile)
+
   // ── Book init — jump to synced page if resuming ──────────────────────────
-  function onInit(e: { object: { getPageCount: () => number } }) {
-    setTotalPages(e.object.getPageCount())
+  function onInit() {
     if (!didSyncRef.current && currentPage > 1) {
       didSyncRef.current = true
 
@@ -91,7 +131,9 @@ export default function FlipReader({
           if (++attempts < MAX) setTimeout(tryFlip, 100)
           return
         }
-        api.turnToPage(currentPage)
+        const target = Math.max(0, displayPages.findIndex(p => p.position === currentPage))
+        api.turnToPage(target)
+        setBookIndex(api.getCurrentPageIndex())
       }
       setTimeout(tryFlip, 100)
     }
@@ -110,37 +152,21 @@ export default function FlipReader({
     return () => window.removeEventListener('keydown', onKey)
   }, [goNext, goPrev])
 
+  // e.data is the book index. Report the LAST visible page, so reaching the
+  // final spread on desktop counts as reading the last page.
   function onFlip(e: { data: number }) {
-    const flippedTo = Math.max(1, e.data)
-    //On Desktop spread 
-    const effectivePage = !isMobile && flippedTo + 1 <= pages.length
-      ? flippedTo + 1
-      : flippedTo
-    onPageChange(effectivePage)
+    setBookIndex(e.data)
+    onPageChange(visibleRange(displayPages, e.data, isMobile).last)
   }
 
-  // ── Derived state ────────────────────────────────────────────────────────
-  const atStart  = currentPage <= 1
-  const atEnd = currentPage >= pages.length - 1
- 
-  const comicPage = Math.max(1, currentPage)
-  const pageLabel = isMobile
-    ? `Page ${Math.min(comicPage, pages.length)} / ${pages.length}`
-    : `Page ${Math.min(comicPage, pages.length)} – ${Math.min(comicPage + 1, pages.length)} / ${pages.length}`
-  const progress = Math.min(100, Math.round((Math.min(comicPage, pages.length) / pages.length) * 100))
+  // ── Derived state (all from bookIndex) ───────────────────────────────────
+  const { atStart, atEnd } = view
+  const total = pages.length
+  const pageLabel = view.first === view.last
+    ? `Page ${view.first} / ${total}`
+    : `Page ${view.first} – ${view.last} / ${total}`
+  const progress = total > 0 ? Math.round((view.last / total) * 100) : 0
 
-  type DisplayPage = Page & { spreadSide: 'left' | 'right' | null }
-
-  const displayPages: DisplayPage[] = useMemo(() =>
-  pages.flatMap((page): DisplayPage[] =>
-    page.is_spread && !isMobile
-      ? [
-          { ...page, spreadSide: 'left' },
-          { ...page, spreadSide: 'right' },
-        ]
-      : [{ ...page, spreadSide: null }]
-  ),
-  [pages, isMobile])
   // ── Reader ───────────────────────────────────────────────────────────────
   return (
     <div
@@ -197,8 +223,8 @@ export default function FlipReader({
           drawShadow
           flippingTime={600}
           usePortrait={isMobile}
-          startPage={1}
-          showCover
+          startPage={0}
+          showCover={false}
           mobileScrollSupport={false}
           onFlip={onFlip}
           onInit={onInit}
@@ -213,48 +239,7 @@ export default function FlipReader({
           disableFlipByClick={false}
           maxShadowOpacity={0.5}
         >
-          {/* Index 0 — cover (user can flip back to it) */}
-          <div
-            style={{
-              width:      bookDims.width,
-              height:     bookDims.height,
-              position:   'relative',
-              overflow:   'hidden',
-              background: '#111',
-            }}
-          >
-            {coverImage ? (
-              <Image
-                src={coverImage}
-                alt={`${seriesTitle} cover`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div
-                className="absolute inset-0 flex flex-col items-end justify-end p-6"
-                style={{ background: 'linear-gradient(135deg, #1C1917, #44170A)' }}
-              >
-                <p
-                  className="text-white text-3xl text-right leading-tight"
-                  style={{ fontFamily: 'var(--font-bangers), cursive', letterSpacing: '0.06em' }}
-                >
-                  {seriesTitle}
-                </p>
-                <p className="text-white/60 text-sm mt-1">Chapter {chapterNumber}</p>
-              </div>
-            )}
-            <div
-              className="absolute left-0 top-0 bottom-0 pointer-events-none"
-              style={{
-                width:      32,
-                background: 'linear-gradient(to right, rgba(0,0,0,0.6), transparent)',
-              }}
-            />
-          </div>
-
-          {/* Index 1+ — comic pages */}
+          {/* Comic pages only; index 0 is page 1 */}
           {displayPages.map((page, index) => (
             <div
               key={`${page.id}-${page.spreadSide ?? 'single'}`}
