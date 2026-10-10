@@ -1,0 +1,35 @@
+# Keep-alive: one request a day that reaches the database, so the free
+# Supabase project is never paused for inactivity (it pauses after about a
+# week without requests, and a paused project takes the whole site down).
+# Cached pages don't count: they can be served without touching Supabase.
+# GET /api/settings is force-dynamic and queries Supabase on every call.
+#
+# A failed run (site down, database paused, wrong URL) shows as a red run in
+# the Actions tab, and GitHub emails the repo owner.
+#
+# Set the repo variable SITE_URL (Settings → Secrets and variables → Actions →
+# Variables) to https://ryuwanshoy.com at launch; until then the workers.dev
+# address below is used. Note: GitHub turns scheduled workflows off after
+# 60 days without any repo activity; re-enable it in the Actions tab if so.
+name: Keep alive
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # daily, 03:17 UTC (11:17 PH time); off the hour, when GitHub queues are busy
+  workflow_dispatch: # "Run workflow" button for a manual check
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SITE_URL: ${{ vars.SITE_URL || 'https://ryuwanshoy.testgmail050.workers.dev' }}
+    steps:
+      - name: Query the database through the site
+        run: |
+          body=$(curl --silent --show-error --fail --retry 3 --retry-delay 20 --max-time 30 "$SITE_URL/api/settings")
+          # A 200 with the settings row means Supabase answered.
+          echo "$body" | grep -q '"settings":{' || { echo "Unexpected response: $body"; exit 1; }
+          echo "OK: $SITE_URL/api/settings answered with the settings row"
