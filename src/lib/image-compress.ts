@@ -9,12 +9,24 @@ export interface CompressOptions {
   maxDimension?: number
   /** JPEG output quality, 0-1. Ignored when the output stays PNG. Default 0.85. */
   quality?: number
-  /** Force JPEG output even for a PNG source. Only safe when the source is
-   *  known to have no transparency (e.g. comic pages, which are full-bleed
-   *  art with no alpha channel) — forcing JPEG on a transparent PNG flattens
-   *  transparent areas to black. Default false: PNG in stays PNG out, so
-   *  logos/stickers/banners with real transparency aren't corrupted. */
+  /** Always output JPEG and skip the transparency check. Only for images
+   *  known to be opaque (comic pages, hero banners): JPEG flattens any
+   *  transparent area to black. Default false: the output format is picked
+   *  per image (see compressImage). */
   forceJpeg?: boolean
+}
+
+/**
+ * True when any pixel isn't fully opaque. Scans the alpha byte of every
+ * pixel (every 4th byte of RGBA) and stops at the first one below 255.
+ * About 2.5M pixels at 1600px, so it costs milliseconds in the browser.
+ */
+function hasTransparency(ctx: CanvasRenderingContext2D, width: number, height: number): boolean {
+  const { data } = ctx.getImageData(0, 0, width, height)
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i]! < 255) return true
+  }
+  return false
 }
 
 /**
@@ -29,10 +41,13 @@ export interface CompressOptions {
  * the Worker only ever touches a small payload — the CPU-heavy part never
  * happens on the server at all.
  *
+ * Output format: JPEG, unless the image has transparent pixels (then PNG,
+ * so the transparency survives). `forceJpeg` skips the check.
+ *
  * @param file the original image file picked or dropped by the admin
  * @param opts see {@link CompressOptions}
- * @returns    a base64 data URL — same shape a raw FileReader output was,
- *             so callers don't otherwise change
+ * @returns    a base64 data URL (JPEG or PNG) — same shape a raw FileReader
+ *             output was, so callers don't otherwise change
  * @throws     if the browser can't decode the file as an image, or canvas
  *             isn't available (shouldn't happen in any real browser, but
  *             the admin dashboard should fail loudly instead of silently
@@ -71,12 +86,13 @@ export function compressImage(
 
       ctx.drawImage(img, 0, 0, width, height)
 
-      // PNG sources keep their transparency unless the caller explicitly
-      // knows there's none to preserve (forceJpeg) — everything else
-      // (JPEG/WEBP sources) already has no alpha, so JPEG out is always
-      // the smaller, correct choice for them.
-      const outputType = !forceJpeg && file.type === 'image/png' ? 'image/png' : 'image/jpeg'
-      resolve(canvas.toDataURL(outputType, quality))
+      // Decided by the pixels, not the file type: an opaque PNG (most art
+      // exports) becomes a JPEG many times smaller, while anything with real
+      // transparency stays PNG. Checking only PNGs used to send transparent
+      // WebP/GIF stickers to JPEG, which turned their background black.
+      // JPEG sources have no alpha channel, so they skip the scan.
+      const keepAlpha = !forceJpeg && file.type !== 'image/jpeg' && hasTransparency(ctx, width, height)
+      resolve(canvas.toDataURL(keepAlpha ? 'image/png' : 'image/jpeg', quality))
     }
 
     img.onerror = () => {
