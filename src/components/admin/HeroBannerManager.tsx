@@ -151,29 +151,23 @@ export default function HeroBannerManager() {
     setCreateError(null)
 
     try {
-      let imageUrl = ''
+      // Recommended 1920x1080 — cap a bit above that for retina without
+      // sending a multi-MB original straight to the Worker. Forced to JPEG:
+      // banners are full-bleed art with no transparency, and a 2200px PNG
+      // came out around 6 MB, downloaded by every home page visitor.
+      const bannerImageBase64 = newImageFile
+        ? await compressImage(newImageFile, { maxDimension: 2200, forceJpeg: true })
+        : null
 
-      if (newImageFile) {
-        // Recommended 1920x1080 — cap a bit above that for retina without
-        // sending a multi-MB original straight to the Worker.
-        const base64 = await compressImage(newImageFile, { maxDimension: 2200 })
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ base64, folder: 'hero-banners' }),
-        })
-        const uploadData = await uploadRes.json()
-        if (!uploadRes.ok) throw new Error(uploadData.error ?? 'Upload failed')
-        imageUrl = uploadData.url
-      }
-
+      // The image goes with the slide so the server can delete it again if
+      // saving the slide fails (no orphan left in R2).
       const res = await fetch('/api/hero-slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           series_id:    selectedSeries?.id ?? null,
           headline:     newHeadline || null,
-          banner_image: imageUrl || null,
+          bannerImageBase64,
           is_visible:   false,
           order_index:  slides.length,
         }),

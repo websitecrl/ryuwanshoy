@@ -214,7 +214,9 @@ export async function DELETE(
   try {
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('series')
-      .select(`cover_image, banner_image, chapters (pages (image_url))`)
+      // hero_slides: deleting the series cascades to its slides in the DB,
+      // so their banner images must be collected here or they'd stay in R2.
+      .select(`cover_image, banner_image, chapters (pages (image_url)), hero_slides (banner_image)`)
       .eq('id', id)
       .single()
 
@@ -235,12 +237,13 @@ export async function DELETE(
     // Awaited, not fire-and-forget: Workers can cut off promises still
     // pending after the response is sent, orphaning the files. One batched
     // request also stays under the per-request subrequest cap.
-    const chapters = (existing as SeriesWithChapters).chapters ?? []
+    const chapters = existing.chapters ?? []
     const covers = existing.cover_image ? await filterUnsharedCovers([existing.cover_image]) : []
     const imageRefs = [
       ...covers,
       existing.banner_image,
       ...chapters.flatMap(c => (c.pages ?? []).map(p => p.image_url)),
+      ...(existing.hero_slides ?? []).map(h => h.banner_image),
     ].filter((ref): ref is string => !!ref)
 
     if (imageRefs.length) {
