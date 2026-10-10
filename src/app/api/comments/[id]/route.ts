@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { isProfane } from '@/lib/profanity'
 import { rateLimit } from '@/lib/rate-limit-cf'
+import { serverError } from '@/lib/api-errors'
 
 // ─── PATCH /api/comments/[id] ─────────────────────────────────────────────────
 // Edit a comment — requires matching edit_token
@@ -61,7 +62,7 @@ export async function PATCH(
     .select('id, name, content, created_at, updated_at')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return serverError('PATCH /api/comments/[id]', error, 'Failed to update comment.')
   return NextResponse.json(data)
 }
 
@@ -117,6 +118,6 @@ export async function DELETE(
     .delete()
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return serverError('DELETE /api/comments/[id]', error, 'Failed to delete comment.')
   return NextResponse.json({ success: true })
 }

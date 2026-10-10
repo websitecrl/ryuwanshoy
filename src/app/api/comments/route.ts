@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { isUuid } from '@/lib/validation'
 import { isProfane } from '@/lib/profanity'
 import { isCursor, readLimit } from '@/lib/cursor'
+import { serverError } from '@/lib/api-errors'
 
 // Comments live on a series (one section per series) or on a post (one per
 // illustration). Chapters have no comments; the chapter_id column is a
@@ -128,8 +129,8 @@ export async function GET(req: NextRequest) {
           .eq(targetColumn, targetId),
   ])
 
-  if (topRes.error) return NextResponse.json({ error: topRes.error.message }, { status: 500 })
-  if (countRes?.error) return NextResponse.json({ error: countRes.error.message }, { status: 500 })
+  if (topRes.error) return serverError('GET /api/comments', topRes.error, 'Failed to load comments.')
+  if (countRes?.error) return serverError('GET /api/comments', countRes.error, 'Failed to load comments.')
 
   const hasMore = topRes.data.length > limit
   const topLevel = hasMore ? topRes.data.slice(0, limit) : topRes.data
@@ -141,7 +142,7 @@ export async function GET(req: NextRequest) {
       .select(COMMENT_FIELDS)
       .in('parent_id', topLevel.map(c => c.id))
       .order('created_at', { ascending: true })
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return serverError('GET /api/comments', error, 'Failed to load comments.')
     replies = data
   }
 
@@ -223,6 +224,6 @@ export async function POST(req: NextRequest) {
     .select(COMMENT_FIELDS)
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return serverError('POST /api/comments', error, 'Failed to post comment.')
   return NextResponse.json({ ...data, edit_token }, { status: 201 })
 }
