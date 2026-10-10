@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { isWizardSaving, subscribeWizardSaving } from '@/lib/wizard-saving'
 import ThemeToggle from '@/components/shared/ThemeToggle'
+import { STORAGE_UPDATED_EVENT } from '@/components/admin/StorageCleanup'
 import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit, MessageSquare } from 'lucide-react'
 
 const navItems = [
@@ -64,14 +65,19 @@ useEffect(() => {
   return () => { supabase.removeChannel(channel); unsubscribe() }
 }, [])
 
-// R2 storage — runs once on mount
+// R2 storage — on mount, and again after Settings → Storage deletes files
 useEffect(() => {
-  fetch('/api/r2-storage')
-    .then(r => r.json())
-    .then(data => {
-      if (data.usedGB !== undefined) setStorage(data)
-    })
-    .catch(() => {})
+  function loadStorage() {
+    fetch('/api/r2-storage')
+      .then(r => r.json())
+      .then(data => {
+        if (data.usedGB !== undefined) setStorage(data)
+      })
+      .catch(() => {})
+  }
+  loadStorage()
+  window.addEventListener(STORAGE_UPDATED_EVENT, loadStorage)
+  return () => window.removeEventListener(STORAGE_UPDATED_EVENT, loadStorage)
 }, [])
 
 useEffect(() => {
