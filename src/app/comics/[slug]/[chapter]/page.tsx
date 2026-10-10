@@ -6,6 +6,7 @@ import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery, nullIfNotFound, PublicNotFoundError } from '@/lib/cache/public-cache'
 import ReaderShell from '@/components/reader/ReaderShell'
 import AgeRestricted from '@/components/shared/AgeRestricted'
+import { seriesShareImage } from '@/lib/share-image'
 
 // The HTML is rendered per request, like before caching (see connection() in
 // the page); only the Supabase reads are cached. Unknown series and chapters
@@ -138,6 +139,7 @@ export async function generateMetadata({
   const title = `${data.series.title} — Chapter ${chapterNumber}${
     data.chapter.title ? `: ${data.chapter.title}` : ''
   }`
+  const shareImage = seriesShareImage(data.series)
   return {
     title: `${title} | Ryuwanshoy`,
     description: `Read ${data.series.title} Chapter ${chapterNumber} free on Ryuwanshoy.`,
@@ -145,18 +147,14 @@ export async function generateMetadata({
       title: `${title} | Ryuwanshoy`,
       description: `Read ${data.series.title} Chapter ${chapterNumber} free on Ryuwanshoy.`,
       url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'}/comics/${slug}/${chapterNumber}`,
-      images: data.series.cover_image
-        ? [{ url: data.series.cover_image, width: 460, height: 640 }]
-        : [{ url: '/og-default.png', width: 1200, height: 630 }],
+      images: [shareImage],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} | Ryuwanshoy`,
       description: `Read ${data.series.title} Chapter ${chapterNumber} free on Ryuwanshoy.`,
-      images: data.series.cover_image
-        ? [data.series.cover_image]
-        : ['/og-default.png'],
+      images: [shareImage.url],
     },
   }
 }

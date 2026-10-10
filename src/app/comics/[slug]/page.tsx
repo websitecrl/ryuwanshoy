@@ -10,6 +10,7 @@ import SeriesHeader from '@/components/shared/SeriesHeader'
 import ChapterList from '@/components/shared/ChapterList'
 import SeriesComments from '@/components/reader/SeriesComments'
 import AgeRestricted from '@/components/shared/AgeRestricted'
+import { seriesShareImage } from '@/lib/share-image'
 
 // The HTML is rendered per request, like before caching (see connection() in
 // the page); only the Supabase read is cached. Unknown slugs return a real
@@ -100,6 +101,7 @@ export async function generateMetadata({
   if (!result) return { title: 'Series Not Found' }
 
   const { series } = result
+  const shareImage = seriesShareImage(series)
   return {
     title: `${series.title} | Ryuwanshoy`,
     description: series.description ?? `Read ${series.title} on Ryuwanshoy.`,
@@ -107,16 +109,14 @@ export async function generateMetadata({
       title: `${series.title} | Ryuwanshoy`,
       description: series.description ?? `Read ${series.title} on Ryuwanshoy.`,
       url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'}/comics/${series.slug}`,
-      images: series.cover_image
-        ? [{ url: series.cover_image, width: 460, height: 640 }]
-        : [{ url: '/og-default.png', width: 1200, height: 630 }],
+      images: [shareImage],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: `${series.title} | Ryuwanshoy`,
       description: series.description ?? `Read ${series.title} on Ryuwanshoy.`,
-      images: series.cover_image ? [series.cover_image] : ['/og-default.png'],
+      images: [shareImage.url],
     },
   }
 }
