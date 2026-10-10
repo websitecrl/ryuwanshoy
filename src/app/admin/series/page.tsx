@@ -59,11 +59,20 @@ export default function AdminSeriesPage() {
   // ── Fetch ──────────────────────────────────────────────────────────────
   useEffect(() => {
     async function fetchSeries() {
-      const res  = await fetch('/api/series')
-      const json = await res.json()
-      if (!res.ok) { toast.error('Failed to load series') }
-      else { setSeries(Array.isArray(json) ? json : json.data ?? []) }
-      setLoading(false)
+      // fetch() and res.json() both throw on a network error or a non-JSON
+      // body (e.g. an HTML error page), so everything goes inside try and
+      // setLoading(false) lives in finally: the skeleton always clears.
+      try {
+        const res  = await fetch('/api/series')
+        const json = await res.json()
+        if (!res.ok) throw new Error(json?.error ?? 'Failed to load series')
+        setSeries(Array.isArray(json) ? json : json.data ?? [])
+      } catch (err) {
+        console.error('[admin/series] load failed:', err)
+        toast.error('Failed to load series')
+      } finally {
+        setLoading(false)
+      }
     }
     fetchSeries()
   }, [])
