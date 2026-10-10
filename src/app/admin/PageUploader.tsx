@@ -7,7 +7,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEn
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
-import { compressImage } from '@/lib/image-compress'
+import { keepImageFiles, readImageSize, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,47 +132,32 @@ export default function PageUploader({
   const sensors = useSensors(useSensor(PointerSensor))
 
   // ── Shared upload logic ──────────────────────────────────────────────────
-  function getImageDimensionns(file: File): Promise<{ width: number; height: number }> {
-    return new Promise(resolve => {
-      const url = URL.createObjectURL(file)
-      const img = new window.Image()
-      img.onload = () => { resolve({ width: img.naturalWidth, height: img.naturalHeight }); URL.revokeObjectURL(url) }
-      img.src = url
-    })
-  }
-
-
   const uploadFiles = useCallback(async (files: File[]) => {
     // Upload in the exact order the browser hands over — no filename sort
-    const imgs = files.filter(f => f.type.startsWith('image/'))
+    const imgs = keepImageFiles(files)
     if (!imgs.length) return
     setError(null)
     setUploading(true)
 
-    try {
-      const uploaded: Page[] = []
-      for (const file of imgs) {
-        // Shrink to a sane size BEFORE sending — the raw 2550x3300 originals
-        // are what were blowing the Worker's free-tier CPU limit. Pages are
-        // full-bleed art with no transparency, so JPEG output is safe here.
-        const base64      = await compressImage(file, { maxDimension: 1600, forceJpeg: true })
-        const dim         = await getImageDimensionns(file)
-        const is_spread   = dim.width > dim.height    // landscape = spread
-        const res  = await fetch('/api/pages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chapter_id: chapterId, imageBase64: base64, is_spread }),
-        })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error ?? 'Upload failed')
-        uploaded.push(data.data)
+    for (const [i, file] of imgs.entries()) {
+      try {
+        const dim       = await readImageSize(file)
+        const is_spread = dim.width > dim.height    // landscape = spread
+        warnIfOversizedPage(file, dim.width, dim.height)
+        const page = await uploadComicPage(chapterId, file, is_spread)
+        // Show each page as soon as it's stored, so a later failure doesn't
+        // hide the ones that already made it.
+        setPages(prev => [...prev, page])
+      } catch (err) {
+        // Stop here: the API appends pages, so skipping one would put the
+        // rest out of order.
+        const reason = err instanceof Error ? err.message : 'Upload failed.'
+        const rest   = imgs.length - i - 1
+        setError(`"${file.name}": ${reason}${rest > 0 ? ` ${rest} file(s) after it were not uploaded.` : ''}`)
+        break
       }
-      setPages(prev => [...prev, ...uploaded])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setUploading(false)
     }
+    setUploading(false)
   }, [chapterId])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

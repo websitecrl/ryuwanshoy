@@ -1,5 +1,8 @@
 'use client'
 
+/** Shown when the browser can't decode a file (corrupt, HEIC in Chrome, renamed non-image). */
+export const UNREADABLE_IMAGE_MESSAGE = "Couldn't read this image. Try saving it as JPG or PNG."
+
 export interface CompressOptions {
   /** Longest side (width or height) is capped to this, aspect ratio preserved.
    *  Never upscales a smaller source image. Default 1600. */
@@ -78,7 +81,7 @@ export function compressImage(
 
     img.onerror = () => {
       URL.revokeObjectURL(objectUrl)
-      reject(new Error('Could not read this image file'))
+      reject(new Error(UNREADABLE_IMAGE_MESSAGE))
     }
 
     img.src = objectUrl

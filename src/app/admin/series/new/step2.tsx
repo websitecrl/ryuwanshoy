@@ -7,9 +7,10 @@ import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'l
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from '@/lib/constants'
+import { COMIC_PAGE_MAX_WIDTH } from '@/lib/constants'
+import { keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, inputStyle, labelStyle, getImageDimensions, type LocalPage, type SaveState } from './types'
+import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
 
 // ── Sortable page card ─────────────────────────────────────────────────────
 
@@ -119,19 +120,23 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
    * @param files - raw files from the input or drop event; non-images are ignored
    */
   async function handleFiles(files: File[]) {
-    const imageFiles = files.filter(f => f.type.startsWith('image/'))
+    const imageFiles = keepImageFiles(files)
     if (!imageFiles.length) return
-    const newPages: LocalPage[] = await Promise.all(imageFiles.map(async file => {
+    const newPages = await Promise.all(imageFiles.map(async (file): Promise<LocalPage | null> => {
+      let dim: { width: number; height: number }
+      try {
+        dim = await readImageSize(file)
+      } catch (err) {
+        // Drop just this file; the rest of the batch still gets added.
+        toast.error(`"${file.name}": ${err instanceof Error ? err.message : 'could not be read.'}`)
+        return null
+      }
+      const is_spread = dim.width > COMIC_PAGE_MAX_WIDTH
+      const oversized = warnIfOversizedPage(file, dim.width, dim.height)
       const preview   = URL.createObjectURL(file)
-      const dim       = await getImageDimensions(file)
-      const is_spread  = dim.width > COMIC_PAGE_MAX_WIDTH
-      const oversized  = is_spread
-        ? dim.width > COMIC_PAGE_MAX_WIDTH * 2 || dim.height > COMIC_PAGE_MAX_HEIGHT
-        : dim.width > COMIC_PAGE_MAX_WIDTH || dim.height > COMIC_PAGE_MAX_HEIGHT
-      if (oversized) toast.warning(`"${file.name}" exceeds max size — it'll still upload.`)
       return { id: crypto.randomUUID(), file, preview, width: dim.width, height: dim.height, oversized, is_spread }
     }))
-    setPages(prev => [...prev, ...newPages])
+    setPages(prev => [...prev, ...newPages.filter((p): p is LocalPage => p !== null)])
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
