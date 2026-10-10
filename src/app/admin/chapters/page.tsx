@@ -108,9 +108,9 @@ export default function AdminChaptersPage() {
         </div>
         <Link href="/admin/series" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
             style={{
-              background: '#FEF08A', color: '#1E1E1E',
-              border: '1px solid #D4B800',
-              boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+              background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)',
+              border: '1px solid var(--ryu-accent-deep)',
+              boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
               cursor: 'pointer',
             }}>
             <Plus size={16} strokeWidth={2.5} /> New Chapter
@@ -120,7 +120,7 @@ export default function AdminChaptersPage() {
       {/* Error */}
       {error && (
         <div className="rounded-lg px-4 py-3 text-sm mb-6"
-          style={{ border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626' }}>
+          style={{ border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)' }}>
           {error}
         </div>
       )}

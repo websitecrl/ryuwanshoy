@@ -233,7 +233,7 @@ export default function EditSeriesPage() {
                       Replace
                     </button>
                     <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(null); setCurrentCover(null) }}
-                      style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer' }}>
+                      style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', cursor: 'pointer' }}>
                       ✕
                     </button>
                   </div>
@@ -264,7 +264,7 @@ export default function EditSeriesPage() {
                 {checklist.map(item => (
                   <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
                     {item.done
-                      ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, #16A34A)', flexShrink: 0 }} />
+                      ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, var(--ryu-success))', flexShrink: 0 }} />
                       : <Circle       size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
                     }
                     <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
@@ -282,14 +282,14 @@ export default function EditSeriesPage() {
           padding: '16px 32px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
         }}>
-          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: '#DC2626', textDecoration: 'none' }}>Cancel</Link>
+          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>Cancel</Link>
           <div style={{ display: 'flex', gap: 10 }}>
             <Link href={`/admin/chapters/new?series_id=${id}`}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
                 <Plus size={14} /> Add Chapter
               </Link>
             <button type="submit" disabled={submitting}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 rgba(0,0,0,0.06)' }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)' }}>
               {submitting && <Loader2 size={14} className="animate-spin" />}
               {submitting ? 'Saving...' : 'Save Changes'}
             </button>

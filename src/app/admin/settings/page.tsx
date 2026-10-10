@@ -54,9 +54,9 @@ function SaveRow({
 }) {
   const isError  = savedSection === 'error:' + sectionKey
   const isSaved  = savedSection === sectionKey
-  const bg       = danger ? '#FEE2E2' : 'var(--ryu-primary)'
-  const color    = danger ? '#DC2626' : '#fff'
-  const border   = danger ? '1px solid #FECACA' : '1px solid var(--ryu-primary-deep)'
+  const bg       = danger ? 'var(--ryu-danger-soft)' : 'var(--ryu-primary)'
+  const color    = danger ? 'var(--ryu-danger)' : 'var(--ryu-on-primary)'
+  const border   = danger ? '1px solid var(--ryu-danger-border)' : '1px solid var(--ryu-primary-deep)'
 
   return (
     <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -73,7 +73,7 @@ function SaveRow({
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
           fontSize: 13, fontWeight: 600,
-          color: isError ? '#DC2626' : '#16A34A',
+          color: isError ? 'var(--ryu-danger)' : 'var(--ryu-success)',
           animation: 'fadeIn 0.2s ease',
         }}>
           <CheckCircle2 size={15} />
@@ -245,9 +245,9 @@ export default function SettingsPage() {
             return (
               <button key={s.key} onClick={() => setSection(s.key)}
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: 'none', marginBottom: 2, fontSize: 13.5, fontWeight: active ? 600 : 500, textAlign: 'left', cursor: 'pointer', position: 'relative',
-                  background: active ? (s.danger ? '#FEE2E2' : 'rgba(249,115,22,0.10)') : 'transparent',
-                  color: active ? (s.danger ? '#DC2626' : 'var(--ryu-primary-deep)') : (s.danger ? '#DC2626' : 'var(--ryu-text)') }}>
-                <span style={{ position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: '0 3px 3px 0', background: active ? (s.danger ? '#DC2626' : 'var(--ryu-primary)') : 'transparent' }} />
+                  background: active ? (s.danger ? 'var(--ryu-danger-soft)' : 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)') : 'transparent',
+                  color: active ? (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-primary-deep)') : (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-text)') }}>
+                <span style={{ position: 'absolute', left: 0, top: 8, bottom: 8, width: 3, borderRadius: '0 3px 3px 0', background: active ? (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-primary)') : 'transparent' }} />
                 <s.Icon size={15} />
                 {s.label}
               </button>
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                     </button>
                   </div>
                   {(savedSection === 'logo' || savedSection === 'error:logo') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12.5, fontWeight: 600, color: savedSection === 'error:logo' ? '#DC2626' : '#16A34A', animation: 'fadeIn 0.2s ease' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12.5, fontWeight: 600, color: savedSection === 'error:logo' ? 'var(--ryu-danger)' : 'var(--ryu-success)', animation: 'fadeIn 0.2s ease' }}>
                       <CheckCircle2 size={13} />
                       {savedSection === 'error:logo' ? 'Upload failed' : 'Logo saved'}
                     </div>
@@ -344,7 +344,7 @@ export default function SettingsPage() {
                 </Field>
               </div>
 
-              <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--ryu-accent)', border: '1px solid var(--ryu-accent-deep)', borderRadius: 8, fontSize: 12.5, color: '#713F12', display: 'flex', gap: 10 }}>
+              <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--ryu-accent)', border: '1px solid var(--ryu-accent-deep)', borderRadius: 8, fontSize: 12.5, color: 'var(--ryu-on-accent)', display: 'flex', gap: 10 }}>
                 <Info size={15} style={{ flexShrink: 0, marginTop: 1 }} />
                 <span>Donations are <strong>direct to you</strong>. Ryuwanshoy never takes a cut.</span>
               </div>
@@ -377,7 +377,7 @@ export default function SettingsPage() {
                   <div key={key} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 14, alignItems: 'center' }}>
                     <div>
                       <label style={{ ...labelStyle, marginBottom: 0 }}>{label}</label>
-                      <div style={{ fontSize: 11.5, color: settings[key] ? '#16A34A' : 'var(--ryu-text-3)' }}>{settings[key] ? 'Connected' : 'Not set'}</div>
+                      <div style={{ fontSize: 11.5, color: settings[key] ? 'var(--ryu-success)' : 'var(--ryu-text-3)' }}>{settings[key] ? 'Connected' : 'Not set'}</div>
                     </div>
                     <input style={inputStyle} value={(settings[key] as string) ?? ''} onChange={e => setSettings(p => ({ ...p, [key]: e.target.value }))} placeholder={placeholder} />
                   </div>
@@ -416,11 +416,11 @@ export default function SettingsPage() {
 
           {/* ── Danger zone ── */}
           {section === 'danger' && (
-            <div style={{ background: 'linear-gradient(180deg, #FFF5F5, var(--background))', border: '1.5px solid #FECACA', borderRadius: 12, padding: 24 }}>
+            <div style={{ background: 'linear-gradient(180deg, var(--ryu-danger-soft), var(--background))', border: '1.5px solid var(--ryu-danger-border)', borderRadius: 12, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-                <span style={{ width: 38, height: 38, borderRadius: 10, background: '#FEE2E2', color: '#DC2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={18} /></span>
+                <span style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={18} /></span>
                 <div>
-                  <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: '#DC2626', marginBottom: 2 }}>DANGER ZONE</div>
+                  <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-danger)', marginBottom: 2 }}>DANGER ZONE</div>
                   <div className="font-heading font-semibold" style={{ fontSize: 20, letterSpacing: -0.3, color: 'var(--ryu-text)' }}>Admin account</div>
                 </div>
               </div>
@@ -428,35 +428,35 @@ export default function SettingsPage() {
 
               {dangerMsg && (
                 <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
-                  background: dangerMsg.type === 'ok' ? '#F0FDF4' : '#FFF5F5',
-                  border: `1px solid ${dangerMsg.type === 'ok' ? '#BBF7D0' : '#FECACA'}`,
-                  color: dangerMsg.type === 'ok' ? '#16A34A' : '#DC2626' }}>
+                  background: dangerMsg.type === 'ok' ? 'var(--ryu-success-soft)' : 'var(--ryu-danger-soft)',
+                  border: `1px solid ${dangerMsg.type === 'ok' ? 'var(--ryu-success-border)' : 'var(--ryu-danger-border)'}`,
+                  color: dangerMsg.type === 'ok' ? 'var(--ryu-success)' : 'var(--ryu-danger)' }}>
                   <CheckCircle2 size={14} />
                   {dangerMsg.text}
                 </div>
               )}
 
               {/* Change email */}
-              <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid #FECACA', borderRadius: 10, padding: 18, marginBottom: 14 }}>
+              <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-danger-border)', borderRadius: 10, padding: 18, marginBottom: 14 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 14 }}>Change Admin Email</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <Field label="New Email"><input style={inputStyle} type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="new@email.com" /></Field>
                   <Field label="Confirm New Email"><input style={inputStyle} type="email" value={confirmEmail} onChange={e => setConfirmEmail(e.target.value)} placeholder="new@email.com" /></Field>
                   <button onClick={handleEmailChange} disabled={savingEmail}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     {savingEmail ? 'Sending confirmation...' : 'Change Email'}
                   </button>
                 </div>
               </div>
 
               {/* Change password */}
-              <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid #FECACA', borderRadius: 10, padding: 18 }}>
+              <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-danger-border)', borderRadius: 10, padding: 18 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 14 }}>Change Admin Password</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <Field label="New Password"><input style={inputStyle} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" /></Field>
                   <Field label="Confirm New Password"><input style={inputStyle} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Min. 8 characters" /></Field>
                   <button onClick={handlePasswordChange} disabled={savingPassword}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     {savingPassword ? 'Updating...' : 'Change Password'}
                   </button>
                 </div>

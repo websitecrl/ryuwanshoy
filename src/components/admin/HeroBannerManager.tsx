@@ -216,7 +216,7 @@ return (
       {/* Error */}
       {error && (
         <div className="rounded-lg px-4 py-3 text-sm"
-          style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }}>
+          style={{ background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)' }}>
           {error}
         </div>
       )}
@@ -229,7 +229,7 @@ return (
 
           {createError && (
             <div className="rounded-lg px-4 py-3 text-sm"
-              style={{ background: '#FEE2E2', color: '#DC2626', border: '1px solid #FECACA' }}>
+              style={{ background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)' }}>
               {createError}
             </div>
           )}
@@ -262,7 +262,7 @@ return (
               </div>
               {seriesDropOpen && !selectedSeries && (
                 <div className="absolute top-full left-0 right-0 mt-1 rounded-lg overflow-hidden z-20 max-h-48 overflow-y-auto"
-                  style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', boxShadow: '0 8px 24px -4px rgba(0,0,0,0.12)' }}>
+                  style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', boxShadow: '0 8px 24px -4px color-mix(in srgb, var(--ryu-shadow) 12%, transparent)' }}>
                   {filteredSeries.length === 0
                     ? <div className="px-3 py-3 text-sm" style={{ color: 'var(--ryu-text-3)' }}>No series found</div>
                     : filteredSeries.map(s => (
@@ -310,7 +310,7 @@ return (
                 <img src={newImagePreview} alt="Banner preview" className="w-full h-full object-cover" />
                 <button onClick={() => { setNewImageFile(null); setNewImagePreview('') }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none' }}>
+                  style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', border: 'none' }}>
                   <X size={14} />
                 </button>
               </div>
@@ -341,11 +341,11 @@ return (
                 <Monitor size={13} /> Site Preview
               </div>
               <div className="relative w-full rounded-lg overflow-hidden flex items-end"
-                style={{ height: 140, background: newImagePreview ? `url(${newImagePreview}) center/cover` : 'linear-gradient(135deg, #1C1917, #44170A)' }}>
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
+                style={{ height: 140, background: newImagePreview ? `url(${newImagePreview}) center/cover` : 'var(--ryu-cover-1)' }}>
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--ryu-shadow) 70%, transparent), transparent)' }} />
                 <div className="relative px-4 pb-4">
-                  {newHeadline && <div className="text-white font-bold text-lg leading-tight">{newHeadline}</div>}
-                  {selectedSeries && <div className="text-white/70 text-sm mt-0.5">{selectedSeries.title}</div>}
+                  {newHeadline && <div className="text-[var(--ryu-on-image)] font-bold text-lg leading-tight">{newHeadline}</div>}
+                  {selectedSeries && <div className="text-[color-mix(in_srgb,var(--ryu-on-image)_70%,transparent)] text-sm mt-0.5">{selectedSeries.title}</div>}
                 </div>
               </div>
             </div>
@@ -353,7 +353,7 @@ return (
 
           <button onClick={handleCreate} disabled={creating}
             className="px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
-            style={{ background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)' }}>
+            style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}>
             {creating ? 'Creating…' : 'Create Slide'}
           </button>
         </div>
@@ -400,7 +400,7 @@ return (
               {/* Visible badge */}
               <span className="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0"
                 style={slide.is_visible
-                  ? { background: '#DCFCE7', color: '#15803D' }
+                  ? { background: 'var(--ryu-success-soft)', color: 'var(--ryu-success)' }
                   : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-3)', border: '1px solid var(--ryu-border)' }}>
                 {slide.is_visible ? 'Visible' : 'Hidden'}
               </span>
@@ -497,7 +497,7 @@ return (
                     </div>
                     {editDropOpen && !editSeries && (
                       <div className="absolute top-full left-0 right-0 mt-1 rounded-lg overflow-hidden z-20 max-h-40 overflow-y-auto"
-                        style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', boxShadow: '0 8px 24px -4px rgba(0,0,0,0.12)' }}>
+                        style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', boxShadow: '0 8px 24px -4px color-mix(in srgb, var(--ryu-shadow) 12%, transparent)' }}>
                         {seriesList.filter(s => s.title.toLowerCase().includes(editSearch.toLowerCase())).length === 0
                           ? <div className="px-3 py-3 text-sm" style={{ color: 'var(--ryu-text-3)' }}>No series found</div>
                           : seriesList.filter(s => s.title.toLowerCase().includes(editSearch.toLowerCase())).map(s => (
@@ -542,7 +542,7 @@ return (
                     onClick={() => handleSaveEdit(slide.id)}
                     disabled={saving}
                     className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60"
-                    style={{ background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)' }}
+                    style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
@@ -567,16 +567,16 @@ return (
                 }}>
                 {previewSlide.banner_image
                   ? <img src={previewSlide.banner_image} alt={previewSlide.headline ?? 'Slide preview'} className="absolute inset-0 w-full h-full object-contain" />
-                  : <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #1C1917, #44170A)' }} />
+                  : <div className="absolute inset-0" style={{ background: 'var(--ryu-cover-1)' }} />
                 }
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)' }} />
+                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--ryu-shadow) 75%, transparent), transparent)' }} />
                 <div className="relative px-6 pb-5">
-                  {previewSlide.headline && <div className="text-white font-bold text-xl leading-tight">{previewSlide.headline}</div>}
-                  {previewSlide.series && <div className="text-white/70 text-sm mt-1">{previewSlide.series.title}</div>}
+                  {previewSlide.headline && <div className="text-[var(--ryu-on-image)] font-bold text-xl leading-tight">{previewSlide.headline}</div>}
+                  {previewSlide.series && <div className="text-[color-mix(in_srgb,var(--ryu-on-image)_70%,transparent)] text-sm mt-1">{previewSlide.series.title}</div>}
                 </div>
                 <button onClick={() => setPreviewSlide(null)}
                   className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
-                  style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none' }}>
+                  style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', color: 'var(--ryu-on-image)', border: 'none' }}>
                   <X size={14} />
                 </button>
               </div>

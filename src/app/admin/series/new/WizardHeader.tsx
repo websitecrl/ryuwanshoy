@@ -13,9 +13,9 @@ function StepDot({ number, label, sublabel, state }: {
         className="flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold shrink-0"
         style={
           state === 'active'
-            ? { background: 'var(--ryu-primary)', color: '#fff', border: '2px solid var(--ryu-primary-deep)' }
+            ? { background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '2px solid var(--ryu-primary-deep)' }
             : state === 'done'
-            ? { background: '#16A34A', color: '#fff', border: '2px solid #15803D' }
+            ? { background: 'var(--ryu-success)', color: 'var(--ryu-on-success)', border: '2px solid var(--ryu-success)' }
             : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-3)', border: '2px solid var(--ryu-border)' }
         }
       >
@@ -24,7 +24,7 @@ function StepDot({ number, label, sublabel, state }: {
       <div>
         <div
           className="font-mono-ryu text-[9.5px] tracking-widest uppercase"
-          style={{ color: state === 'active' ? 'var(--ryu-primary-deep)' : state === 'done' ? '#16A34A' : 'var(--ryu-text-3)' }}
+          style={{ color: state === 'active' ? 'var(--ryu-primary-deep)' : state === 'done' ? 'var(--ryu-success)' : 'var(--ryu-text-3)' }}
         >
           {sublabel}
         </div>
@@ -77,7 +77,7 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
             <div key={s.label} className="flex items-center flex-1 last:flex-none">
               <StepDot number={stepNum} sublabel={s.sublabel} label={s.label} state={state} />
               {i < STEPS.length - 1 && (
-                <div className="flex-1 mx-4 h-px" style={{ background: step > stepNum ? '#16A34A' : 'var(--ryu-border)', minWidth: 32 }} />
+                <div className="flex-1 mx-4 h-px" style={{ background: step > stepNum ? 'var(--ryu-success)' : 'var(--ryu-border)', minWidth: 32 }} />
               )}
             </div>
           )

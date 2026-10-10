@@ -112,7 +112,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
   if (!chapter) {
     return (
-      <div className="p-8 text-sm" style={{ color: '#DC2626' }}>
+      <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>
         Chapter not found.
       </div>
     )
@@ -156,7 +156,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
       {/* ── Error banner ─────────────────────────────────────────────────── */}
       {error && (
         <div className="mx-8 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
-          style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626' }}>
+          style={{ background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)' }}>
           <AlertCircle size={15} style={{ flexShrink: 0 }} />
           {error}
         </div>
@@ -233,7 +233,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             {checklist.map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
                 {item.done
-                  ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, #16A34A)', flexShrink: 0 }} />
+                  ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, var(--ryu-success))', flexShrink: 0 }} />
                   : <Circle       size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
                 }
                 <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
@@ -249,7 +249,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 2 }}>
                   Early access only
                   {isEarlyAccess && (
-                    <span style={{ marginLeft: 8, fontSize: 10.5, background: 'var(--ryu-accent)', color: '#713F12', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
+                    <span style={{ marginLeft: 8, fontSize: 10.5, background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>
                       EA
                     </span>
                   )}
@@ -276,8 +276,8 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                   position: 'absolute',
                   left: isEarlyAccess ? 19 : 2,
                   top: 2, width: 16, height: 16, borderRadius: 99,
-                  background: '#fff', transition: 'left 200ms ease',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.18)',
+                  background: 'var(--ryu-thumb)', transition: 'left 200ms ease',
+                  boxShadow: '0 1px 3px color-mix(in srgb, var(--ryu-shadow) 18%, transparent)',
                 }} />
               </button>
             </div>
@@ -359,9 +359,9 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                 padding: '10px 20px', borderRadius: 8,
                 border: '1px solid var(--ryu-primary-deep)',
                 background: 'var(--ryu-primary)',
-                color: '#fff', fontSize: 13.5, fontWeight: 600,
+                color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600,
                 cursor: 'pointer',
-                boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
+                boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
                 opacity: loading ? 0.6 : 1,
               }}
             >

@@ -50,7 +50,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
           <div className="flex items-center gap-2.5">
             <span
               className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--ryu-primary-soft)', color: '#9A3412' }}
+              style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-on-primary-soft)' }}
             >
               <BookOpen size={14} />
             </span>
@@ -109,9 +109,9 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
                     className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
                     style={
                       s.status === 'ongoing'
-                        ? { background: '#DCFCE7', color: '#15803D' }
+                        ? { background: 'var(--ryu-success-soft)', color: 'var(--ryu-success)' }
                         : s.status === 'completed'
-                        ? { background: 'var(--ryu-primary-soft)', color: '#9A3412' }
+                        ? { background: 'var(--ryu-primary-soft)', color: 'var(--ryu-on-primary-soft)' }
                         : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-2)' }
                     }
                   >
@@ -119,7 +119,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
                       className="w-1 h-1 rounded-full"
                       style={{
                         background:
-                          s.status === 'ongoing'   ? '#16A34A' :
+                          s.status === 'ongoing'   ? 'var(--ryu-success)' :
                           s.status === 'completed' ? 'var(--ryu-primary)' :
                           'var(--ryu-text-3)',
                       }}
@@ -160,7 +160,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
           <div className="flex items-center gap-2.5">
             <span
               className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+              style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
             >
               <FileEdit size={14} />
             </span>
@@ -170,7 +170,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
               </span>
               <span
                 className="ml-2 text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
-                style={{ background: 'var(--ryu-primary-soft)', color: '#9A3412' }}
+                style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-on-primary-soft)' }}
               >
                 {totalDrafts}
               </span>
@@ -203,7 +203,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
             >
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-mono-ryu text-[8px] font-bold tracking-wider"
-                style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+                style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
               >
                 DRAFT
               </div>
@@ -241,7 +241,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
             >
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 font-mono-ryu text-[8px] font-bold tracking-wider"
-                style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+                style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
               >
                 DRAFT
               </div>

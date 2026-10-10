@@ -119,6 +119,46 @@
   --ryu-danger: var(--destructive);
   --ryu-on-danger: #FFFFFF;
 
+  /* Status colors (saved, success, warning). Light: green-600 / amber-600,
+     both above 3:1 on white for icons and bold text. Dark values in .dark. */
+  --ryu-success: #16A34A;
+  --ryu-warning: #D97706;
+
+  /* Tints for banners, badges and icon bubbles. Mixed from the base color,
+     so they follow .dark without their own dark values. */
+  --ryu-danger-soft:    color-mix(in srgb, var(--ryu-danger) 10%, transparent);
+  --ryu-danger-border:  color-mix(in srgb, var(--ryu-danger) 30%, transparent);
+  --ryu-success-soft:   color-mix(in srgb, var(--ryu-success) 10%, transparent);
+  --ryu-success-border: color-mix(in srgb, var(--ryu-success) 30%, transparent);
+  --ryu-warning-soft:   color-mix(in srgb, var(--ryu-warning) 12%, transparent);
+  --ryu-warning-border: color-mix(in srgb, var(--ryu-warning) 30%, transparent);
+
+  /* Text/icons on a solid --ryu-success (white here, dark in .dark, like --ryu-on-danger). */
+  --ryu-on-success: #FFFFFF;
+  /* Text on --ryu-primary-soft badges (orange-800 here; the soft tint is
+     translucent in .dark, where it needs a light orange). */
+  --ryu-on-primary-soft: #9A3412;
+
+  /* Drop shadows and modal backdrops: black in both themes. */
+  --ryu-shadow: #000000;
+  /* Text and icons over photos or dark glass (cover art, banner previews):
+     white in both themes, because the image behind doesn't change. */
+  --ryu-on-image: #FFFFFF;
+  /* Knob of a toggle switch: white in both themes. */
+  --ryu-thumb: #FFFFFF;
+
+  /* Placeholder covers for a series with no cover image (admin series list,
+     wizard preview, hero banner preview). Dark art under --ryu-on-image text,
+     the same in both themes. The series list picks one by title. */
+  --ryu-cover-1: linear-gradient(145deg, #3D1A0E 0%, #7C2D12 100%);
+  --ryu-cover-2: linear-gradient(145deg, #1A1A3E 0%, #312E81 100%);
+  --ryu-cover-3: linear-gradient(145deg, #0F2A1A 0%, #14532D 100%);
+  --ryu-cover-4: linear-gradient(145deg, #2A0A2E 0%, #581C87 100%);
+  --ryu-cover-5: linear-gradient(145deg, #1A2A0A 0%, #365314 100%);
+  --ryu-cover-6: linear-gradient(145deg, #0A1A2A 0%, #1E3A5F 100%);
+  --ryu-cover-7: linear-gradient(145deg, #2A1A0A 0%, #78350F 100%);
+  --ryu-cover-8: linear-gradient(145deg, #1A0A2A 0%, #4C1D95 100%);
+
   /* shadcn tokens — remapped to warm palette.
      The primary/accent family aliases the --ryu-* tokens so the two systems can't drift. */
   --background: #FFFBF5;
@@ -192,6 +232,11 @@
   --ryu-tag-fanart-bg: #500724;   --ryu-tag-fanart-fg: #F9A8D4;
   --ryu-tag-announce-bg: #172554; --ryu-tag-announce-fg: #93C5FD;
   --ryu-on-danger: #1C1917; /* dark text on the lighter dark-mode red (white only reaches ~2.8:1) */
+  /* Lighter status colors so they read on charcoal (green-400 / amber-400). */
+  --ryu-success: #4ADE80;
+  --ryu-warning: #FBBF24;
+  --ryu-on-success: #1C1917;
+  --ryu-on-primary-soft: #FDBA74;
 
   /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
   --background: #14110F;

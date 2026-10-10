@@ -2,7 +2,7 @@
 
 export function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22, boxShadow: '0 1px 0 rgba(120,80,30,0.04)' }}>
+    <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 4%, transparent)' }}>
       {children}
     </div>
   )

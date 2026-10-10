@@ -116,7 +116,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
                   <input style={{ ...inputStyle, border: 'none', borderRadius: 0, background: 'transparent' }} value={data.slug} onChange={e => { setSlugTaken(false); onChange({ slug: e.target.value }) }} onBlur={() => { void checkSlug() }} placeholder="my-awesome-comic" />
                 </div>
                 {slugTaken && (
-                  <p role="alert" style={{ marginTop: 6, fontSize: 12, color: '#DC2626' }}>
+                  <p role="alert" style={{ marginTop: 6, fontSize: 12, color: 'var(--ryu-danger)' }}>
                     This slug is already used by another series. Pick a different one.
                   </p>
                 )}
@@ -173,13 +173,13 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
                 <div>
                   <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 2 }}>
                     Early access series
-                    {data.isEA && <span style={{ marginLeft: 8, fontSize: 10.5, background: 'var(--ryu-accent)', color: '#713F12', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>EA</span>}
+                    {data.isEA && <span style={{ marginLeft: 8, fontSize: 10.5, background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)', padding: '2px 8px', borderRadius: 4, fontWeight: 700 }}>EA</span>}
                   </p>
                   <p style={{ fontSize: 12, color: 'var(--ryu-text-2)' }}>Only early access subscribers can read this</p>
                 </div>
                 <button type="button" role="switch" aria-checked={data.isEA} onClick={() => onChange({ isEA: !data.isEA })}
                   style={{ width: 40, height: 22, borderRadius: 99, background: data.isEA ? 'var(--ryu-primary)' : 'var(--ryu-border)', border: `1px solid ${data.isEA ? 'var(--ryu-primary-deep)' : 'var(--ryu-border)'}`, position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background 200ms ease' }}>
-                  <span style={{ position: 'absolute', left: data.isEA ? 18 : 2, top: 2, width: 16, height: 16, borderRadius: 99, background: '#fff', transition: 'left 200ms ease', boxShadow: '0 1px 3px rgba(0,0,0,0.18)' }} />
+                  <span style={{ position: 'absolute', left: data.isEA ? 18 : 2, top: 2, width: 16, height: 16, borderRadius: 99, background: 'var(--ryu-thumb)', transition: 'left 200ms ease', boxShadow: '0 1px 3px color-mix(in srgb, var(--ryu-shadow) 18%, transparent)' }} />
                 </button>
               </div>
             </Card>
@@ -233,7 +233,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
               {checklist.map(item => (
                 <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
                   {item.done
-                    ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, #16A34A)', flexShrink: 0 }} />
+                    ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success, var(--ryu-success))', flexShrink: 0 }} />
                     : <Circle       size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
                   }
                   <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
@@ -247,7 +247,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
       <div style={BOTTOM_BAR}>
         {!submitting && (
-          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: '#DC2626', textDecoration: 'none' }}>
+          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>
             Discard
           </Link>
         )}
@@ -263,7 +263,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
           <button
             disabled={submitting || !hasTitle || !hasSlug}
             onClick={() => proceed('next')}
-            style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 rgba(0,0,0,0.06)', opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
+            style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)', opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
             {checkingSlug ? <Loader2 size={14} className="animate-spin" /> : null}
             {checkingSlug ? 'Checking slug...' : 'Next — First Chapter →'}
           </button>

@@ -69,7 +69,7 @@ export default async function DashboardPage() {
     >
       <span
         className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-        style={{ background: '#16A34A' }}
+        style={{ background: 'var(--ryu-success)' }}
       />
       {new Date().toLocaleDateString('en-PH', {
         weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
             <div className="flex items-center gap-2 mb-1">
               <span
                 className="w-2 h-2 rounded-full animate-pulse-dot"
-                style={{ background: '#16A34A' }}
+                style={{ background: 'var(--ryu-success)' }}
               />
               <span
                 className="font-heading font-bold"

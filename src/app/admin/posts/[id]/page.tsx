@@ -159,7 +159,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
   if (!post) {
     return (
-      <div className="p-8 text-sm" style={{ color: '#DC2626' }}>
+      <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>
         {error ?? 'Post not found.'}
       </div>
     )
@@ -197,7 +197,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       {/* Error banner */}
       {error && (
         <div className="mx-8 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
-          style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#DC2626' }}>
+          style={{ background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)' }}>
           <AlertCircle size={15} style={{ flexShrink: 0 }} />
           {error}
         </div>
@@ -285,7 +285,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
               </div>
               {newPreview && (
                 <span className="font-mono-ryu text-[10px] px-2 py-0.5 rounded-full"
-                  style={{ background: 'var(--ryu-accent)', color: '#713F12' }}>
+                  style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}>
                   New image selected
                 </span>
               )}
@@ -318,7 +318,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                       style={{
                         position: 'absolute', top: 8, right: 8,
                         width: 28, height: 28, borderRadius: 99,
-                        background: 'rgba(28,25,23,0.7)', color: '#fff',
+                        background: 'color-mix(in srgb, var(--ryu-shadow) 70%, transparent)', color: 'var(--ryu-on-image)',
                         border: 'none', display: 'flex', alignItems: 'center',
                         justifyContent: 'center', cursor: 'pointer',
                       }}
@@ -394,10 +394,10 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
               padding: '10px 22px', borderRadius: 8,
               border: '1px solid var(--ryu-primary-deep)',
               background: 'var(--ryu-primary)',
-              color: '#fff', fontSize: 13.5, fontWeight: 600,
+              color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600,
               cursor: submitting ? 'not-allowed' : 'pointer',
               opacity: submitting ? 0.6 : 1,
-              boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
+              boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
             }}
           >
             {submitting && <Loader2 size={14} className="animate-spin" />}

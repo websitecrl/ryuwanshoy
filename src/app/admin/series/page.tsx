@@ -13,24 +13,13 @@ type Series = Tables<'series'>
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-// Generate a stable gradient from the series title (no image = show initials on gradient)
-function titleToGradient(title: string): string {
-  const palettes = [
-    ['#3D1A0E', '#7C2D12'],
-    ['#1A1A3E', '#312E81'],
-    ['#0F2A1A', '#14532D'],
-    ['#2A0A2E', '#581C87'],
-    ['#1A2A0A', '#365314'],
-    ['#0A1A2A', '#1E3A5F'],
-    ['#2A1A0A', '#78350F'],
-    ['#1A0A2A', '#4C1D95'],
-  ] as const
+// Number of --ryu-cover-N placeholder gradients defined in globals.css.
+const COVER_COUNT = 8
 
-  const idx = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % palettes.length
-  const palette = palettes[idx]!
-  const from = palette[0]
-  const to   = palette[1]
-  return `linear-gradient(145deg, ${from} 0%, ${to} 100%)`
+// A stable placeholder cover picked from the series title (no image = initials on gradient)
+function titleToGradient(title: string): string {
+  const idx = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % COVER_COUNT
+  return `var(--ryu-cover-${idx + 1})`
 }
 
 // Get initials — up to 2 characters from first letters of words
@@ -197,7 +186,7 @@ export default function AdminSeriesPage() {
                     statusFilter === status
                       ? {
                           background: 'var(--ryu-primary)',
-                          color: '#fff',
+                          color: 'var(--ryu-on-primary)',
                           border: '1.5px solid var(--ryu-primary-deep)',
                         }
                       : {
@@ -212,7 +201,7 @@ export default function AdminSeriesPage() {
                     className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-bold"
                     style={
                       statusFilter === status
-                        ? { background: 'rgba(255,255,255,0.25)', color: '#fff' }
+                        ? { background: 'color-mix(in srgb, var(--ryu-on-image) 25%, transparent)', color: 'var(--ryu-on-image)' }
                         : { background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-2)' }
                     }
                   >
@@ -226,10 +215,10 @@ export default function AdminSeriesPage() {
           href="/admin/series/new"
           className="flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-semibold shrink-0 transition-opacity hover:opacity-90"
           style={{
-            background: '#FEF08A',
-            color: '#1E1E1E',
-            border: '1px solid #D4B800',
-            boxShadow: '0 1px 0 rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.15)',
+            background: 'var(--ryu-accent)',
+            color: 'var(--ryu-on-accent)',
+            border: '1px solid var(--ryu-accent-deep)',
+            boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
           }}
         >
           <Plus size={16} strokeWidth={2.5} />
@@ -258,7 +247,7 @@ export default function AdminSeriesPage() {
           <Link
             href="/admin/series/new"
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
-            style={{ background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)' }}
+            style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}
           >
             <Plus size={15} strokeWidth={2.5} />
             Create first series
@@ -317,7 +306,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
       style={{
         border: '1px solid var(--ryu-border)',
         background: 'var(--ryu-surface-1)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+        boxShadow: '0 1px 3px color-mix(in srgb, var(--ryu-shadow) 4%, transparent)',
       }}
     >
       {/* ── Cover area ── */}
@@ -339,7 +328,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
           >
             <span
               className="font-heading font-bold select-none"
-              style={{ fontSize: 56, lineHeight: 1, color: 'rgba(255,255,255,0.15)', letterSpacing: -2 }}
+              style={{ fontSize: 56, lineHeight: 1, color: 'color-mix(in srgb, var(--ryu-on-image) 15%, transparent)', letterSpacing: -2 }}
             >
               {getInitials(s.title)}
             </span>
@@ -350,17 +339,14 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="absolute top-3 right-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={
-              s.status === 'ongoing'
-                ? { background: 'rgba(22,163,74,0.92)', color: '#fff', backdropFilter: 'blur(4px)' }
-                : s.status === 'completed'
-                ? { background: 'rgba(100,116,139,0.88)', color: '#fff', backdropFilter: 'blur(4px)' }
-                : { background: 'rgba(217,119,6,0.88)', color: '#fff', backdropFilter: 'blur(4px)' }
-            }
+            // Dark glass in both themes (it sits on cover art); the dot carries
+            // the status color, so white text stays readable in dark mode,
+            // where the status colors are light.
+            style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 65%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }}
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ background: s.status === 'ongoing' ? '#86EFAC' : s.status === 'completed' ? '#CBD5E1' : '#FDE68A' }}
+              style={{ background: s.status === 'ongoing' ? 'var(--ryu-success)' : s.status === 'completed' ? 'color-mix(in srgb, var(--ryu-on-image) 60%, transparent)' : 'var(--ryu-warning)' }}
             />
             {s.status === 'ongoing' ? 'Ongoing' : s.status === 'completed' ? 'Completed' : 'Hiatus'}
           </span>
@@ -370,7 +356,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="absolute bottom-3 left-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            style={{ background: 'rgba(0,0,0,0.65)', color: '#fff', backdropFilter: 'blur(4px)' }}
+            style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 65%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }}
           >
             <BookMarked size={12} />
             {chapterCount} chapter{chapterCount !== 1 ? 's' : ''}

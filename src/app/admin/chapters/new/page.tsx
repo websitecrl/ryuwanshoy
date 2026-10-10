@@ -69,17 +69,17 @@ function SortablePageThumbnail({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
-      <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', border: `2px solid ${page.error ? '#FCA5A5' : page.uploaded ? '#86EFAC' : 'var(--ryu-border)'}` }}>
+      <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', border: `2px solid ${page.error ? 'var(--ryu-danger-border)' : page.uploaded ? 'var(--ryu-success-border)' : 'var(--ryu-border)'}` }}>
         <Image src={page.preview} alt={`Page ${index + 1}`} fill className="object-cover" draggable={false} />
 
         {page.uploading && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Loader2 size={14} className="animate-spin text-white" />
+          <div style={{ position: 'absolute', inset: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Loader2 size={14} className="animate-spin text-[var(--ryu-on-image)]" />
           </div>
         )}
         {page.uploaded && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(22,163,74,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle2 size={14} style={{ color: '#86EFAC' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'color-mix(in srgb, var(--ryu-success) 30%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={14} style={{ color: 'var(--ryu-success-border)' }} />
           </div>
         )}
         {!page.uploading && !page.uploaded && (
@@ -89,18 +89,18 @@ function SortablePageThumbnail({
             // on the remove button doesn't get swallowed as a drag start.
             onPointerDown={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
-            style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'rgba(28,25,23,0.78)', color: '#FFFBF5', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
+            style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
             className="hover:opacity-100 transition-opacity">
             <X size={9} />
           </button>
         )}
 
-        <span className="font-mono-ryu" style={{ position: 'absolute', top: 3, left: 3, fontSize: 8, background: 'rgba(28,25,23,0.78)', color: '#FFFBF5', padding: '1px 4px', borderRadius: 3 }}>
+        <span className="font-mono-ryu" style={{ position: 'absolute', top: 3, left: 3, fontSize: 8, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', padding: '1px 4px', borderRadius: 3 }}>
           P{String(index + 1).padStart(2, '0')}
         </span>
 
         {page.isSpread && (
-          <span className="font-mono-ryu" style={{ position: 'absolute', bottom: 3, right: 3, fontSize: 8, background: 'var(--ryu-primary)', color: '#fff', padding: '1px 4px', borderRadius: 3, fontWeight: 700 }}>
+          <span className="font-mono-ryu" style={{ position: 'absolute', bottom: 3, right: 3, fontSize: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', padding: '1px 4px', borderRadius: 3, fontWeight: 700 }}>
             SPREAD
           </span>
         )}
@@ -290,7 +290,7 @@ export default function NewChapterPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 animate-page-in">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>No series found. Create a series first before adding chapters.</p>
-        <Link href="/admin/series/new" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: '#fff', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
+        <Link href="/admin/series/new" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
             Create New Series
           </Link>
       </div>
@@ -354,8 +354,8 @@ export default function NewChapterPage() {
                     value={chapterNumber}
                     onChange={e => setChapterNumber(e.target.value)}
                   />
-                  {chapterNumber && !isValidNumber && <p style={{ fontSize: 11.5, color: '#DC2626', marginTop: 4 }}>Must be 1 or higher</p>}
-                  {chapterNumber && isValidNumber && isDuplicateNumber && <p style={{ fontSize: 11.5, color: '#DC2626', marginTop: 4 }}>Chapter {chapterNum} already exists</p>}
+                  {chapterNumber && !isValidNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Must be 1 or higher</p>}
+                  {chapterNumber && isValidNumber && isDuplicateNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Chapter {chapterNum} already exists</p>}
                 </div>
                 <div>
                   <label style={labelStyle}>Title <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>(optional)</span></label>
@@ -387,7 +387,7 @@ export default function NewChapterPage() {
             ].map(item => (
               <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}>
                 {item.done
-                  ? <CheckCircle2 size={13} style={{ color: '#16A34A', flexShrink: 0 }} />
+                  ? <CheckCircle2 size={13} style={{ color: 'var(--ryu-success)', flexShrink: 0 }} />
                   : <Circle      size={13} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
                 }
                 <span style={{ fontSize: 12, color: item.done ? 'var(--ryu-text)' : 'var(--ryu-text-2)' }}>{item.label}</span>
@@ -408,7 +408,7 @@ export default function NewChapterPage() {
                 <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>02</span>
                 <span className="font-heading" style={{ fontSize: 15, fontWeight: 600, color: 'var(--ryu-text)' }}>Pages</span>
               </div>
-              <span className="font-mono-ryu text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--ryu-accent)', color: '#713F12' }}>Required</span>
+              <span className="font-mono-ryu text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}>Required</span>
             </div>
             <div style={{ padding: 16 }}>
               <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
@@ -461,7 +461,7 @@ export default function NewChapterPage() {
           onClick={() => router.push('/admin/series')}
           style={{
             fontSize: 13.5, fontWeight: 600,
-            color: submitting ? 'var(--ryu-text-3)' : '#DC2626',
+            color: submitting ? 'var(--ryu-text-3)' : 'var(--ryu-danger)',
             background: 'none', border: 'none',
             cursor: submitting ? 'not-allowed' : 'pointer',
             padding: 0, opacity: submitting ? 0.5 : 1,
@@ -488,7 +488,7 @@ export default function NewChapterPage() {
               Save as draft
             </button>
           <button disabled={submitting || !hasSeriesSelected || !hasChapterNumber || !hasPages || !isValidNumber || isDuplicateNumber} onClick={() => handleSubmit('publish')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 rgba(0,0,0,0.06)', opacity: (!hasSeriesSelected || !hasChapterNumber || !hasPages || !isValidNumber || isDuplicateNumber) ? 0.5 : 1 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)', opacity: (!hasSeriesSelected || !hasChapterNumber || !hasPages || !isValidNumber || isDuplicateNumber) ? 0.5 : 1 }}>
             {submitting && <Loader2 size={14} className="animate-spin" />}
             {seriesIsPublished === false ? 'Publish series' : 'Publish chapter'}
           </button>

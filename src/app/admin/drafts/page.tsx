@@ -185,7 +185,7 @@ export default async function DraftsPage() {
                     </span>
                     <span
                       className="font-mono-ryu text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full shrink-0"
-                      style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+                      style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
                     >
                       DRAFT
                     </span>
@@ -202,7 +202,7 @@ export default async function DraftsPage() {
                 {missingCount > 0 && (
                   <span
                     className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
-                    style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                    style={{ background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)' }}
                     title="Missing from the series checklist"
                   >
                     <AlertTriangle size={11} /> {missingCount} missing
@@ -219,7 +219,7 @@ export default async function DraftsPage() {
                   <Link
                     href={`/admin/chapters/new?series_id=${draft.id}`}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
-                    style={{ background: 'var(--ryu-primary)', border: '1px solid var(--ryu-primary-deep)', color: '#fff' }}
+                    style={{ background: 'var(--ryu-primary)', border: '1px solid var(--ryu-primary-deep)', color: 'var(--ryu-on-primary)' }}
                   >
                     <Plus size={13} /> Add chapter
                   </Link>
@@ -272,7 +272,7 @@ export default async function DraftsPage() {
                   {missingCount > 0 && (
                     <span
                       className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
-                      style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
+                      style={{ background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)' }}
                       title="Missing from the chapter checklist"
                     >
                       <AlertTriangle size={11} /> {missingCount} missing
@@ -280,7 +280,7 @@ export default async function DraftsPage() {
                   )}
                   <span
                     className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
-                    style={{ background: 'var(--ryu-accent)', color: '#713F12' }}
+                    style={{ background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)' }}
                   >
                     Draft
                   </span>
