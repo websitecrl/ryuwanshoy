@@ -17,13 +17,24 @@ const EDITABLE_FIELDS = [
   'twitter_url', 'youtube_url',
 ] as const satisfies ReadonlyArray<keyof TablesUpdate<'settings'>>
 
+// Columns the public GET returns. Listed by hand, not '*', because GET is
+// public and uses the service role (no RLS): a column added to settings later
+// (e.g. an API key) must stay private unless someone deliberately adds it
+// here. Kept separate from EDITABLE_FIELDS for the same reason: "the admin
+// can edit it" doesn't mean "visitors may read it".
+const PUBLIC_FIELDS = `
+  creator_name, donation_message, ea_headline, ea_subtext, facebook_url,
+  instagram_url, kofi_url, logo_url, patreon_url, paypal_url,
+  site_description, site_title, tiktok_url, twitter_url, youtube_url
+`
+
 // ─── GET /api/settings ────────────────────────────────────────────────────────
 // Public — donate page and early-access page need this without auth
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from("settings")
-      .select("*")
+      .select(PUBLIC_FIELDS)
       .single();
 
     if (error) {
