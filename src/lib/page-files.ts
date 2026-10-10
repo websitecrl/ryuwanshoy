@@ -13,7 +13,9 @@ import type { Tables } from '@/types/database'
  * Keeps the image files and tells the admin about the rest.
  *
  * The file picker already hides non-images (accept="image/*"), but drag and
- * drop doesn't, and a dropped PDF used to vanish without a word.
+ * drop doesn't, and a dropped PDF used to vanish without a word. The wording
+ * says "supported image" because some real images land here too: Windows
+ * often gives .heic files no MIME type at all.
  *
  * @param files - files from an input or a drop event, in the browser's order
  * @returns only the image files, order preserved
@@ -23,11 +25,11 @@ export function keepImageFiles(files: File[]): File[] {
   const skipped = files.filter(f => !f.type.startsWith('image/'))
 
   if (skipped.length === 1) {
-    toast.warning(`Skipped "${skipped[0]!.name}": not an image.`)
+    toast.warning(`Skipped "${skipped[0]!.name}": not a supported image type. Use JPG, PNG or WebP.`)
   } else if (skipped.length > 1) {
     const names = skipped.slice(0, 3).map(f => `"${f.name}"`).join(', ')
     const more  = skipped.length > 3 ? ` and ${skipped.length - 3} more` : ''
-    toast.warning(`Skipped ${skipped.length} files that aren't images: ${names}${more}.`)
+    toast.warning(`Skipped ${skipped.length} files that aren't supported images (use JPG, PNG or WebP): ${names}${more}.`)
   }
   return images
 }
