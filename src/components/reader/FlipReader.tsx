@@ -9,6 +9,8 @@ import type { Tables } from '@/types/database'
 
 type Page = Tables<'pages'>
 
+const FLIP_MS = 400
+
 /**
  * One item in the flip book. A two page spread is split into two items on
  * desktop, so book indexes and chapter pages don't line up 1:1; `position`
@@ -33,7 +35,42 @@ function visibleRange(displayPages: DisplayPage[], index: number, portrait: bool
     last: displayPages[end]?.position ?? 1,
     atStart: start <= 0,
     atEnd: end >= last,
+    before: start,
+    after: Math.max(0, last - end),
   }
+}
+
+function edgeWidth(items: number, total: number, max: number) {
+  if (items <= 0 || total <= 1) return 0
+  return Math.max(2, Math.round((max * items) / (total - 1)))
+}
+
+function PageEdge({ side, width }: { side: 'left' | 'right'; width: number }) {
+  if (width === 0) return null
+  return (
+    <div
+      aria-hidden
+      style={{
+        position:      'absolute',
+        top:           3,
+        bottom:        3,
+        [side]:        -width,
+        width,
+        background:    `repeating-linear-gradient(to ${side}, var(--ryu-page-edge) 0 1px, var(--ryu-page-edge-line) 1px 2px)`,
+        borderRadius:  side === 'left' ? '3px 0 0 3px' : '0 3px 3px 0',
+        boxShadow:     '0 2px 4px color-mix(in srgb, var(--ryu-shadow) 35%, transparent)',
+        transition:    `width ${FLIP_MS}ms ease, ${side} ${FLIP_MS}ms ease`,
+        pointerEvents: 'none',
+      }}
+    />
+  )
+}
+
+function spineShade(page: 'left' | 'right') {
+  const dark = 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)'
+  const soft = 'color-mix(in srgb, var(--ryu-shadow) 18%, transparent)'
+  const fromSpine = page === 'left' ? 'to left' : 'to right'
+  return `linear-gradient(${fromSpine}, ${dark}, ${soft} 4%, transparent 12%)`
 }
 
 type Props = {
@@ -167,6 +204,10 @@ export default function FlipReader({
     : `Page ${view.first} – ${view.last} / ${total}`
   const progress = total > 0 ? Math.round((view.last / total) * 100) : 0
 
+  const edgeMax   = isMobile ? 5 : 10
+  const leftEdge  = isMobile ? 0 : edgeWidth(view.before, displayPages.length, edgeMax)
+  const rightEdge = edgeWidth(view.after, displayPages.length, edgeMax)
+
   // ── Reader ───────────────────────────────────────────────────────────────
   return (
     <div
@@ -186,30 +227,13 @@ export default function FlipReader({
         <ChevronLeft size={isMobile ? 22 : 28} />
       </button>
 
-      {/* Book + center spine line */}
+      {/* Book */}
       <div
         onClick={e => e.stopPropagation()}
         style={{ position: 'relative' }}
       >
-        {/* Center spine line — desktop spread only, subtle divider between pages.
-            --ryu-text is near-black in light and cream in dark, so a low opacity
-            gives the same soft crease in both without a theme branch. */}
-        {!isMobile && (
-          <div
-            style={{
-              position:      'absolute',
-              left:          '50%',
-              top:           0,
-              bottom:        0,
-              width:         '2px',
-              transform:     'translateX(-50%)',
-              background:    'var(--ryu-text)',
-              opacity:       0.1,
-              zIndex:        10,
-              pointerEvents: 'none',
-            }}
-          />
-        )}
+        <PageEdge side="left" width={leftEdge} />
+        <PageEdge side="right" width={rightEdge} />
 
         <HTMLFlipBook
           ref={bookRef}
@@ -221,7 +245,7 @@ export default function FlipReader({
           minHeight={bookDims.height}
           maxHeight={bookDims.height}
           drawShadow
-          flippingTime={600}
+          flippingTime={FLIP_MS}
           usePortrait={isMobile}
           startPage={0}
           showCover={false}
@@ -237,7 +261,7 @@ export default function FlipReader({
           swipeDistance={30}
           showPageCorners
           disableFlipByClick={false}
-          maxShadowOpacity={0.5}
+          maxShadowOpacity={0.8}
         >
           {/* Comic pages only; index 0 is page 1 */}
           {displayPages.map((page, index) => (
@@ -280,6 +304,17 @@ export default function FlipReader({
                   className="object-contain"
                   priority={index < 4}
                   loading={index < 4 ? 'eager' : 'lazy'}
+                />
+              )}
+              {!isMobile && (
+                <div
+                  aria-hidden
+                  style={{
+                    position:      'absolute',
+                    inset:         0,
+                    background:    spineShade(index % 2 === 0 ? 'left' : 'right'),
+                    pointerEvents: 'none',
+                  }}
                 />
               )}
             </div>
