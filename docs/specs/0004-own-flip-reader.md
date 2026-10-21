@@ -1,6 +1,6 @@
 # 0004 · Our own flip reader (replacing react-pageflip)
 
-**Status**: Draft (waiting for owner approval)
+**Status**: Accepted (owner answers below); built in steps 2 to 5
 **Date**: 2026-10-21
 **Authorized by**: Sayron123, in chat ("option B"), after #49 shipped option A
 

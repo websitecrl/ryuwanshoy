@@ -5,7 +5,6 @@ import type { Tables } from '@/types/database'
 import { savedAgeAllows } from '@/hooks/useSavedAge'
 import ScrollReader from './ScrollReader'
 import FlipReader from './FlipReader'
-import TiltFlipReader from './flip/TiltFlipReader'
 import ReaderTopBar from './ReaderTopBar'
 
 type Page = Tables<'pages'>
@@ -53,13 +52,11 @@ export default function ReaderShell({
   const [mode,        setMode]        = useState<ReadMode>('scroll')
   const [uiVisible,   setUiVisible]   = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
-  const [newFlip,     setNewFlip]     = useState(false)
 
   // Restore mode = URL param takes priority over localStorage
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
-      setNewFlip(params.get('flip') === 'new')
       const urlMode = params.get('mode') as ReadMode | null
       if (urlMode === 'flip' || urlMode === 'scroll') {
         setMode(urlMode)
@@ -175,17 +172,6 @@ export default function ReaderShell({
           <ScrollReader
             pages={pages}
             totalPages={pages.length}
-            uiVisible={uiVisible}
-            onToggleUI={() => setUiVisible((v) => !v)}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-          />
-        ) : newFlip ? (
-          <TiltFlipReader
-            pages={pages}
-            seriesSlug={series.slug}
-            prevHref={prevHref}
-            nextHref={nextHref}
             uiVisible={uiVisible}
             onToggleUI={() => setUiVisible((v) => !v)}
             currentPage={currentPage}

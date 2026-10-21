@@ -53,7 +53,7 @@ Ryuwanshoy is a comic / manhwa publishing site for a single Filipino creator. It
 | Components | shadcn-style primitives on **`@base-ui/react`** | `components.json` style `base-nova`; icons via `lucide-react` |
 | Font | **Fredoka** (Google font via `next/font`) | One font for everything |
 | Drag & drop | `@dnd-kit/*` | Page reordering |
-| Page-turn | `react-pageflip` | Flip reader |
+| Page-turn | Own code (`src/components/reader/flip/`, spec 0004) | Flip reader |
 | Toasts | `sonner` | |
 | Database & Auth | **Supabase** (`@supabase/ssr`, `@supabase/supabase-js`) | Postgres + Auth + Realtime |
 | File storage | **Cloudflare R2** via `aws4fetch` | S3-compatible, SigV4-signed `fetch` |
