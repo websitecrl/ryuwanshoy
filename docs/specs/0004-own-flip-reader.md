@@ -59,10 +59,11 @@ These come from `FlipReader.tsx` and `ReaderShell.tsx` as of #49.
 ## How it gets built (one PR each)
 1. This spec, approved.
 2. Click, tap and key turns with the 3D tilt, desktop and phone, behind
-   `?flip=new`. Everyone else keeps the current reader.
+   `?flip=new`, with the book look (R-10) shared with the old reader.
+   Everyone else keeps the current reader.
 3. Drag and swipe with the corner curl, including spring back (R-3).
-4. Book look moved over (R-10), spreads (R-9, A-4), `?page=N` (R-6),
-   reduce motion (A-3), mounting only nearby pages (A-2).
+4. Spreads (R-9, A-4), `?page=N` (R-6), reduce motion (A-3), mounting only
+   nearby pages (A-2).
 5. Make it the default, delete the old reader and remove `react-pageflip` and
    `page-flip` from `package.json`.
 
@@ -88,6 +89,6 @@ These come from `FlipReader.tsx` and `ReaderShell.tsx` as of #49.
 - Zoom and pinch to zoom.
 - Page turn sound.
 
-## Open questions for the owner
-- Q-1: Keep the 3D tilt for clicks (like FlipHTML5) or use the curl for clicks too?
-- Q-2: Should phones curl on swipe, or slide like FlipHTML5 does on phones?
+## Owner answers (2026-10-21)
+- Q-1: Clicks, taps and keys use the 3D tilt, like FlipHTML5.
+- Q-2: Phones curl the page on swipe (no slide).
