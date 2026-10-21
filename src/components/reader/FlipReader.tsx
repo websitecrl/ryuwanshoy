@@ -261,13 +261,12 @@ export default function FlipReader({
           swipeDistance={30}
           showPageCorners
           disableFlipByClick={false}
-          maxShadowOpacity={0.5}
+          maxShadowOpacity={0.8}
         >
           {/* Comic pages only; index 0 is page 1 */}
           {displayPages.map((page, index) => (
             <div
               key={`${page.id}-${page.spreadSide ?? 'single'}`}
-              data-density="hard"
               style={{
                 width:      bookDims.width,
                 height:     bookDims.height,
