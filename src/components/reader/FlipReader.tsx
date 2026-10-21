@@ -1,22 +1,20 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import HTMLFlipBook from 'react-pageflip'
-import type { Tables } from '@/types/database'
-
-type Page = Tables<'pages'>
-
-const FLIP_MS = 400
-
-/**
- * One item in the flip book. A two page spread is split into two items on
- * desktop, so book indexes and chapter pages don't line up 1:1; `position`
- * (1 based place in the chapter) is the page number readers see.
- */
-type DisplayPage = Page & { spreadSide: 'left' | 'right' | null; position: number }
+import {
+  FLIP_MS,
+  PageContent,
+  PageEdge,
+  PrevArrow,
+  NextArrow,
+  FlipProgress,
+  buildDisplayPages,
+  edgeWidth,
+  useBookDims,
+  type DisplayPage,
+  type FlipReaderProps,
+} from './flip/book'
 
 /**
  * The chapter pages visible at a flip book index.
@@ -40,50 +38,6 @@ function visibleRange(displayPages: DisplayPage[], index: number, portrait: bool
   }
 }
 
-function edgeWidth(items: number, total: number, max: number) {
-  if (items <= 0 || total <= 1) return 0
-  return Math.max(2, Math.round((max * items) / (total - 1)))
-}
-
-function PageEdge({ side, width }: { side: 'left' | 'right'; width: number }) {
-  if (width === 0) return null
-  return (
-    <div
-      aria-hidden
-      style={{
-        position:      'absolute',
-        top:           3,
-        bottom:        3,
-        [side]:        -width,
-        width,
-        background:    `repeating-linear-gradient(to ${side}, var(--ryu-page-edge) 0 1px, var(--ryu-page-edge-line) 1px 2px)`,
-        borderRadius:  side === 'left' ? '3px 0 0 3px' : '0 3px 3px 0',
-        boxShadow:     '0 2px 4px color-mix(in srgb, var(--ryu-shadow) 35%, transparent)',
-        transition:    `width ${FLIP_MS}ms ease, ${side} ${FLIP_MS}ms ease`,
-        pointerEvents: 'none',
-      }}
-    />
-  )
-}
-
-function spineShade(page: 'left' | 'right') {
-  const dark = 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)'
-  const soft = 'color-mix(in srgb, var(--ryu-shadow) 18%, transparent)'
-  const fromSpine = page === 'left' ? 'to left' : 'to right'
-  return `linear-gradient(${fromSpine}, ${dark}, ${soft} 4%, transparent 12%)`
-}
-
-type Props = {
-  pages: Page[]
-  seriesSlug: string
-  prevHref: string | null
-  nextHref: string | null
-  uiVisible: boolean
-  onToggleUI: () => void
-  currentPage: number
-  onPageChange: (page: number) => void
-}
-
 type FlipBookRef = {
   pageFlip: () => {
     flipNext: (corner?: string) => void
@@ -101,48 +55,13 @@ export default function FlipReader({
   onToggleUI,
   currentPage,
   onPageChange,
-}: Props) {
+}: FlipReaderProps) {
   const bookRef    = useRef<FlipBookRef>(null)
   const didSyncRef = useRef(false)
 
-  const [isMobile,   setIsMobile]   = useState(false)
-  const [bookDims,   setBookDims]   = useState({ width: 400, height: 560 })
+  const { isMobile, bookDims } = useBookDims()
 
-  // ── Responsive dims ──────────────────────────────────────────────────────
-  useEffect(() => {
-    function update() {
-      const mobile = window.innerWidth <= 880
-      setIsMobile(mobile)
-      if (mobile) {
-        const w = Math.min(Math.round(window.innerWidth * 0.88), 480)
-        const h = Math.round(w * (3300 / 2550))
-        setBookDims({ width: w, height: h })
-      } else {
-        const h = Math.min(Math.round(window.innerHeight * 0.82), 860)
-        const w = Math.round(h * (2550 / 3300))
-        setBookDims({ width: w, height: h })
-      }
-    }
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  // Only this chapter's pages, in page_number order. No cover or divider: an
-  // extra item before page 1 is what readers could flip back to and get
-  // stuck on, with the counter still saying page 1.
-  const displayPages: DisplayPage[] = useMemo(() =>
-    [...pages]
-      .sort((a, b) => a.page_number - b.page_number)
-      .flatMap((page, i): DisplayPage[] =>
-        page.is_spread && !isMobile
-          ? [
-              { ...page, spreadSide: 'left',  position: i + 1 },
-              { ...page, spreadSide: 'right', position: i + 1 },
-            ]
-          : [{ ...page, spreadSide: null, position: i + 1 }]
-      ),
-  [pages, isMobile])
+  const displayPages = useMemo(() => buildDisplayPages(pages, isMobile), [pages, isMobile])
 
   // The flip book index on screen. Set only from the book itself (onFlip, or
   // the resume jump), so the counter, progress bar and arrows can't drift.
@@ -156,7 +75,7 @@ export default function FlipReader({
 
       let attempts = 0
       const MAX = 20
-      
+
       const tryFlip = () => {
         const api = bookRef.current?.pageFlip()
         if (!api) {
@@ -196,14 +115,6 @@ export default function FlipReader({
     onPageChange(visibleRange(displayPages, e.data, isMobile).last)
   }
 
-  // ── Derived state (all from bookIndex) ───────────────────────────────────
-  const { atStart, atEnd } = view
-  const total = pages.length
-  const pageLabel = view.first === view.last
-    ? `Page ${view.first} / ${total}`
-    : `Page ${view.first} – ${view.last} / ${total}`
-  const progress = total > 0 ? Math.round((view.last / total) * 100) : 0
-
   const edgeMax   = isMobile ? 5 : 10
   const leftEdge  = isMobile ? 0 : edgeWidth(view.before, displayPages.length, edgeMax)
   const rightEdge = edgeWidth(view.after, displayPages.length, edgeMax)
@@ -215,17 +126,7 @@ export default function FlipReader({
       style={{ minHeight: 'calc(100vh - 48px)' }}
       onClick={onToggleUI}
     >
-      {/* Prev arrow */}
-      <button
-        onClick={e => { e.stopPropagation(); goPrev() }}
-        disabled={atStart}
-        aria-label="Previous page"
-        className="absolute left-2 z-10 p-2 md:p-3 transition-colors
-                   disabled:opacity-20 disabled:cursor-not-allowed
-                   text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
-      >
-        <ChevronLeft size={isMobile ? 22 : 28} />
-      </button>
+      <PrevArrow disabled={view.atStart} isMobile={isMobile} onPrev={goPrev} />
 
       {/* Book */}
       <div
@@ -275,91 +176,21 @@ export default function FlipReader({
                 overflow:   'hidden',
               }}
             >
-              {page.spreadSide ? (
-                // Force a deterministic split: render the image at 2x page width,
-                // then shift it exactly one page-width left or right.
-                <div
-                  style={{
-                    position: 'absolute',
-                    top:      0,
-                    left:     page.spreadSide === 'left' ? 0 : -bookDims.width,
-                    width:    bookDims.width * 2,
-                    height:   bookDims.height,
-                  }}
-                >
-                  <Image
-                    src={page.image_url}
-                    alt={`Page ${page.page_number}`}
-                    fill
-                    className="object-cover"
-                    priority={index < 4}
-                    loading={index < 4 ? 'eager' : 'lazy'}
-                  />
-                </div>
-              ) : (
-                <Image
-                  src={page.image_url}
-                  alt={`Page ${page.page_number}`}
-                  fill
-                  className="object-contain"
-                  priority={index < 4}
-                  loading={index < 4 ? 'eager' : 'lazy'}
-                />
-              )}
-              {!isMobile && (
-                <div
-                  aria-hidden
-                  style={{
-                    position:      'absolute',
-                    inset:         0,
-                    background:    spineShade(index % 2 === 0 ? 'left' : 'right'),
-                    pointerEvents: 'none',
-                  }}
-                />
-              )}
+              <PageContent
+                page={page}
+                width={bookDims.width}
+                height={bookDims.height}
+                eager={index < 4}
+                spine={isMobile ? null : index % 2 === 0 ? 'left' : 'right'}
+              />
             </div>
           ))}
         </HTMLFlipBook>
       </div>
 
-      {/* Next arrow / next chapter */}
-      {atEnd && nextHref ? (
-        <Link
-          href={nextHref}
-          onClick={e => e.stopPropagation()}
-          className="absolute right-2 z-10 flex items-center gap-1 text-sm transition-colors
-                     text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
-        >
-          Next <ChevronRight size={isMobile ? 22 : 28} />
-        </Link>
-      ) : (
-        <button
-          onClick={e => { e.stopPropagation(); goNext() }}
-          disabled={atEnd}
-          aria-label="Next page"
-          className="absolute right-2 z-10 p-2 md:p-3 transition-colors
-                     disabled:opacity-20 disabled:cursor-not-allowed
-                     text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]"
-        >
-          <ChevronRight size={isMobile ? 22 : 28} />
-        </button>
-      )}
+      <NextArrow atEnd={view.atEnd} nextHref={nextHref} isMobile={isMobile} onNext={goNext} />
 
-      {/* Progress bar */}
-      <div className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300
-        ${uiVisible ? 'translate-y-0' : 'translate-y-full'}`}>
-        <div className="flex justify-center pb-1">
-          <span className="text-xs tabular-nums text-[var(--ryu-text-2)]">
-            {pageLabel}
-          </span>
-        </div>
-        <div className="h-1 bg-[var(--ryu-border)]">
-          <div
-            className="h-full transition-all duration-300 bg-[var(--ryu-primary)]"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      <FlipProgress uiVisible={uiVisible} first={view.first} last={view.last} total={pages.length} />
     </div>
   )
 }
