@@ -212,8 +212,6 @@
   --ryu-primary-deep: #FB923C;
   --ryu-primary-soft: rgba(244, 129, 47, 0.16);
   --ryu-on-primary: #1C1917;
-  --ryu-page-edge: #CFC8BC;
-  --ryu-page-edge-line: #8F8676;
   /* Same gold family as light (#FEF08A) but much lower lightness — the pale yellow blew out
      against charcoal. Still clearly distinct from the orange primary; #1C1917 on it is 7.4:1. */
   --ryu-accent: #D4A017;
@@ -241,6 +239,8 @@
   --ryu-warning: #FBBF24;
   --ryu-on-success: #1C1917;
   --ryu-on-primary-soft: #FDBA74;
+  --ryu-page-edge: #CFC8BC;
+  --ryu-page-edge-line: #8F8676;
 
   /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
   --background: #14110F;

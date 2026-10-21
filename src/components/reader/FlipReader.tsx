@@ -40,7 +40,13 @@ function visibleRange(displayPages: DisplayPage[], index: number, portrait: bool
   }
 }
 
+function edgeWidth(items: number, total: number, max: number) {
+  if (items <= 0 || total <= 1) return 0
+  return Math.max(2, Math.round((max * items) / (total - 1)))
+}
+
 function PageEdge({ side, width }: { side: 'left' | 'right'; width: number }) {
+  if (width === 0) return null
   return (
     <div
       aria-hidden
@@ -60,10 +66,11 @@ function PageEdge({ side, width }: { side: 'left' | 'right'; width: number }) {
   )
 }
 
-function spineShade(side: 'left' | 'right') {
+function spineShade(page: 'left' | 'right') {
   const dark = 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)'
   const soft = 'color-mix(in srgb, var(--ryu-shadow) 18%, transparent)'
-  return `linear-gradient(to ${side}, ${dark}, ${soft} 4%, transparent 12%)`
+  const fromSpine = page === 'left' ? 'to left' : 'to right'
+  return `linear-gradient(${fromSpine}, ${dark}, ${soft} 4%, transparent 12%)`
 }
 
 type Props = {
@@ -197,13 +204,9 @@ export default function FlipReader({
     : `Page ${view.first} – ${view.last} / ${total}`
   const progress = total > 0 ? Math.round((view.last / total) * 100) : 0
 
-  const edgeMax = isMobile ? 5 : 10
-  const edgeWidth = (items: number) =>
-    items <= 0 || displayPages.length <= 1
-      ? 0
-      : Math.max(2, Math.round((edgeMax * items) / (displayPages.length - 1)))
-  const leftEdge  = isMobile ? 0 : edgeWidth(view.before)
-  const rightEdge = edgeWidth(view.after)
+  const edgeMax   = isMobile ? 5 : 10
+  const leftEdge  = isMobile ? 0 : edgeWidth(view.before, displayPages.length, edgeMax)
+  const rightEdge = edgeWidth(view.after, displayPages.length, edgeMax)
 
   // ── Reader ───────────────────────────────────────────────────────────────
   return (
