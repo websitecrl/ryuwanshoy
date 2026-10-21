@@ -146,6 +146,8 @@
   --ryu-on-image: #FFFFFF;
   /* Knob of a toggle switch: white in both themes. */
   --ryu-thumb: #FFFFFF;
+  --ryu-page-edge: #EDE8DF;
+  --ryu-page-edge-line: #C2B9AA;
 
   /* Placeholder covers for a series with no cover image (admin series list,
      wizard preview, hero banner preview). Dark art under --ryu-on-image text,
@@ -210,6 +212,8 @@
   --ryu-primary-deep: #FB923C;
   --ryu-primary-soft: rgba(244, 129, 47, 0.16);
   --ryu-on-primary: #1C1917;
+  --ryu-page-edge: #CFC8BC;
+  --ryu-page-edge-line: #8F8676;
   /* Same gold family as light (#FEF08A) but much lower lightness — the pale yellow blew out
      against charcoal. Still clearly distinct from the orange primary; #1C1917 on it is 7.4:1. */
   --ryu-accent: #D4A017;
