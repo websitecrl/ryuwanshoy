@@ -1,6 +1,6 @@
 import { PageContent } from './book'
 import type { FoldGeometry, FoldSetup } from './fold'
-import type { Slot } from './views'
+import { isPage, type Slot } from './views'
 
 const overlayStyle = {
   position:      'absolute',
@@ -34,7 +34,7 @@ export default function FoldLeaf({ geometry, setup, front, back, width, height, 
             zIndex:     2,
           }}
         >
-          <PageContent page={front} width={width} height={height} eager spine={frontSpine} />
+          {isPage(front) && <PageContent page={front} width={width} height={height} eager spine={frontSpine} />}
           {geometry && <div style={{ ...overlayStyle, background: geometry.frontShade }} />}
         </div>
       )}
@@ -54,7 +54,7 @@ export default function FoldLeaf({ geometry, setup, front, back, width, height, 
             zIndex:          3,
           }}
         >
-          {back && <PageContent page={back} width={width} height={height} eager spine={backSpine} />}
+          {isPage(back) && <PageContent page={back} width={width} height={height} eager spine={backSpine} />}
           <div style={{ ...overlayStyle, background: geometry.flapShade }} />
         </div>
       )}

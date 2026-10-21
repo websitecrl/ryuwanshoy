@@ -2,25 +2,45 @@ import type { DisplayPage } from './book'
 
 export type Dir = 'next' | 'prev'
 
-export type Slot = DisplayPage | null
+export type Slot = DisplayPage | 'blank' | null
 
 export type View = { start: number; slots: Slot[] }
 
+export function isPage(slot: Slot): slot is DisplayPage {
+  return slot !== null && slot !== 'blank'
+}
+
 export function buildViews(items: DisplayPage[], portrait: boolean): View[] {
-  const step = portrait ? 1 : 2
   const views: View[] = []
-  for (let start = 0; start < items.length; start += step) {
-    const first = items[start] ?? null
-    views.push({
-      start,
-      slots: portrait ? [first] : [first, items[start + 1] ?? null],
-    })
+  let start = 0
+  while (start < items.length) {
+    const first = items[start]!
+    const second = items[start + 1] ?? null
+    if (portrait) {
+      views.push({ start, slots: [first] })
+      start += 1
+    } else if (second?.spreadSide === 'left') {
+      views.push({ start, slots: [first, 'blank'] })
+      start += 1
+    } else {
+      views.push({ start, slots: [first, second] })
+      start += 2
+    }
   }
   return views
 }
 
+export function viewAt(views: View[], position: number): number {
+  let found = 0
+  views.forEach((view, index) => {
+    const first = view.slots.find(isPage)
+    if (first && first.position <= position) found = index
+  })
+  return found
+}
+
 export function viewInfo(view: View, itemCount: number) {
-  const shown = view.slots.filter((slot): slot is DisplayPage => slot !== null)
+  const shown = view.slots.filter(isPage)
   const end = view.start + shown.length - 1
   return {
     first: shown[0]?.position ?? 1,

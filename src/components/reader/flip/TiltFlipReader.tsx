@@ -13,7 +13,8 @@ import {
   useBookDims,
   type FlipReaderProps,
 } from './book'
-import { buildViews, turnLayout, viewInfo, type Dir, type Slot, type TurnLayout } from './views'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { buildViews, isPage, turnLayout, viewAt, viewInfo, type Dir, type Slot, type TurnLayout } from './views'
 import { constrainPoint, foldGeometry, foldProgress, foldSetup, type FoldSetup, type Point } from './fold'
 import FoldLeaf from './FoldLeaf'
 
@@ -63,6 +64,7 @@ export default function TiltFlipReader({
   nextHref,
   uiVisible,
   onToggleUI,
+  currentPage,
   onPageChange,
 }: FlipReaderProps) {
   const { isMobile, bookDims } = useBookDims()
@@ -72,11 +74,19 @@ export default function TiltFlipReader({
   const items = useMemo(() => buildDisplayPages(pages, isMobile), [pages, isMobile])
   const views = useMemo(() => buildViews(items, isMobile), [items, isMobile])
 
-  const [viewIndex, setViewIndex] = useState(0)
+  const reducedMotion = useReducedMotion()
+
+  const [anchor, setAnchor] = useState(1)
+  const [syncedPage, setSyncedPage] = useState(false)
   const [turn, setTurn] = useState<Turn | null>(null)
   const [fold, setFold] = useState<Fold | null>(null)
 
-  const current = Math.min(viewIndex, Math.max(0, views.length - 1))
+  if (!syncedPage && currentPage > 1) {
+    setSyncedPage(true)
+    setAnchor(currentPage)
+  }
+
+  const current = viewAt(views, anchor)
   const from = views[current]
   const turnTo = turn ? views[turn.to] ?? null : null
   const foldTo = fold ? views[fold.to] ?? null : null
@@ -96,21 +106,24 @@ export default function TiltFlipReader({
   const atStart = current <= 0
   const atEnd = current >= views.length - 1
 
+  const finishTurn = useCallback((to: number) => {
+    const target = views[to]
+    if (!target) return
+    setAnchor(target.slots.find(isPage)?.position ?? 1)
+    onPageChange(viewInfo(target, items.length).last)
+  }, [views, items.length, onPageChange])
+
   const goNext = useCallback(() => {
     if (busy || atEnd) return
-    setTurn({ dir: 'next', to: current + 1 })
-  }, [busy, atEnd, current])
+    if (reducedMotion) finishTurn(current + 1)
+    else setTurn({ dir: 'next', to: current + 1 })
+  }, [busy, atEnd, current, reducedMotion, finishTurn])
 
   const goPrev = useCallback(() => {
     if (busy || atStart) return
-    setTurn({ dir: 'prev', to: current - 1 })
-  }, [busy, atStart, current])
-
-  const finishTurn = useCallback((to: number) => {
-    const target = views[to]
-    setViewIndex(to)
-    if (target) onPageChange(viewInfo(target, items.length).last)
-  }, [views, items.length, onPageChange])
+    if (reducedMotion) finishTurn(current - 1)
+    else setTurn({ dir: 'prev', to: current - 1 })
+  }, [busy, atStart, current, reducedMotion, finishTurn])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -164,7 +177,7 @@ export default function TiltFlipReader({
     const nearby = views.slice(Math.max(0, current - 2), current + 3)
     for (const view of nearby) {
       for (const slot of view.slots) {
-        if (slot) new window.Image().src = slot.image_url
+        if (isPage(slot)) new window.Image().src = slot.image_url
       }
     }
   }, [views, current])
@@ -334,7 +347,8 @@ export default function TiltFlipReader({
 
         {staticSlots.map((slot, index) => (
           <div
-            key={index}
+            key={reducedMotion ? `${from.start}-${index}` : index}
+            className={reducedMotion ? 'animate-in fade-in duration-150' : undefined}
             style={{
               position:   'absolute',
               top:        0,
@@ -345,7 +359,7 @@ export default function TiltFlipReader({
               background: slot ? '#111' : 'transparent',
             }}
           >
-            {slot && <PageContent page={slot} width={W} height={H} eager spine={spineFor(index)} />}
+            {isPage(slot) && <PageContent page={slot} width={W} height={H} eager spine={spineFor(index)} />}
             {index === underSide && <div ref={underShadeRef} style={shadeStyle} />}
           </div>
         ))}
@@ -368,13 +382,13 @@ export default function TiltFlipReader({
           >
             {layout.front && (
               <div style={faceStyle}>
-                <PageContent page={layout.front} width={W} height={H} eager spine={frontSpine} />
+                {isPage(layout.front) && <PageContent page={layout.front} width={W} height={H} eager spine={frontSpine} />}
                 <div ref={frontShadeRef} style={shadeStyle} />
               </div>
             )}
             {layout.back && (
               <div style={{ ...faceStyle, transform: 'rotateY(180deg)' }}>
-                <PageContent page={layout.back} width={W} height={H} eager spine={backSpine} />
+                {isPage(layout.back) && <PageContent page={layout.back} width={W} height={H} eager spine={backSpine} />}
                 <div ref={backShadeRef} style={shadeStyle} />
               </div>
             )}
