@@ -11,39 +11,30 @@ import {
   buildDisplayPages,
   edgeWidth,
   useBookDims,
-  type DisplayPage,
   type FlipReaderProps,
 } from './book'
+import { buildViews, turnLayout, viewInfo, type Dir, type Slot, type TurnLayout } from './views'
+import { constrainPoint, foldGeometry, foldProgress, foldSetup, type FoldSetup, type Point } from './fold'
+import FoldLeaf from './FoldLeaf'
 
-type View = { start: number; slots: (DisplayPage | null)[] }
+type Turn = { dir: Dir; to: number }
 
-type Turn = { dir: 'next' | 'prev'; to: number }
+type Fold = { dir: Dir; to: number; setup: FoldSetup; point: Point }
 
-export function buildViews(items: DisplayPage[], portrait: boolean): View[] {
-  const step = portrait ? 1 : 2
-  const views: View[] = []
-  for (let start = 0; start < items.length; start += step) {
-    const first = items[start] ?? null
-    views.push({
-      start,
-      slots: portrait ? [first] : [first, items[start + 1] ?? null],
-    })
-  }
-  return views
+type Drag = {
+  id: number
+  startX: number
+  startY: number
+  lastX: number
+  lastT: number
+  velocity: number
+  fold: Omit<Fold, 'point'> | null
 }
 
-export function viewInfo(view: View, itemCount: number) {
-  const shown = view.slots.filter((slot): slot is DisplayPage => slot !== null)
-  const end = view.start + shown.length - 1
-  return {
-    first: shown[0]?.position ?? 1,
-    last: shown[shown.length - 1]?.position ?? 1,
-    before: view.start,
-    after: Math.max(0, itemCount - 1 - end),
-  }
-}
+const DRAG_START_PX = 8
+const FLICK_PX_PER_MS = 0.35
 
-export function turnAngles(dir: Turn['dir'], portrait: boolean): [number, number] {
+export function turnAngles(dir: Dir, portrait: boolean): [number, number] {
   if (portrait) return dir === 'next' ? [0, -90] : [-90, 0]
   return dir === 'next' ? [0, -180] : [0, 180]
 }
@@ -76,35 +67,50 @@ export default function TiltFlipReader({
 }: FlipReaderProps) {
   const { isMobile, bookDims } = useBookDims()
   const { width: W, height: H } = bookDims
+  const bookWidth = isMobile ? W : W * 2
 
   const items = useMemo(() => buildDisplayPages(pages, isMobile), [pages, isMobile])
   const views = useMemo(() => buildViews(items, isMobile), [items, isMobile])
 
   const [viewIndex, setViewIndex] = useState(0)
   const [turn, setTurn] = useState<Turn | null>(null)
+  const [fold, setFold] = useState<Fold | null>(null)
 
   const current = Math.min(viewIndex, Math.max(0, views.length - 1))
   const from = views[current]
-  const to = turn ? views[turn.to] ?? null : null
-  const turning = turn !== null && to !== null
+  const turnTo = turn ? views[turn.to] ?? null : null
+  const foldTo = fold ? views[fold.to] ?? null : null
+  const turning = turn !== null && turnTo !== null
+  const folding = fold !== null && foldTo !== null
+  const busy = turning || folding
 
   const leafRef = useRef<HTMLDivElement>(null)
   const frontShadeRef = useRef<HTMLDivElement>(null)
   const backShadeRef = useRef<HTMLDivElement>(null)
   const underShadeRef = useRef<HTMLDivElement>(null)
+  const dragRef = useRef<Drag | null>(null)
+  const pointRef = useRef<Point | null>(null)
+  const settleRef = useRef<number | null>(null)
+  const suppressClickRef = useRef(false)
 
   const atStart = current <= 0
   const atEnd = current >= views.length - 1
 
   const goNext = useCallback(() => {
-    if (turning || atEnd) return
+    if (busy || atEnd) return
     setTurn({ dir: 'next', to: current + 1 })
-  }, [turning, atEnd, current])
+  }, [busy, atEnd, current])
 
   const goPrev = useCallback(() => {
-    if (turning || atStart) return
+    if (busy || atStart) return
     setTurn({ dir: 'prev', to: current - 1 })
-  }, [turning, atStart, current])
+  }, [busy, atStart, current])
+
+  const finishTurn = useCallback((to: number) => {
+    const target = views[to]
+    setViewIndex(to)
+    if (target) onPageChange(viewInfo(target, items.length).last)
+  }, [views, items.length, onPageChange])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -142,10 +148,8 @@ export default function TiltFlipReader({
     leafAnimation.finished
       .then(() => {
         if (cancelled) return
-        const target = views[turn.to]
-        setViewIndex(turn.to)
         setTurn(null)
-        if (target) onPageChange(viewInfo(target, items.length).last)
+        finishTurn(turn.to)
       })
       .catch(() => {})
 
@@ -154,7 +158,7 @@ export default function TiltFlipReader({
       leafAnimation.cancel()
       shadeAnimations.forEach(animation => animation?.cancel())
     }
-  }, [turn, isMobile, views, items.length, onPageChange])
+  }, [turn, isMobile, finishTurn])
 
   useEffect(() => {
     const nearby = views.slice(Math.max(0, current - 2), current + 3)
@@ -165,58 +169,140 @@ export default function TiltFlipReader({
     }
   }, [views, current])
 
-  if (!from) return null
+  useEffect(() => () => {
+    if (settleRef.current !== null) cancelAnimationFrame(settleRef.current)
+  }, [])
 
-  const shownView = to ?? from
-  const info = viewInfo(from, items.length)
-  const edges = viewInfo(shownView, items.length)
-  const edgeMax = isMobile ? 5 : 10
-  const leftEdge = isMobile ? 0 : edgeWidth(edges.before, items.length, edgeMax)
-  const rightEdge = edgeWidth(edges.after, items.length, edgeMax)
+  function settle(active: Omit<Fold, 'point'>, completed: boolean) {
+    const startPoint = pointRef.current ?? active.setup.start
+    const target = completed ? active.setup.complete : active.setup.start
+    const total = Math.hypot(active.setup.complete.x - active.setup.start.x, active.setup.complete.y - active.setup.start.y)
+    const remaining = Math.hypot(target.x - startPoint.x, target.y - startPoint.y)
+    const duration = Math.max(120, (FLIP_MS * remaining) / Math.max(1, total))
+    const began = performance.now()
 
-  const bookWidth = isMobile ? W : W * 2
-
-  let staticSlots: (DisplayPage | null)[] = from.slots
-  let leaf: {
-    left: number
-    origin: string
-    angle: number
-    front: DisplayPage | null
-    back: DisplayPage | null
-  } | null = null
-  let underSide: 0 | 1 = 0
-
-  if (turning && turn && to) {
-    const angle = turnAngles(turn.dir, isMobile)[0]
-    if (isMobile) {
-      staticSlots = turn.dir === 'next' ? to.slots : from.slots
-      leaf = {
-        left: 0,
-        origin: 'left center',
-        angle,
-        front: (turn.dir === 'next' ? from.slots[0] : to.slots[0]) ?? null,
-        back: null,
+    const step = (now: number) => {
+      const t = Math.min(1, (now - began) / duration)
+      const eased = 1 - Math.pow(1 - t, 3)
+      const point = constrainPoint(
+        { x: startPoint.x + (target.x - startPoint.x) * eased, y: startPoint.y + (target.y - startPoint.y) * eased },
+        active.setup,
+        W,
+        H,
+      )
+      pointRef.current = point
+      if (t < 1) {
+        setFold({ ...active, point })
+        settleRef.current = requestAnimationFrame(step)
+        return
       }
-      underSide = 0
-    } else if (turn.dir === 'next') {
-      staticSlots = [from.slots[0] ?? null, to.slots[1] ?? null]
-      leaf = { left: W, origin: 'left center', angle, front: from.slots[1] ?? null, back: to.slots[0] ?? null }
-      underSide = 1
-    } else {
-      staticSlots = [to.slots[0] ?? null, from.slots[1] ?? null]
-      leaf = { left: 0, origin: 'right center', angle, front: from.slots[0] ?? null, back: to.slots[1] ?? null }
-      underSide = 0
+      settleRef.current = null
+      pointRef.current = null
+      setFold(null)
+      if (completed) finishTurn(active.to)
+    }
+    settleRef.current = requestAnimationFrame(step)
+  }
+
+  function localPoint(e: React.PointerEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top }
+  }
+
+  function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    suppressClickRef.current = false
+    if (busy || (e.pointerType === 'mouse' && e.button !== 0)) return
+    const p = localPoint(e)
+    dragRef.current = {
+      id: e.pointerId,
+      startX: p.x,
+      startY: p.y,
+      lastX: p.x,
+      lastT: e.timeStamp,
+      velocity: 0,
+      fold: null,
     }
   }
 
-  const spineFor = (index: number) => (isMobile ? null : index === 0 ? 'left' : 'right')
+  function startFold(drag: Drag, dx: number): Omit<Fold, 'point'> | null {
+    const dir: Dir | null = isMobile
+      ? (dx < 0 ? 'next' : 'prev')
+      : drag.startX >= W
+        ? (dx < 0 ? 'next' : null)
+        : (dx > 0 ? 'prev' : null)
+    if (!dir) return null
+    if (dir === 'next' ? atEnd : atStart) return null
+    const cornerY = drag.startY < H / 2 ? 0 : H
+    return { dir, to: current + (dir === 'next' ? 1 : -1), setup: foldSetup(dir, isMobile, W, cornerY) }
+  }
+
+  function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current
+    if (!drag || drag.id !== e.pointerId) return
+    const p = localPoint(e)
+    const dx = p.x - drag.startX
+    const dy = p.y - drag.startY
+
+    const dt = e.timeStamp - drag.lastT
+    if (dt > 0) drag.velocity = (p.x - drag.lastX) / dt
+    drag.lastX = p.x
+    drag.lastT = e.timeStamp
+
+    if (!drag.fold) {
+      if (Math.abs(dx) < DRAG_START_PX && Math.abs(dy) < DRAG_START_PX) return
+      if (Math.abs(dx) < Math.abs(dy)) { dragRef.current = null; return }
+      drag.fold = startFold(drag, dx)
+      if (!drag.fold) { dragRef.current = null; return }
+      e.currentTarget.setPointerCapture(e.pointerId)
+    }
+
+    const factor = isMobile ? 2 : 1
+    const { setup } = drag.fold
+    const point = constrainPoint({ x: setup.start.x + dx * factor, y: setup.start.y + dy }, setup, W, H)
+    pointRef.current = point
+    setFold({ ...drag.fold, point })
+  }
+
+  function onPointerEnd(e: React.PointerEvent<HTMLDivElement>, cancelled: boolean) {
+    const drag = dragRef.current
+    if (!drag || drag.id !== e.pointerId) return
+    dragRef.current = null
+    if (!drag.fold) return
+    suppressClickRef.current = true
+
+    const { setup } = drag.fold
+    const progress = foldProgress(setup, pointRef.current ?? setup.start)
+    const towardComplete = Math.sign(setup.complete.x - setup.start.x) * drag.velocity
+    const completed = !cancelled && (progress > 0.5 || (towardComplete > FLICK_PX_PER_MS && progress > 0.03))
+    settle(drag.fold, completed)
+  }
 
   function onBookClick(e: React.MouseEvent<HTMLDivElement>) {
     e.stopPropagation()
+    if (suppressClickRef.current) { suppressClickRef.current = false; return }
     const x = e.clientX - e.currentTarget.getBoundingClientRect().left
     if (x < bookWidth / 2) goPrev()
     else goNext()
   }
+
+  if (!from) return null
+
+  const info = viewInfo(from, items.length)
+  const edges = viewInfo(turnTo ?? foldTo ?? from, items.length)
+  const edgeMax = isMobile ? 5 : 10
+  const leftEdge = isMobile ? 0 : edgeWidth(edges.before, items.length, edgeMax)
+  const rightEdge = edgeWidth(edges.after, items.length, edgeMax)
+
+  let layout: TurnLayout | null = null
+  if (turning && turn && turnTo) layout = turnLayout(turn.dir, isMobile, from, turnTo)
+  if (folding && fold && foldTo) layout = turnLayout(fold.dir, isMobile, from, foldTo)
+
+  const staticSlots: Slot[] = layout ? layout.staticSlots : from.slots
+  const underSide = layout && turn ? (isMobile ? 0 : layout.side) : null
+  const tiltAngle = turn ? turnAngles(turn.dir, isMobile)[0] : 0
+  const frontSpine = isMobile || !layout ? null : layout.side === 0 ? 'left' : 'right'
+  const backSpine = isMobile || !layout ? null : layout.side === 0 ? 'right' : 'left'
+  const spineFor = (index: number) => (isMobile ? null : index === 0 ? 'left' : 'right')
 
   return (
     <div
@@ -229,12 +315,18 @@ export default function TiltFlipReader({
       <div
         data-flip-book
         onClick={onBookClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={e => onPointerEnd(e, false)}
+        onPointerCancel={e => onPointerEnd(e, true)}
+        onDragStart={e => e.preventDefault()}
         style={{
           position:    'relative',
           width:       bookWidth,
           height:      H,
           perspective: isMobile ? 1200 : 1800,
           cursor:      'pointer',
+          touchAction: 'pan-y pinch-zoom',
         }}
       >
         <PageEdge side="left" width={leftEdge} />
@@ -254,51 +346,52 @@ export default function TiltFlipReader({
             }}
           >
             {slot && <PageContent page={slot} width={W} height={H} eager spine={spineFor(index)} />}
-            {turning && index === underSide && <div ref={underShadeRef} style={shadeStyle} />}
+            {index === underSide && <div ref={underShadeRef} style={shadeStyle} />}
           </div>
         ))}
 
-        {leaf && (
+        {layout && turn && (
           <div
             ref={leafRef}
             style={{
               position:        'absolute',
               top:             0,
-              left:            leaf.left,
+              left:            layout.side * W,
               width:           W,
               height:          H,
-              transformOrigin: leaf.origin,
-              transform:       `rotateY(${leaf.angle}deg)`,
+              transformOrigin: layout.side === 1 || isMobile ? 'left center' : 'right center',
+              transform:       `rotateY(${tiltAngle}deg)`,
               transformStyle:  'preserve-3d',
               willChange:      'transform',
               zIndex:          2,
             }}
           >
-            {leaf.front && (
+            {layout.front && (
               <div style={faceStyle}>
-                <PageContent
-                  page={leaf.front}
-                  width={W}
-                  height={H}
-                  eager
-                  spine={isMobile ? null : leaf.left === 0 ? 'left' : 'right'}
-                />
+                <PageContent page={layout.front} width={W} height={H} eager spine={frontSpine} />
                 <div ref={frontShadeRef} style={shadeStyle} />
               </div>
             )}
-            {leaf.back && (
+            {layout.back && (
               <div style={{ ...faceStyle, transform: 'rotateY(180deg)' }}>
-                <PageContent
-                  page={leaf.back}
-                  width={W}
-                  height={H}
-                  eager
-                  spine={leaf.left === 0 ? 'right' : 'left'}
-                />
+                <PageContent page={layout.back} width={W} height={H} eager spine={backSpine} />
                 <div ref={backShadeRef} style={shadeStyle} />
               </div>
             )}
           </div>
+        )}
+
+        {layout && fold && (
+          <FoldLeaf
+            geometry={foldGeometry(fold.setup, fold.point, W, H)}
+            setup={fold.setup}
+            front={layout.front}
+            back={layout.back}
+            width={W}
+            height={H}
+            frontSpine={frontSpine}
+            backSpine={backSpine}
+          />
         )}
       </div>
 
