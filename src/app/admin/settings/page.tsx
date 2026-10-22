@@ -229,7 +229,6 @@ export default function SettingsPage() {
     <div className="p-8 animate-page-in">
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }`}</style>
 
-      {/* Header */}
       <div className="mb-8">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>Workspace · Configuration</div>
         <h1 className="font-heading font-bold" style={{ fontSize: 38, letterSpacing: -0.8, color: 'var(--ryu-text)', margin: 0 }}>Settings</h1>
@@ -238,7 +237,6 @@ export default function SettingsPage() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24 }}>
 
-        {/* Sub-nav */}
         <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 12, alignSelf: 'start', position: 'sticky', top: 24 }}>
           {SECTIONS.filter(s => s.key !== 'early' || isEAEnabled).map(s => {
             const active = section === s.key
@@ -264,13 +262,10 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Content */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* ── Storage ── */}
           {section === 'storage' && <StorageCleanup />}
 
-          {/* ── Site info ── */}
           {section === 'site' && (
             <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Site info</div>
@@ -278,7 +273,6 @@ export default function SettingsPage() {
               <p style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: 20 }}>What readers see on the homepage, search results, and social shares.</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {/* Logo field */}
                 <div>
                   <label style={labelStyle}>Logo</label>
                   {settings.logo_url && (
@@ -316,7 +310,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* ── Donations ── */}
           {section === 'donations' && (
             <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Donations</div>
@@ -359,7 +352,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* ── Social links ── */}
           {section === 'social' && (
             <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Social links</div>
@@ -394,7 +386,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* ── Early access ── */}
           {section === 'early' && isEAEnabled && (
             <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Early access</div>
@@ -414,7 +405,6 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* ── Danger zone ── */}
           {section === 'danger' && (
             <div style={{ background: 'linear-gradient(180deg, var(--ryu-danger-soft), var(--background))', border: '1.5px solid var(--ryu-danger-border)', borderRadius: 12, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
@@ -436,7 +426,6 @@ export default function SettingsPage() {
                 </div>
               )}
 
-              {/* Change email */}
               <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-danger-border)', borderRadius: 10, padding: 18, marginBottom: 14 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 14 }}>Change Admin Email</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -449,7 +438,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Change password */}
               <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-danger-border)', borderRadius: 10, padding: 18 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 14 }}>Change Admin Password</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

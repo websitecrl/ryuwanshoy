@@ -23,7 +23,6 @@ type ChapterReadState = {
   totalPages?: number
 }
 
-// ─── Tab button ───────────────────────────────────────────────────────────────
 
 function TabButton({
   active,
@@ -54,7 +53,6 @@ function TabButton({
   )
 }
 
-// ─── Chapter row ──────────────────────────────────────────────────────────────
 
 function ChapterRow({
   chapter,
@@ -101,7 +99,6 @@ function ChapterRow({
                  hover:bg-[var(--ryu-surface-2)] transition-colors
                  ${!isLast ? 'border-b border-[var(--ryu-border-soft)]' : ''}`}
     >
-      {/* Chapter number + new dot */}
       <div className="flex-shrink-0 w-6 relative flex items-center justify-center">
         <span className="text-sm text-[var(--ryu-text-3)]">
           {chapter.chapter_number}
@@ -114,7 +111,6 @@ function ChapterRow({
         )}
       </div>
 
-      {/* Title + sub-label */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--ryu-text)] truncate">
           {chapterLabel}
@@ -147,7 +143,6 @@ function ChapterRow({
         />
       )}
 
-      {/* Action button */}
       <Link
         href={href}
         className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs
@@ -160,7 +155,6 @@ function ChapterRow({
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ChapterList({
   chapters,
@@ -224,7 +218,6 @@ export default function ChapterList({
       {/* Continue reading bar — above tabs, only shown if progress exists */}
       <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} chapterIds={chapterIds} />
 
-      {/* Tab bar */}
       <div className="flex items-end border-b border-[var(--ryu-border)] mb-5">
         <TabButton
           active={activeTab === 'chapters'}
@@ -239,7 +232,6 @@ export default function ChapterList({
         />
       </div>
 
-      {/* ── CHAPTERS tab ── */}
       {activeTab === 'chapters' && (
         <div>
           {/* List header: count + sort toggle */}
@@ -275,7 +267,6 @@ export default function ChapterList({
             )}
           </div>
 
-          {/* Chapter rows */}
           {chapters.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-[var(--ryu-text-3)] text-sm">No chapters yet.</p>
@@ -301,7 +292,6 @@ export default function ChapterList({
         </div>
       )}
 
-      {/* ── ABOUT tab ── */}
       {activeTab === 'about' && (
         <div className="py-4 max-w-2xl">
           {seriesDescription ? (

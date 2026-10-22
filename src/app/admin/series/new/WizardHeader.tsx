@@ -59,7 +59,6 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
   return (
     <div className="px-8 pt-4 pb-3 max-w-8xl mx-auto w-full shrink-0">
 
-      {/* Eyebrow */}
       <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>
         {EYEBROWS[idx]}
       </div>
@@ -68,7 +67,6 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
         {HEADINGS[idx]}
       </h1>
 
-      {/* Step tracker */}
       <div className="flex items-center">
         {STEPS.map((s, i) => {
           const stepNum  = i + 1
@@ -84,7 +82,6 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
         })}
       </div>
 
-      {/* Subtitle */}
       <p className="mt-2 text-sm" style={{ color: 'var(--ryu-text-2)' }}>
         {step === 2 && seriesTitle
           ? `Adding Chapter 1 to "${seriesTitle}". Upload pages and set the reading order.`

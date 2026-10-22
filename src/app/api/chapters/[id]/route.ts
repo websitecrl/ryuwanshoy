@@ -8,7 +8,6 @@ import type { TablesUpdate } from '@/types/database'
 
 type ChapterUpdate = TablesUpdate<'chapters'>
 
-// ─── GET /api/chapters/[id] ───────────────────────────────────────────────────
 // Admin only — returns chapter with pages
 export async function GET(
   _req: NextRequest,
@@ -39,7 +38,6 @@ export async function GET(
   }
 }
 
-// ─── PATCH /api/chapters/[id] ─────────────────────────────────────────────────
 // Admin only — update chapter metadata
 export async function PATCH(
   req: NextRequest,
@@ -87,7 +85,6 @@ export async function PATCH(
   }
 }
 
-// ─── DELETE /api/chapters/[id] ────────────────────────────────────────────────
 // Admin only — deletes chapter + cleans up all page images from R2
 export async function DELETE(
   _req: NextRequest,

@@ -53,7 +53,7 @@ export default function ReaderShell({
   const [uiVisible,   setUiVisible]   = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
-  // Restore mode = URL param takes priority over localStorage
+  // ?mode= wins over the saved mode.
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
@@ -67,30 +67,20 @@ export default function ReaderShell({
     } catch {}
   }, [])
 
-  // Every effect below that saves something first checks the reader may see
-  // this series (spec 0003). A blocked chapter still mounts once on first
-  // load, and without this it overwrote the saved mode with 'scroll' and
-  // could save the comic as "continue reading".
+  // Every save checks savedAgeAllows: a blocked chapter still mounts once on first load (spec 0003).
 
-  // Persist mode
   useEffect(() => {
     if (!savedAgeAllows(series.min_age)) return
     try { localStorage.setItem(MODE_KEY, mode) } catch {}
   }, [mode, series.min_age])
 
-  // Restore page from ?page= URL param on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const page = parseInt(params.get('page') ?? '1', 10)
     if (!isNaN(page) && page > 1) setCurrentPage(page)
   }, [])
 
-  // Write reading progress
-  //
-  // Guarded on currentPage > 1: without this, the effect fires the instant
-  // the page mounts — at page 1, before any real scrolling or page-turning —
-  // so simply opening a chapter link got recorded as "reading progress"
-  // identically to someone who actually read it.
+  // Only after page 1, so just opening a chapter link isn't saved as progress.
   useEffect(() => {
     if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {
@@ -108,19 +98,13 @@ export default function ReaderShell({
     } catch {}
   }, [series.id, series.min_age, chapter, pages, currentPage])
 
-  // Mark chapter done at last page
   useEffect(() => {
     if (currentPage >= pages.length && savedAgeAllows(series.min_age)) {
       try { localStorage.setItem(`ch-done-${chapter.id}`, 'true') } catch {}
     }
   }, [currentPage, pages.length, chapter.id, series.min_age])
 
-  // Save continue reading (includes currentPage so resume works)
-  //
-  // Same guard, same reason as above: this used to fire on mount at page 1,
-  // so the Home page's "Continue reading" card showed up the instant a
-  // chapter link was opened, not only once someone had actually started
-  // reading it.
+  // Same page 1 guard as above.
   useEffect(() => {
     if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {
@@ -132,11 +116,11 @@ export default function ReaderShell({
           chapterNumber: chapter.chapter_number,
           chapterTitle:  chapter.title,
           coverImage:    series.cover_image,
-          currentPage,                          // ← was missing from dep array
+          currentPage,
         })
       )
     } catch {}
-  }, [series, chapter, currentPage])            // ← currentPage added here
+  }, [series, chapter, currentPage])
 
   const prevHref = prevChapter
     ? `/comics/${series.slug}/${prevChapter.chapter_number}`

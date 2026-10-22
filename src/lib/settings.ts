@@ -14,21 +14,10 @@ const querySettings = cachedPublicQuery('settings', async () => {
   return data
 })
 
-/**
- * Site settings; THROWS on failure. Use it on cached (ISR) pages: a thrown
- * error makes Next keep serving the last good copy of the page, instead of
- * caching a page with no logo or title for everyone.
- * cache() makes it one lookup per request no matter how many callers.
- */
+/** Throws on failure, so a cached page keeps its last good copy. One lookup per request. */
 export const getSettingsOrThrow = cache(() => querySettings())
 
-/**
- * Site settings, or null on failure. Only for the root layout: a throw there
- * would take down every page (there is no global-error.tsx), so it falls back
- * to defaults. Shares the same per-request lookup as getSettingsOrThrow.
- * Caveat: a page whose only settings read is this one (e.g. /donate) can
- * cache the fallback for up to 60 s.
- */
+/** Null on failure. Only for the root layout, where a throw would take down every page. */
 export const getSettings = cache(async () => {
   try {
     return await getSettingsOrThrow()

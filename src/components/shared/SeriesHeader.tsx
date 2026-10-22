@@ -108,7 +108,6 @@ export default function SeriesHeader({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-8 sm:pb-12">
       <div className="flex gap-6 sm:gap-8">
 
-        {/* Cover image */}
         <div className="flex-shrink-0 w-28 sm:w-40 md:w-48">
           <div
             className="relative w-full aspect-[460/640] rounded-xl overflow-hidden
@@ -133,10 +132,8 @@ export default function SeriesHeader({
           </div>
         </div>
 
-        {/* Series info */}
         <div className="flex-1 min-w-0">
 
-          {/* Badges row */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {updatedLabel && (
               <span
@@ -176,7 +173,6 @@ export default function SeriesHeader({
             ))}
           </div>
 
-          {/* Title */}
           <h1
             className="font-comic text-3xl sm:text-4xl md:text-5xl
                        text-[var(--ryu-text)] leading-none mb-3"
@@ -184,7 +180,6 @@ export default function SeriesHeader({
             {series.title}
           </h1>
 
-          {/* Stats row */}
           <div className="flex items-center gap-8 py-4 border-y border-[var(--ryu-border)] mb-5">
             <div className="flex items-center gap-1.5">
               <span className="font-comic text-4xl text-[var(--ryu-text)]">{chapterCount}</span>
@@ -192,9 +187,7 @@ export default function SeriesHeader({
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* START READING / CONTINUE */}
           <Link
             href={ctaHref}
             className="font-comic flex items-center gap-1 px-4
@@ -229,7 +222,6 @@ export default function SeriesHeader({
             </Link>
           )}
 
-          {/* BOOKMARK */}
           <button
             onClick={toggleBookmark}
             className={`font-comic flex items-center gap-1 px-4
@@ -248,7 +240,6 @@ export default function SeriesHeader({
             BOOKMARK
           </button>
 
-          {/* SHARE */}
           <button
             onClick={handleShare}
             className="font-comic flex items-center gap-1 px-4

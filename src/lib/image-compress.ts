@@ -4,23 +4,15 @@
 export const UNREADABLE_IMAGE_MESSAGE = "Couldn't read this image. Try saving it as JPG or PNG."
 
 export interface CompressOptions {
-  /** Longest side (width or height) is capped to this, aspect ratio preserved.
-   *  Never upscales a smaller source image. Default 1600. */
+  /** Longest side cap, never upscales. Default 1600. */
   maxDimension?: number
   /** JPEG output quality, 0-1. Ignored when the output stays PNG. Default 0.85. */
   quality?: number
-  /** Always output JPEG and skip the transparency check. Only for images
-   *  known to be opaque (comic pages, hero banners): JPEG flattens any
-   *  transparent area to black. Default false: the output format is picked
-   *  per image (see compressImage). */
+  /** Always JPEG, no transparency check. Only for opaque images: JPEG turns transparency black. */
   forceJpeg?: boolean
 }
 
-/**
- * True when any pixel isn't fully opaque. Scans the alpha byte of every
- * pixel (every 4th byte of RGBA) and stops at the first one below 255.
- * About 2.5M pixels at 1600px, so it costs milliseconds in the browser.
- */
+/** True when any pixel isn't fully opaque (stops at the first one). */
 function hasTransparency(ctx: CanvasRenderingContext2D, width: number, height: number): boolean {
   const { data } = ctx.getImageData(0, 0, width, height)
   for (let i = 3; i < data.length; i += 4) {
@@ -30,28 +22,8 @@ function hasTransparency(ctx: CanvasRenderingContext2D, width: number, height: n
 }
 
 /**
- * Resizes and compresses an image in the browser, before it's ever sent to
- * the server.
- *
- * Full-resolution admin uploads (comic pages up to 2550x3300px/25MB, but
- * also hero banners, post images, etc.) blow past Cloudflare Workers'
- * free-tier 10ms CPU budget once the Worker has to base64-decode them and
- * hash them again for R2's AWS SigV4 signing (see the "Worker exceeded CPU
- * time limit" errors in wrangler tail). Shrinking here, client-side, means
- * the Worker only ever touches a small payload — the CPU-heavy part never
- * happens on the server at all.
- *
- * Output format: JPEG, unless the image has transparent pixels (then PNG,
- * so the transparency survives). `forceJpeg` skips the check.
- *
- * @param file the original image file picked or dropped by the admin
- * @param opts see {@link CompressOptions}
- * @returns    a base64 data URL (JPEG or PNG) — same shape a raw FileReader
- *             output was, so callers don't otherwise change
- * @throws     if the browser can't decode the file as an image, or canvas
- *             isn't available (shouldn't happen in any real browser, but
- *             the admin dashboard should fail loudly instead of silently
- *             sending a bad payload)
+ * Resizes and compresses an image in the browser, so the Worker never handles a full-size upload (10ms CPU limit).
+ * Returns a JPEG data URL, or PNG when the image has transparent pixels.
  */
 export function compressImage(
   file: File,
@@ -66,7 +38,6 @@ export function compressImage(
     img.onload = () => {
       URL.revokeObjectURL(objectUrl)
 
-      // Only scale DOWN — never upscale a smaller source image.
       const scale = Math.min(
         1,
         maxDimension / Math.max(img.naturalWidth, img.naturalHeight)
@@ -86,11 +57,7 @@ export function compressImage(
 
       ctx.drawImage(img, 0, 0, width, height)
 
-      // Decided by the pixels, not the file type: an opaque PNG (most art
-      // exports) becomes a JPEG many times smaller, while anything with real
-      // transparency stays PNG. Checking only PNGs used to send transparent
-      // WebP/GIF stickers to JPEG, which turned their background black.
-      // JPEG sources have no alpha channel, so they skip the scan.
+      // Decided by pixels, not file type: opaque PNGs shrink as JPEG, transparent WebP/GIF stay PNG.
       const keepAlpha = !forceJpeg && file.type !== 'image/jpeg' && hasTransparency(ctx, width, height)
       resolve(canvas.toDataURL(keepAlpha ? 'image/png' : 'image/jpeg', quality))
     }

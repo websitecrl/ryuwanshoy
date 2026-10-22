@@ -65,7 +65,6 @@ export default function ReaderTopBar({
       >
         <div className="flex h-12 items-center gap-2 px-3">
 
-          {/* Back */}
           <Link
             href={`/comics/${seriesSlug}`}
             onClick={e => e.stopPropagation()}
@@ -75,7 +74,6 @@ export default function ReaderTopBar({
             <ArrowLeft size={18} />
           </Link>
 
-          {/* Titles + chapter picker trigger */}
           <button
             onClick={e => { e.stopPropagation(); setPickerOpen(v => !v) }}
             aria-label="Chapter list"
@@ -99,10 +97,8 @@ export default function ReaderTopBar({
             />
           </button>
 
-          {/* Right controls */}
           <div className="flex-shrink-0 flex items-center gap-0.5">
 
-            {/* Prev chapter */}
             {prevHref ? (
               <Link href={prevHref} onClick={e => e.stopPropagation()}
                 className={`p-2 transition-colors ${mutedText} ${hoverText}`}
@@ -113,7 +109,6 @@ export default function ReaderTopBar({
               <span className={`p-2 ${disabledText}`}><ChevronLeft size={18} /></span>
             )}
 
-            {/* Next chapter */}
             {nextHref ? (
               <Link href={nextHref} onClick={e => e.stopPropagation()}
                 className={`p-2 transition-colors ${mutedText} ${hoverText}`}
@@ -124,7 +119,6 @@ export default function ReaderTopBar({
               <span className={`p-2 ${disabledText}`}><ChevronRight size={18} /></span>
             )}
 
-            {/* Mode toggle */}
             <div
               className="flex items-center rounded-md border p-0.5 ml-1 border-[var(--ryu-border)] bg-[var(--ryu-surface-2)]"
               onClick={e => e.stopPropagation()}
@@ -161,7 +155,6 @@ export default function ReaderTopBar({
               className={`p-2 transition-colors ${mutedText} ${hoverText}`}
             />
 
-            {/* Hide UI */}
             <button
               onClick={e => { e.stopPropagation(); onToggleVisibility() }}
               aria-label="Hide UI"
@@ -173,14 +166,12 @@ export default function ReaderTopBar({
           </div>
         </div>
 
-        {/* ── Chapter picker panel ─────────────────────────────────────────── */}
         {pickerOpen && (
           <div
             className="absolute left-0 right-0 border-b overflow-y-auto bg-[var(--ryu-surface-1)] border-[var(--ryu-border)]"
             style={{ top: '100%', maxHeight: 'min(60vh, 380px)', zIndex: 40 }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Panel header */}
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--ryu-border-soft)]">
               <span className={`text-xs font-semibold uppercase tracking-wider ${mutedText}`}>
                 {allChapters.length} Chapter{allChapters.length !== 1 ? 's' : ''}
@@ -194,7 +185,6 @@ export default function ReaderTopBar({
               </button>
             </div>
 
-            {/* Chapter rows */}
             {allChapters.map(ch => {
               const isCurrent = ch.chapter_number === currentChapterNumber
               const label = ch.title
@@ -212,7 +202,6 @@ export default function ReaderTopBar({
                       : 'text-[var(--ryu-text-2)] hover:bg-[var(--ryu-surface-3)] hover:text-[var(--ryu-text)]'
                   }`}
                 >
-                  {/* Current indicator dot */}
                   <span
                     className={`w-1.5 h-1.5 rounded-full flex-shrink-0 transition-opacity ${
                       isCurrent ? 'bg-[var(--ryu-primary)] opacity-100' : 'opacity-0'
@@ -232,7 +221,6 @@ export default function ReaderTopBar({
         )}
       </header>
 
-      {/* Floating show-UI button */}
       {!visible && (
         <button
           onClick={e => { e.stopPropagation(); onToggleVisibility() }}

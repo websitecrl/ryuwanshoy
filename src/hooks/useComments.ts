@@ -19,9 +19,9 @@ type State<T> =
   | { status: 'error' }
   | {
       status: 'loaded'
-      topLevel: T[]        // newest first, as returned by the API
-      replies: T[]         // oldest first
-      total: number        // every comment on the target, replies included
+      topLevel: T[]  // newest first
+      replies: T[]   // oldest first
+      total: number
       nextCursor: string | null
     }
 
@@ -39,39 +39,20 @@ async function fetchPage<T>(target: CommentTarget, before?: string): Promise<Pag
 }
 
 /**
- * Loads one comment section page by page (30 top-level comments at a time,
- * each with all its replies) and keeps it in sync with local actions, so
- * posting, editing or deleting never reloads the whole thread.
- *
- * @param target - which section to load; changing it starts over
- * @returns
- *   - status: 'loading' | 'error' | 'loaded'
- *   - topLevel: loaded top-level comments, NEWEST first (reverse for chat-style)
- *   - repliesFor(id): replies of one top-level comment, oldest first
- *   - total: count of every comment (replies included), for the header badge
- *   - hasMore / loadingOlder / loadOlder(): the "Show older comments" button
- *   - reload(): first page again (e.g. Retry after an error)
- *   - add(comment): a comment or reply the user just posted. Only works once
- *     loaded, so callers must keep their post button disabled until
- *     status === 'loaded' (otherwise the comment is saved but not shown)
- *   - remove(id): a deleted comment; also drops its replies, since the DB
- *     deletes them with it (ON DELETE CASCADE on parent_id)
- *   - edit(id, content)
+ * Loads one comment section, 30 top-level comments (with replies) per page, and applies local
+ * add/edit/remove without a reload. add() only works once status is 'loaded'.
  */
 export function useComments<T extends BaseComment>(target: CommentTarget) {
   const [state, setState] = useState<State<T>>({ status: 'loading' })
   const [loadingOlder, setLoadingOlder] = useState(false)
   const key = targetQuery(target)
 
-  // Ignore responses that arrive after the target changed or the component
-  // unmounted (e.g. the user opened another illustration mid-load).
+  // Ignores responses for an old target or after unmount.
   const generation = useRef(0)
 
   const reload = useCallback(async () => {
     const gen = ++generation.current
     setState({ status: 'loading' })
-    // An in-flight loadOlder from the old generation won't clear its own
-    // flag (its finally sees a stale generation), so clear it here.
     setLoadingOlder(false)
     try {
       const page = await fetchPage<T>(target)
@@ -86,7 +67,7 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
     } catch {
       if (gen === generation.current) setState({ status: 'error' })
     }
-    // `key` stands in for `target`, whose object identity changes every render.
+    // `key` stands in for `target`, a new object every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 
@@ -104,7 +85,6 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
       if (gen !== generation.current) return
       setState(prev => {
         if (prev.status !== 'loaded') return prev
-        // Skip anything already on screen (e.g. a comment posted locally).
         const seen = new Set([...prev.topLevel, ...prev.replies].map(c => c.id))
         const fresh = page.comments.filter(c => !seen.has(c.id))
         return {
@@ -115,11 +95,9 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
         }
       })
     } catch {
-      // Keep what's on screen; the button stays so the user can try again.
     } finally {
       if (gen === generation.current) setLoadingOlder(false)
     }
-    // Same as reload: `key` stands in for `target` (a new object every render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, state, loadingOlder])
 
@@ -135,7 +113,6 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
   const remove = useCallback((id: string) => {
     setState(prev => {
       if (prev.status !== 'loaded') return prev
-      // Drop the comment itself, plus its replies if it was top-level.
       const gone = (c: T) => c.id === id || c.parent_id === id
       const topLevel = prev.topLevel.filter(c => !gone(c))
       const replies = prev.replies.filter(c => !gone(c))

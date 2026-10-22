@@ -97,7 +97,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
 
   return (
     <div>
-      {/* ── Search strip ─────────────────────────────────── */}
       <div
         className="border-b"
         style={{ borderColor: 'var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
@@ -126,13 +125,11 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       </div>
 
-      {/* ── Filter pills (desktop) + burger (mobile) + Bookmarks + Sort ──────────────────────────────────── */}
       <div
         className="sticky top-[52px] z-30 border-b"
         style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-3 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Pills — desktop */}
           <div className="hidden sm:flex items-center gap-2 flex-wrap">
             {pills.map(pill => (
               <button
@@ -204,7 +201,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       </div>
 
-      {/* ── Mobile filter bottom sheet ──────────────────────────────────── */}
       {filterSheetOpen && (
         <div
           className="sm:hidden fixed inset-0 z-50 flex items-end"
@@ -263,7 +259,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       )}
 
-      {/* ── Grid ─────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-6">
         {filtered.length === 0 ? (
           <div

@@ -60,7 +60,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 space-y-6 animate-page-in">
-      {/* ── Header ──────────────────────────────────────────────────── */}
 <div className="flex items-center justify-between gap-4">
   <div>
     <div
@@ -86,10 +85,8 @@ export default async function DashboardPage() {
   <NotificationBell />
 </div>
 
-      {/* ── Top row — Hero Banner + Right column ────────────────────── */}
       <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 280px' }}>
 
-        {/* Hero Banner Manager */}
         <div
           className="rounded-xl overflow-hidden"
           style={{
@@ -119,10 +116,8 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Right column */}
         <div className="flex flex-col gap-4">
 
-          {/* Live Status */}
           <div
             className="rounded-xl p-5"
             style={{
@@ -168,7 +163,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Bottom row — Series + Drafts (client component) ─────────── */}
       <DashboardContent
         series={series.map(s => ({
           id:          s.id,

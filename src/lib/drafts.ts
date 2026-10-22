@@ -3,18 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { deleteManyFromR2 } from '@/lib/r2'
 import { filterUnsharedCovers } from '@/lib/series-covers'
 
-// ─── What counts as a draft ───────────────────────────────────────────────────
-// Single source of truth for the drafts badge, the "Delete all drafts" dialog
-// and the bulk delete itself, so all three always agree.
-//
-// Draft chapter: is_published is not true. NOT is_draft — that flag is only
-//   set at creation and the series wizard leaves it false on unpublished
-//   chapters, so it misses real drafts. A published chapter never matches.
-// Draft series: is_published is not true AND none of its chapters is
-//   published. Deleting a series cascades to its chapters, pages, comments
-//   and hero_slides, so this guarantees the cascade only ever removes draft
-//   chapters. Series have no is_draft column; an unpublished series that
-//   still has live chapters is "hidden", not a draft, and is never touched.
+// One draft rule for the badge, the dialog and the bulk delete.
+// Draft chapter: is_published not true (is_draft misses wizard drafts).
+// Draft series: unpublished AND no published chapter, so the delete cascade only removes drafts.
 
 export type DraftSeriesItem = {
   id: string
@@ -68,8 +59,7 @@ async function findDraftTargets() {
       chapterCount: s.chapters.length,
       chapters:     s.chapters.length,
       heroSlides:   s.hero_slides.length,
-      // Kept out of imageRefs: a legacy cover may also back a series that
-      // isn't being deleted, so it's checked separately before deletion.
+      // A legacy cover may be shared with a kept series; checked before deletion.
       coverImage:   s.cover_image,
       imageRefs: [
         s.banner_image,
@@ -123,13 +113,8 @@ export type DeleteDraftsResult = {
 }
 
 /**
- * Deletes the drafts the admin confirmed — only ids that were shown in the
- * dialog AND still match the draft rule now. Anything that became a draft
- * after the dialog opened, or stopped being one, is left alone.
- *
- * DB rows go first, then their R2 images (awaited, batched — see
- * deleteManyFromR2). Deleting images first would leave live rows pointing
- * at missing files if the DB delete then failed.
+ * Deletes confirmed ids that still match the draft rule. Rows first, then their R2 images,
+ * so a failed row delete never leaves live rows pointing at missing files.
  */
 export async function deleteConfirmedDrafts(confirmed: {
   seriesIds: string[]
@@ -142,8 +127,7 @@ export async function deleteConfirmedDrafts(confirmed: {
   const series   = targets.series.filter(s => seriesIds.has(s.id))
   const chapters = targets.chapters.filter(c => chapterIds.has(c.id))
 
-  // The published guard is repeated in each DELETE so a row published
-  // between the lookup above and here is still never removed.
+  // Each DELETE repeats the published guard, in case something was published meanwhile.
   let deletedSeriesIds = new Set<string>()
   if (series.length) {
     const { data, error } = await supabaseAdmin

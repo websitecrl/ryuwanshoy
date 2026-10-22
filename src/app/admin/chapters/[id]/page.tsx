@@ -98,7 +98,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     router.push('/admin/chapters')
   }
 
-  // ── Loading / error states ────────────────────────────────────────────────
   if (fetching) {
     return (
       <div className="p-8 space-y-4">
@@ -131,7 +130,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      {/* ── Breadcrumb ──────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/chapters" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>
@@ -141,7 +139,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         <span style={{ color: 'var(--ryu-text)' }}>Edit</span>
       </div>
 
-      {/* ── Page heading ────────────────────────────────────────────────── */}
       <div className="px-8 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
           style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -153,7 +150,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         </h1>
       </div>
 
-      {/* ── Error banner ─────────────────────────────────────────────────── */}
       {error && (
         <div className="mx-8 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
           style={{ background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)' }}>
@@ -162,13 +158,10 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      {/* ── Main two-column grid ─────────────────────────────────────────── */}
       <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        {/* ── LEFT COLUMN — Chapter details ────────────────────────────── */}
         <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* 01 Chapter details card */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
               <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>01</span>
@@ -208,7 +201,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              {/* Publish date */}
               <div>
                 <label style={labelStyle}>Publish Date</label>
                 <input
@@ -222,7 +214,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             </div>
           </div>
 
-          {/* Checklist card */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Checklist</div>
@@ -241,7 +232,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          {/* 02 Early Access card */}
           {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 18 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -285,15 +275,12 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           )}
           
         </div>
-        {/* ── END LEFT COLUMN ──────────────────────────────────────────── */}
 
-        {/* ── RIGHT COLUMN — Pages ─────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col gap-4"
           style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
 
-            {/* Panel header */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>02</span>
@@ -305,7 +292,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
               </span>
             </div>
 
-            {/* PageUploader lives here now */}
             <div style={{ padding: 16 }}>
               <PageUploader
                 chapterId={chapterId ?? ''}
@@ -316,18 +302,15 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
           </div>
         </div>
-        {/* ── END RIGHT COLUMN ─────────────────────────────────────────── */}
 
       </div>
 
-      {/* ── Fixed bottom action bar ──────────────────────────────────────── */}
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--background) 60%, transparent)',
           padding: '20px 32px 16px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          {/* Left — destructive */}
           <DeleteButton
             variant="text"
             label="Delete chapter"
@@ -337,7 +320,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
             onConfirm={handleDelete}
           />
 
-          {/* Right — cancel + save */}
           <div style={{ display: 'flex', gap: 10 }}>
             <Link href="/admin/chapters"
                 style={{ display: 'inline-block',

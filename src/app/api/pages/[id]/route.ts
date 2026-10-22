@@ -5,7 +5,6 @@ import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteFromR2 } from '@/lib/r2'
 
-// ─── DELETE — admin only ──────────────────────────────────────────────────────
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

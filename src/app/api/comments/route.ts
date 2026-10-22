@@ -8,9 +8,7 @@ import { isProfane } from '@/lib/profanity'
 import { isCursor, readLimit } from '@/lib/cursor'
 import { serverError } from '@/lib/api-errors'
 
-// Comments live on a series (one section per series) or on a post (one per
-// illustration). Chapters have no comments; the chapter_id column is a
-// leftover and is no longer accepted.
+// A comment is on a series or a post (chapter_id is a leftover and no longer accepted).
 type CommentTarget = {
   seriesId?: string | null
   postId?:   string | null
@@ -22,11 +20,7 @@ const MAX_PAGE_SIZE = 50
 
 const COMMENT_FIELDS = 'id, name, content, created_at, updated_at, parent_id'
 
-/**
- * True only when the target is visible to readers: a series must be
- * published; posts have no publish flag, so a post only has to exist. Stops
- * comments being read or posted on hidden content by guessed id.
- */
+/** True only for a published series or an existing post, so hidden content can't get comments by guessed id. */
 async function isPublicTarget({ seriesId, postId }: CommentTarget): Promise<boolean> {
   if (seriesId) {
     const { data } = await supabaseAdmin
@@ -48,11 +42,7 @@ async function isPublicTarget({ seriesId, postId }: CommentTarget): Promise<bool
   return true
 }
 
-/**
- * Reads exactly one target from the request: series_id XOR post_id, each a
- * uuid.
- * @returns the target, or null when neither, both, or a malformed id is given
- */
+/** series_id XOR post_id, each a uuid; null otherwise. */
 function readTarget(seriesId: unknown, postId: unknown): CommentTarget | null {
   const s = seriesId ? seriesId : null
   const p = postId ? postId : null
@@ -62,29 +52,9 @@ function readTarget(seriesId: unknown, postId: unknown): CommentTarget | null {
   return { seriesId: s as string | null, postId: p as string | null }
 }
 
-// ─── GET /api/comments ────────────────────────────────────────────────────────
-// ?series_id=… | ?post_id=…  [&before=<cursor>] [&limit=1..50]
-//
-// Returns one page of top-level comments, NEWEST first, plus every reply of
-// those comments (oldest first), so a page never shows a reply without its
-// parent:
-//   { comments, total, nextCursor }
-// - total: every comment on the target, replies included (first page only,
-//   null on later pages, so "load older" doesn't pay for a count again)
-// - nextCursor: pass as ?before= to get the next older page; null when done
-//
-// Cursor is the created_at of the oldest top-level comment returned. Two
-// top-level comments on the same target with the exact same microsecond
-// timestamp could straddle a page boundary; with one insert per request that
-// doesn't happen in practice, and it keeps the filter a plain .lt().
-//
-// Known limits, accepted (none can happen with current data and rules):
-// - total counts every comment on the target. A legacy reply-to-a-reply
-//   (POST now rejects those) would be counted but never shown.
-// - created_at defaults to now(); a row with NULL created_at would sort
-//   first and end paging early.
-// - Replies per page are not capped; PostgREST's max-rows (default 1000)
-//   would truncate a thread with more than that.
+// GET ?series_id= | ?post_id= [&before=<cursor>] [&limit=1..50]
+// One page of top-level comments, newest first, with all their replies: { comments, total, nextCursor }.
+// total is only counted on the first page.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const target = readTarget(searchParams.get('series_id'), searchParams.get('post_id'))
@@ -154,7 +124,6 @@ export async function GET(req: NextRequest) {
   })
 }
 
-// ─── POST /api/comments ───────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const limited = await rateLimit(req, 'COMMENT_LIMITER')
   if (limited) return limited
@@ -191,9 +160,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
 
-  // A reply must answer a TOP-LEVEL comment on the SAME series/post. The UI
-  // only offers "Reply" on top-level comments, and GET only loads replies of
-  // top-level comments, so anything else would be stored but never shown.
+  // Replies only to a top-level comment on the same target; anything else would never be shown.
   if (parentId) {
     const { data: parent, error: parentError } = await supabaseAdmin
       .from('comments')

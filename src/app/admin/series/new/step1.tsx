@@ -95,7 +95,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
         {/* LEFT — 01 Title & link, 02 Story, 04 Access */}
         <div className="flex-1 space-y-5">
 
-          {/* 01 Title & link */}
           <Card>
             <CardLabel n="01" title="Title & link" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -130,7 +129,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             </div>
           </Card>
 
-          {/* 02 Story */}
           <Card>
             <CardLabel n="02" title="Story" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -165,7 +163,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             </div>
           </Card>
 
-          {/* 04 Access */}
           {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
             <Card>
               <CardLabel n="04" title="Access" />
@@ -193,7 +190,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             <CardLabel n="03" title="Artwork" />
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
 
-            {/* Cover uploader */}
             <label style={{ ...labelStyle, marginBottom: 8 }}>Cover <span style={{ color: 'var(--ryu-primary)' }}>*</span> <span style={{ float: 'right', fontSize: 10.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>460 × 640 px</span></label>
             {data.coverPreview ? (
               <div style={{ borderRadius: 10, border: '2px solid var(--ryu-primary)', overflow: 'hidden', background: 'var(--ryu-primary-soft)' }}>
@@ -215,7 +211,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
               </div>
             )}
 
-            {/* URL preview */}
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-2" style={{ color: 'var(--ryu-text-2)' }}>URL preview</div>
               <div style={{ background: 'var(--ryu-surface-3)', borderRadius: 8, padding: '9px 12px', fontFamily: 'var(--font-jetbrains-mono, monospace)', fontSize: 12, wordBreak: 'break-all', border: '1px solid var(--ryu-border)' }}>
@@ -224,7 +219,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
               </div>
             </div>
 
-            {/* Checklist */}
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Checklist</div>

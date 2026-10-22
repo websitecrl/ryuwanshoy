@@ -1,7 +1,4 @@
-// Rules shared by the feedback form, the crash report button and
-// POST /api/feedback, so the browser and the server can't disagree.
-// The database enforces the same limits again
-// (20261009120000_create_feedback.sql, 20261009140000_feedback_device_drop_email.sql).
+// Shared by the form, crash report and POST /api/feedback; the database enforces the same limits.
 
 /** Kinds a reader can pick in the form. 'crash' is only sent by the error screen. */
 export const FEEDBACK_FORM_KINDS = ['bug', 'idea', 'other'] as const
@@ -16,11 +13,7 @@ export const FEEDBACK_LABELS: Record<FeedbackKind, string> = {
   crash: 'Crash report',
 }
 
-/**
- * Where the reader noticed it. The form has two checkboxes (Web, Phone) and
- * at least one is required; ticking both is stored as 'both'. Required for
- * every form kind; crash reports don't ask (the user agent shows it).
- */
+/** Where the reader noticed it (Web/Phone checkboxes, both = 'both'). Not asked on crash reports. */
 export const FEEDBACK_DEVICES = ['web', 'phone', 'both'] as const
 export type FeedbackDevice = (typeof FEEDBACK_DEVICES)[number]
 
@@ -38,10 +31,7 @@ export const FEEDBACK_LIMITS = {
   errorDigest: 100,
 } as const
 
-// A path on THIS site: "/" then not another "/" or "\" (which browsers treat
-// as another site), and no whitespace, control characters or backslashes
-// anywhere (browsers silently drop tabs/newlines, so "/<tab>/evil.com" would
-// otherwise become //evil.com).
+// Same-site path only: no "//" or "/\", no whitespace or control chars ("/<tab>/evil.com" becomes //evil.com).
 const SAFE_PATH = /^\/(?![/\\])[^\s\\\u0000-\u001f\u007f]*$/
 
 export function isFeedbackKind(value: unknown): value is FeedbackKind {
@@ -60,11 +50,7 @@ export function toFeedbackDevice(web: boolean, phone: boolean): FeedbackDevice |
   return null
 }
 
-/**
- * True only for a same-site path like "/comics/x/1?page=2".
- * Two layers: the strict pattern above, then a real URL parse that must stay
- * on the same origin. Used by the form, the API and the admin page.
- */
+/** True only for a same-site path like "/comics/x/1?page=2" (pattern plus a same-origin URL parse). */
 export function isSafeSitePath(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > FEEDBACK_LIMITS.pageUrl || !SAFE_PATH.test(value)) {
     return false
@@ -76,8 +62,7 @@ export function isSafeSitePath(value: unknown): value is string {
   }
 }
 
-/** What the browser sends to POST /api/feedback (the user agent is read
- *  from the request header on the server, never from the body). */
+/** Body of POST /api/feedback. The user agent comes from the request header, never the body. */
 export type FeedbackPayload = {
   kind: FeedbackKind
   message: string

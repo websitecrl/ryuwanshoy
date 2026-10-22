@@ -12,17 +12,7 @@ type Feedback = Tables<'feedback'>
 type Filter = 'all' | 'unread'
 type Page = { feedback: Feedback[]; unread: number; total: number; nextCursor: string | null }
 
-/**
- * Admin inbox for reader feedback and crash reports (spec 0001).
- * Data: GET /api/feedback, 50 per page, "Load older" for more. Actions go
- * through PATCH/DELETE /api/feedback/[id] and PATCH /api/feedback (mark the
- * LOADED reports read); every one is admin-checked on the server and returns
- * the server's unread count, which the header shows as is (no local math).
- *
- * Reader-supplied values are shown as text (React escapes them); the page
- * path only becomes a link after isSafeSitePath, even though the API already
- * filtered it. No email is collected, so there is no reply link.
- */
+/** Admin inbox for feedback and crash reports (spec 0001). The unread count always comes from the server. */
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([])
   const [unread, setUnread] = useState(0)
@@ -76,7 +66,6 @@ export default function AdminFeedbackPage() {
     }
   }
 
-  /** Applies the server's unread count when the API returned one. */
   function syncUnread(json: { unread?: number | null }) {
     if (typeof json.unread === 'number') setUnread(json.unread)
   }
@@ -99,8 +88,7 @@ export default function AdminFeedbackPage() {
     }
   }
 
-  // Marks only the reports loaded on this page, never ones the admin hasn't
-  // seen (older pages or reports that arrived after loading).
+  // Only reports loaded here, never ones the admin hasn't seen.
   const loadedUnreadIds = items.filter(f => !f.is_read).map(f => f.id)
   async function markAllRead() {
     if (loadedUnreadIds.length === 0) return
@@ -136,8 +124,6 @@ export default function AdminFeedbackPage() {
 
   return (
     <div className="p-8 animate-page-in">
-      {/* Header: same layout as the other admin pages (eyebrow, 38px title,
-          subtitle on the left; actions on the right). */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 text-[var(--ryu-primary-deep)]">
@@ -183,7 +169,6 @@ export default function AdminFeedbackPage() {
         </div>
       </div>
 
-      {/* List */}
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(n => (
@@ -199,7 +184,6 @@ export default function AdminFeedbackPage() {
           </button>
         </div>
       ) : shown.length === 0 ? (
-        // Centered empty state, same card as the other admin lists.
         <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center
                         border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4
@@ -227,7 +211,6 @@ export default function AdminFeedbackPage() {
                   item.is_read ? 'border-[var(--ryu-border)]' : 'border-[var(--ryu-primary)]'
                 }`}
               >
-                {/* Meta row */}
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ryu-text-3)]">
                   <span
                     className={`rounded-full px-2 py-0.5 font-semibold ${
@@ -256,20 +239,18 @@ export default function AdminFeedbackPage() {
                         {item.page_url}
                       </a>
                     ) : (
-                      // Never a link: shown as text so an odd value can't send the admin anywhere.
+                      // Text, never a link.
                       <span className="truncate max-w-xs">{item.page_url}</span>
                     )
                   )}
                 </div>
 
-                {/* Message */}
                 {item.message ? (
                   <p className="text-sm text-[var(--ryu-text)] whitespace-pre-wrap break-words">{item.message}</p>
                 ) : (
                   <p className="text-sm italic text-[var(--ryu-text-3)]">No note from the reader.</p>
                 )}
 
-                {/* Crash details */}
                 {item.kind === 'crash' && (item.error_message || item.error_digest) && (
                   <details className="text-xs text-[var(--ryu-text-2)]">
                     <summary className="cursor-pointer select-none">Error details</summary>
@@ -291,7 +272,6 @@ export default function AdminFeedbackPage() {
                   </p>
                 )}
 
-                {/* Actions */}
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     type="button"
@@ -322,7 +302,6 @@ export default function AdminFeedbackPage() {
         </ul>
       )}
 
-      {/* Paging: everything older than what's loaded */}
       {!loading && !failed && items.length > 0 && (
         <div className="flex flex-col items-center gap-2 pt-2">
           <p className="text-xs text-[var(--ryu-text-3)]">

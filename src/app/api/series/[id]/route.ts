@@ -27,18 +27,7 @@ const CHAPTERS_SELECT = `
   is_early_access, published_at, created_at, is_published, is_draft
 `
 
-/**
- * The reader's view of one series, cached across requests and visitors.
- * Readers call this route from the home page "Continue reading" bar on every
- * visit, so it must not hit Supabase each time.
- *
- * Anon client + is_published filter, and only published, non-draft chapters
- * (same visibility rule as the reader pages). A missing series throws
- * PublicNotFoundError so bots probing random slugs don't fill the cache; a
- * Supabase error throws so it is never cached either.
- *
- * @param key - a series uuid or slug, as given in the URL
- */
+/** Cached reader view of a published series and its published chapters (hit by "Continue reading" on every visit). */
 const queryPublicSeries = cachedPublicQuery('api:series', async (key: string) => {
   const { data, error } = await createPublicClient()
     .from('series')
@@ -66,12 +55,10 @@ export async function GET(
   try {
     const { id } = await params
 
-    // No cookie → no Supabase call here, so this is cheap for readers.
     const auth = await requireAdmin()
     const isAdmin = !(auth instanceof NextResponse)
 
-    // Admin (editor pages, wizard slug check): live data, any series,
-    // drafts included. Never cached.
+    // Admin: live data, drafts included, never cached.
     let data: SeriesWithChapters | null
     if (isAdmin) {
       const res = await supabaseAdmin
@@ -86,8 +73,7 @@ export async function GET(
       data = await nullIfNotFound(queryPublicSeries(id)) as SeriesWithChapters | null
     }
 
-    // A real "not found" is a 404; a failure is a 500, so it never looks like
-    // "deleted" (callers prune local bookmarks on a 404).
+    // 404 only when missing: callers prune bookmarks on a 404.
     if (!data) {
       return NextResponse.json(
         { data: null, error: 'Series not found' },
@@ -145,9 +131,6 @@ export async function PATCH(
             return NextResponse.json({ error: 'Image too large'}, { status: 413 })
           }
 
-          // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
-          // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
-          // currently broken on this deployment. See src/lib/image-processing.ts.
           payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
         } catch (err) {
           if (err instanceof InvalidImageError) {
@@ -168,9 +151,7 @@ export async function PATCH(
       .select()
       .single()
 
-    // A new cover replaces the old file once the row points at it; if the
-    // update failed, the new upload is the unreferenced one instead.
-    // A legacy old cover may still back other series (see series-covers.ts).
+    // Delete the old cover only after the row points at the new one (legacy covers may be shared).
     if (payload.cover_image) {
       const orphans = error
         ? [payload.cover_image]
@@ -214,8 +195,7 @@ export async function DELETE(
   try {
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('series')
-      // hero_slides: deleting the series cascades to its slides in the DB,
-      // so their banner images must be collected here or they'd stay in R2.
+      // Slides cascade with the series, so their images are collected here too.
       .select(`cover_image, banner_image, chapters (pages (image_url)), hero_slides (banner_image)`)
       .eq('id', id)
       .single()
@@ -234,9 +214,7 @@ export async function DELETE(
 
     if (error) throw error
 
-    // Awaited, not fire-and-forget: Workers can cut off promises still
-    // pending after the response is sent, orphaning the files. One batched
-    // request also stays under the per-request subrequest cap.
+    // Awaited and batched: Workers can drop pending promises and caps subrequests.
     const chapters = existing.chapters ?? []
     const covers = existing.cover_image ? await filterUnsharedCovers([existing.cover_image]) : []
     const imageRefs = [

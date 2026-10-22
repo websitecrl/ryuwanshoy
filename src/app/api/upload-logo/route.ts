@@ -8,7 +8,6 @@ import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// ─── POST — admin only ────────────────────────────────────────────────────────
 // Body: { imageBase64: string }
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()

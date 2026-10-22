@@ -48,7 +48,6 @@ export default function Footer({
         className="mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-8 py-4"
         style={{ maxWidth: 1600, minHeight: 80 }}
       >
-        {/* Left — copyright + social icons */}
         <div className="flex items-center gap-5">
           <p
             className="font-reader"

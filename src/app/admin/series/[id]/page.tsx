@@ -134,7 +134,6 @@ export default function EditSeriesPage() {
   return (
     <div className="animate-page-in px-8 pb-28 pt-6" style={{ minHeight: '100vh' }}>
 
-      {/* Header */}
       <div className="mb-8">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 flex items-center gap-2" style={{ color: 'var(--ryu-primary-deep)' }}>
           <Link href="/admin/series" style={{ color: 'var(--ryu-primary-deep)' }}>Series</Link>
@@ -149,10 +148,8 @@ export default function EditSeriesPage() {
       <form onSubmit={handleSubmit}>
         <div className="flex gap-6 max-w-8xl" style={{ alignItems: 'flex-start' }}>
 
-          {/* LEFT — series info */}
           <div className="flex-1 space-y-5">
 
-            {/* 01 Title & link */}
             <Card>
               <CardLabel n="01" title="Title & link" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -170,7 +167,6 @@ export default function EditSeriesPage() {
               </div>
             </Card>
 
-            {/* 02 Story */}
             <Card>
               <CardLabel n="02" title="Story" />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -217,7 +213,6 @@ export default function EditSeriesPage() {
               <CardLabel n="03" title="Artwork" />
               <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
 
-              {/* Cover uploader */}
               <label style={{ ...labelStyle, marginBottom: 8 }}>
                 Cover <span style={{ color: 'var(--ryu-primary)' }}>*</span>
                 <span style={{ float: 'right', fontSize: 10.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>460 × 640 px</span>
@@ -249,7 +244,6 @@ export default function EditSeriesPage() {
                 </div>
               )}
 
-              {/* URL preview */}
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-2" style={{ color: 'var(--ryu-text-2)' }}>URL preview</div>
                 <div style={{ background: 'var(--ryu-surface-3)', borderRadius: 8, padding: '9px 12px', fontFamily: 'var(--font-jetbrains-mono, monospace)', fontSize: 12, wordBreak: 'break-all', border: '1px solid var(--ryu-border)' }}>
@@ -258,7 +252,6 @@ export default function EditSeriesPage() {
                 </div>
               </div>
 
-              {/* Checklist */}
               <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-2" style={{ color: 'var(--ryu-text-2)' }}>Checklist</div>
                 {checklist.map(item => (
@@ -275,7 +268,6 @@ export default function EditSeriesPage() {
           </div>
         </div>
 
-        {/* Bottom action bar */}
         <div style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--ryu-bg, var(--background)) 80%, transparent)',

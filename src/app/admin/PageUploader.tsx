@@ -9,11 +9,9 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
 import { isSpreadPage, keepImageFiles, readImageSize, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Page = Database['public']['Tables']['pages']['Row']
 
-// ─── Single sortable page thumbnail ──────────────────────────────────────────
 
 interface SortablePageProps {
   page: Page
@@ -42,7 +40,6 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
         overflow: 'hidden', border: '1.5px solid var(--ryu-border)',
         background: 'var(--ryu-surface-2)',
       }}>
-        {/* Drag handle */}
         <div
           {...attributes}
           {...listeners}
@@ -58,7 +55,6 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           sizes="120px"
         />
 
-        {/* Page number badge */}
         <span
           className="font-mono-ryu"
           style={{
@@ -70,9 +66,7 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           P{String(page.page_number).padStart(2, '0')}
         </span>
 
-        {/* Delete button — always visible (was hover-only, so it never
-            showed up on touch devices and wasn't obvious on desktop
-            either) */}
+        {/* Always visible: hover-only never showed on touch devices. */}
         <button
           onClick={() => onDelete(page.id)}
           disabled={isDeleting}
@@ -95,13 +89,11 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
   )
 }
 
-/** @returns the route's `{ error }` message, or `fallback` when the body has none */
 async function errorMessage(res: Response, fallback: string): Promise<string> {
   const body = await res.json().catch(() => null) as { error?: unknown } | null
   return typeof body?.error === 'string' ? body.error : fallback
 }
 
-// ─── Main PageUploader ────────────────────────────────────────────────────────
 
 interface PageUploaderProps {
   chapterId: string
@@ -123,17 +115,14 @@ export default function PageUploader({
 
   useEffect(() => {
     onPagesChange?.(pages)
-    // Only on page changes. Listing onPagesChange would also fire on every
-    // render when a parent passes an inline function (the edit page passes
-    // setPages, which is stable, so nothing is missed).
+    // Only on page changes (a parent may pass an inline function).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages])
 
   const sensors = useSensors(useSensor(PointerSensor))
 
-  // ── Shared upload logic ──────────────────────────────────────────────────
   const uploadFiles = useCallback(async (files: File[]) => {
-    // Upload in the exact order the browser hands over — no filename sort
+    // In the order the browser hands over, no filename sort.
     const imgs = keepImageFiles(files)
     if (!imgs.length) return
     setError(null)
@@ -145,12 +134,9 @@ export default function PageUploader({
         const is_spread = isSpreadPage(dim.width, dim.height)
         warnIfOversizedPage(file, dim.width, dim.height)
         const page = await uploadComicPage(chapterId, file, is_spread)
-        // Show each page as soon as it's stored, so a later failure doesn't
-        // hide the ones that already made it.
         setPages(prev => [...prev, page])
       } catch (err) {
-        // Stop here: the API appends pages, so skipping one would put the
-        // rest out of order.
+        // Stop: the API appends pages, so skipping one would break the order.
         const reason = err instanceof Error ? err.message : 'Upload failed.'
         const rest   = imgs.length - i - 1
         setError(`"${file.name}": ${reason}${rest > 0 ? ` ${rest} file(s) after it were not uploaded.` : ''}`)
@@ -172,14 +158,8 @@ export default function PageUploader({
     uploadFiles(Array.from(e.dataTransfer.files))
   }
 
-  // ── Delete ───────────────────────────────────────────────────────────────
 
-  // No confirmation dialog — this is treated as "remove," not "delete": a
-  // page in this uploader is still unpublished draft content the admin is
-  // actively arranging, not something a reader has ever seen. A native
-  // browser confirm() also looks unpolished (shows the raw workers.dev
-  // domain) and blocks the whole tab while open. The X button itself is
-  // the deliberate action; no extra gate needed on top of it.
+  // No confirm dialog: these are unpublished draft pages, so the X is enough.
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {
@@ -193,7 +173,6 @@ export default function PageUploader({
     } finally { setDeletingId(null) }
   }
 
-  // ── Reorder ──────────────────────────────────────────────────────────────
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -218,12 +197,10 @@ export default function PageUploader({
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-      {/* Error banner */}
       {error && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -235,7 +212,6 @@ export default function PageUploader({
         </div>
       )}
 
-      {/* ── Styled drop zone ─────────────────────────────────────────────── */}
       <input
         ref={fileInputRef}
         type="file"
@@ -279,7 +255,6 @@ export default function PageUploader({
         </p>
       </div>
 
-      {/* ── Page grid ────────────────────────────────────────────────────── */}
       {pages.length > 0 && (
         <DndContext
           sensors={sensors}
@@ -300,7 +275,6 @@ export default function PageUploader({
                   isDeleting={deletingId === page.id}
                 />
               ))}
-              {/* Add more tile */}
               <div
                 onClick={() => !uploading && fileInputRef.current?.click()}
                 style={{
@@ -320,7 +294,6 @@ export default function PageUploader({
         </DndContext>
       )}
 
-      {/* Hint */}
       <p style={{ fontSize: 11, color: 'var(--ryu-text-3)', margin: 0 }}>
         Name files <span style={{ fontFamily: 'monospace' }}>001.jpg, 002.jpg</span> — they upload in filename order.
         Drag thumbnails to reorder.

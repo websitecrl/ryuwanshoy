@@ -109,7 +109,6 @@ export default async function DraftsPage() {
   return (
     <div className="p-8 space-y-6 animate-page-in" style={{ minHeight: '100vh' }}>
 
-      {/* Header */}
       <div>
         <div
           className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
@@ -133,7 +132,6 @@ export default async function DraftsPage() {
       </div>
       </div>
 
-      {/* Empty state */}
       {drafts.length === 0 && chapterDrafts.length === 0 ? (
         <div
           className="rounded-xl p-12 text-center"
@@ -164,7 +162,6 @@ export default async function DraftsPage() {
               className="rounded-xl overflow-hidden"
               style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
             >
-              {/* Series header */}
               <div
                 className="flex items-center gap-4 px-5 py-4"
                 style={{ borderBottom: '1px solid var(--ryu-border-soft)' }}
@@ -231,7 +228,6 @@ export default async function DraftsPage() {
         </div>
       )}
 
-    {/* Chapter drafts section */}
       {chapterDrafts.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold font-mono-ryu tracking-widest uppercase" style={{ color: 'var(--ryu-text-3)' }}>

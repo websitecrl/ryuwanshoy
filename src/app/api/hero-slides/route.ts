@@ -6,7 +6,6 @@ import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteManyFromR2, InvalidImageError, uploadToR2 } from '@/lib/r2'
 import { serverError } from '@/lib/api-errors'
 
-// ─── GET — admin only (every slide, hidden ones included) ─────────────────────
 // Readers get hero slides from the cached home page (src/app/page.tsx), so
 // there is no public GET anymore. The old public branch was only used by the
 // home page's realtime refetch, which was removed.
@@ -31,7 +30,6 @@ export async function GET() {
   return NextResponse.json(data)
 }
 
-// ─── POST — admin only ────────────────────────────────────────────────────────
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

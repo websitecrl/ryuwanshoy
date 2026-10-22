@@ -25,14 +25,12 @@ const FAQ_ITEMS = [
   },
 ]
 
-// ─── Ko-fi card ───────────────────────────────────────────────────────────────
 function KofiCard({ url }: { url: string }) {
   return (
     <div
       className="flex flex-col overflow-hidden rounded-xl"
       style={{ border: '0.5px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
     >
-      {/* Header */}
       <div className="flex items-center gap-3 px-6 py-5" style={{ background: '#D4537E' }}>
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center"
@@ -51,7 +49,6 @@ function KofiCard({ url }: { url: string }) {
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex flex-col justify-between gap-5 p-6 flex-1">
         <div className="flex flex-col gap-5">
           <p className="text-sm leading-relaxed" style={{ color: 'var(--ryu-text-2)' }}>
@@ -59,7 +56,6 @@ function KofiCard({ url }: { url: string }) {
             to get early-access chapter previews and the occasional process post.
           </p>
 
-          {/* Ko-fi logo centered */}
           <div className="flex justify-center py-4">
             <Image
               src="https://storage.ko-fi.com/cdn/cup-border.png"
@@ -76,7 +72,6 @@ function KofiCard({ url }: { url: string }) {
           </p>
         </div>
 
-        {/* CTA */}
         <a
           href={url}
           target="_blank"
@@ -105,7 +100,6 @@ function PatreonCard({ url }: { url: string }) {
       className="flex flex-col overflow-hidden rounded-xl"
       style={{ border: '0.5px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
     >
-      {/* Header */}
       <div className="flex items-center gap-3 px-6 py-5" style={{ background: '#000000' }}>
         <div
           className="w-11 h-11 rounded-xl flex items-center justify-center"
@@ -124,7 +118,6 @@ function PatreonCard({ url }: { url: string }) {
         </div>
       </div>
 
-      {/* Body */}
       <div className="flex flex-col justify-between gap-5 p-6 flex-1">
         <div className="flex flex-col gap-5">
           <p className="text-sm leading-relaxed" style={{ color: 'var(--ryu-text-2)' }}>
@@ -132,7 +125,6 @@ function PatreonCard({ url }: { url: string }) {
             high-res art, and behind-the-scenes process posts.
           </p>
 
-          {/* Patreon logo centered */}
           <div className="flex justify-center py-4">
             <div
               className="rounded-2xl flex items-center justify-center"
@@ -143,7 +135,6 @@ function PatreonCard({ url }: { url: string }) {
           </div>
         </div>
 
-        {/* CTA */}
         <a
           href={url}
           target="_blank"
@@ -166,7 +157,6 @@ function PatreonCard({ url }: { url: string }) {
   )
 }
 
-// ─── FAQ accordion ────────────────────────────────────────────────────────────
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
 
@@ -191,7 +181,6 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   )
 }
 
-// ─── Empty state ──────────────────────────────────────────────────────────────
 function NoMethodsCard() {
   return (
     <div
@@ -213,7 +202,6 @@ function NoMethodsCard() {
   )
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function DonatePage() {
   const [settings, setSettings] = useState<Settings | null>(null)
 
@@ -237,7 +225,6 @@ export default function DonatePage() {
   return (
     <main className="flex-1" style={{ background: 'var(--ryu-bg)' }}>
 
-      {/* Hero */}
       <div style={{ borderBottom: '0.5px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
         <div className="max-w-400 mx-auto px-12 py-10 text-center flex flex-col items-center gap-3">
           <div
@@ -261,7 +248,6 @@ export default function DonatePage() {
         </div>
       </div>
 
-      {/* Cards */}
       <div className="max-w-220 mx-auto px-6 py-10">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {hasAny ? (
@@ -275,7 +261,6 @@ export default function DonatePage() {
         </div>
       </div>
 
-      {/* FAQ */}
       <div
         className="max-w-180 mx-auto px-6 pb-16"
         style={{ borderTop: '0.5px solid var(--ryu-border)', paddingTop: 32 }}

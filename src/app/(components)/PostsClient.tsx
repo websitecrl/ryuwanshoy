@@ -59,7 +59,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
 
   return (
     <>
-      {/* ── Empty state ──────────────────────────────────────────── */}
       {posts.length === 0 && (
         <div className="max-w-400 mx-auto px-12 py-24 text-center">
           <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
@@ -77,7 +76,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
         </div>
       )}
 
-      {/* ── Masonry grid ─────────────────────────────────────────── */}
       {posts.length > 0 && (
         <div className="max-w-400 mx-auto px-12 py-6">
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
@@ -97,7 +95,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
                   (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--ryu-border)';
                 }}
               >
-                {/* Image */}
                 <div className="relative w-full" style={{ background: 'var(--ryu-surface-2)' }}>
                   <Image
                     src={post.image_url}
@@ -110,16 +107,13 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
                   />
                 </div>
 
-                {/* Body */}
                 <div className="p-3.5 flex flex-col gap-2">
-                  {/* Date */}
                   {post.created_at && (
                     <span className="text-[11px] whitespace-nowrap" style={{ color: 'var(--ryu-text-muted)' }}>
                       {formatDate(post.created_at)}
                     </span>
                   )}
 
-                  {/* Title */}
                   {post.title && (
                     <p
                       className="text-sm font-semibold leading-snug line-clamp-2"

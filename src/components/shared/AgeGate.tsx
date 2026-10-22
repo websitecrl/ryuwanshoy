@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { saveAge, useSavedAge } from '@/hooks/useSavedAge'
 
-// Age tier colors mapped to CSS variables
 const TIERS = [
   {
     value: 13,
@@ -29,25 +28,19 @@ const TIERS = [
   },
 ]
 
-// The page always renders, on the server too, so the cached HTML has real
-// content for search engines and link previews. The gate is an overlay on
-// top, and the HTML is the same for every visitor: whether it shows is
-// decided in the browser. Before React loads, AGE_INIT_SCRIPT + globals.css
-// hide it for readers who already picked an age; after, useSavedAge does.
+// The page always renders (search engines, previews); the gate is an overlay decided in the browser.
 export default function AgeGate({ children }: { children: React.ReactNode }) {
   const savedAge = useSavedAge()
   const [selected, setSelected] = useState<number | null>(null)
   const pathname = usePathname()
 
   const showGate = !pathname.startsWith('/admin') && savedAge == null
-  // Only once we KNOW no age is saved (null, not undefined): blocking the
-  // page in the shared HTML would also block returning readers until JS loads.
+  // Only once we KNOW no age is saved, or returning readers would be blocked until JS loads.
   const blockPage = showGate && savedAge === null
 
   return (
     <>
-      {/* display: contents keeps the body's flex layout; inert stops keyboard
-          and clicks from reaching the page behind the gate. */}
+      {/* contents keeps the flex layout; inert blocks the page behind the gate. */}
       <div style={{ display: 'contents' }} inert={blockPage}>
         {children}
       </div>
@@ -88,7 +81,6 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
         textAlign: 'center',
       }}>
 
-        {/* Icon */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
           <div style={{
             width: 72, height: 72, borderRadius: '50%',
@@ -109,8 +101,7 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           </div>
         </div>
 
-        {/* Heading. h2, not h1: this is in every page's HTML, and the page's
-            own h1 is what search engines should read as its title. */}
+        {/* h2: the page's own h1 stays its title for search engines. */}
         <h2 id="age-gate-title" style={{
           fontFamily: "var(--font-fredoka), sans-serif",
           fontWeight: 600,
@@ -128,7 +119,6 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           that's true for you — you'll only be asked once.
         </p>
 
-        {/* Age buttons */}
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
           {TIERS.map(tier => (
             <button
@@ -175,7 +165,6 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           ))}
         </div>
 
-        {/* Enter button */}
         <button
           onClick={confirm}
           disabled={selected === null}
@@ -199,7 +188,6 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           PICK YOUR AGE →
         </button>
 
-        {/* Fine print */}
         <p style={{
           fontSize: 11, color: 'var(--ryu-text-3)', margin: '14px 0 0',
           fontFamily: "var(--font-fredoka), sans-serif",

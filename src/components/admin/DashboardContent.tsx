@@ -35,7 +35,6 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
   return (
     <div className="grid grid-cols-2 gap-6">
 
-      {/* Current Series */}
       <div
         className="rounded-xl overflow-hidden"
         style={{
@@ -145,7 +144,6 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
         )}
       </div>
 
-      {/* Drafts */}
       <div
         className="rounded-xl overflow-hidden"
         style={{

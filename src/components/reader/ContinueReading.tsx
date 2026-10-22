@@ -76,7 +76,6 @@ export default function ContinueReading() {
         padding: '12px 14px',
       }}
     >
-      {/* Bookmark label */}
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <span style={{ color: 'var(--ryu-accent-deep)', fontSize: 15 }}>🔖</span>
         <div className="min-w-0">
@@ -96,7 +95,6 @@ export default function ContinueReading() {
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-2 shrink-0">
         <Link
           href={href}

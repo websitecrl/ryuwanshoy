@@ -5,18 +5,8 @@ import { useSavedAge } from '@/hooks/useSavedAge'
 import { ALL_AGES } from '@/lib/age'
 
 /**
- * Shows the page only to readers whose saved age band reaches the series
- * min_age; everyone else gets a "not for your age" screen. Spec 0003.
- *
- * The HTML is the same for every visitor and holds both the page and the
- * block screen. Before React loads, CSS picks one off <html data-reader-age>
- * (set by AGE_INIT_SCRIPT, see globals.css), so a younger reader never sees
- * a flash of the page. After, useSavedAge decides.
- *
- * The age is self reported: this protects honest younger readers, it is not
- * access control.
- *
- * @param minAge - the series min_age; null or 13 renders the page as is
+ * Shows the page only when the saved age reaches min_age, else a block screen (spec 0003).
+ * Before React loads, CSS picks one off <html data-reader-age>. Self reported age: not access control.
  */
 export default function AgeRestricted({ minAge, children }: {
   minAge: number | null
@@ -25,9 +15,7 @@ export default function AgeRestricted({ minAge, children }: {
   const savedAge = useSavedAge()
   const required = minAge ?? ALL_AGES
 
-  // undefined: not known yet (server HTML, hydration) or no age saved (the
-  // AgeGate covers the page), so CSS decides. Same element tree in every
-  // case, so the page isn't remounted once the age is read.
+  // undefined = not known yet, so CSS decides. Same tree in every case, so the page isn't remounted.
   const blocked = savedAge == null || required <= ALL_AGES ? undefined : savedAge < required
 
   if (required <= ALL_AGES) return <>{children}</>
@@ -35,9 +23,7 @@ export default function AgeRestricted({ minAge, children }: {
   return (
     <div className="age-restricted" data-min-age={required} style={{ display: 'contents' }}>
       <div className="age-restricted-content" style={{ display: blocked ? 'none' : 'contents' }}>
-        {/* Blocked: unmount the page, not just hide it. A hidden reader still
-            ran: ?page=N, flip mode arrow keys and its progress effects saved
-            the comic to "continueReading" (shown on the home page). */}
+        {/* Unmounted, not hidden: a hidden reader still ran and saved progress. */}
         {blocked === true ? null : children}
       </div>
       {blocked !== false && <AgeBlockedScreen minAge={required} shown={blocked === true} />}
@@ -49,8 +35,6 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
   return (
     <div
       className="age-restricted-block"
-      // When React knows the reader is too young, show it outright; otherwise
-      // the CSS rules in globals.css decide (hidden by default).
       style={{
         display: shown ? 'flex' : undefined,
         minHeight: '100vh',
@@ -64,8 +48,7 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
         textAlign: 'center',
       }}
     >
-      {/* h2, not h1: this is in the shared HTML of every restricted page, and
-          the page's own h1 is what search engines should read as its title. */}
+      {/* h2: the page's own h1 stays its title for search engines. */}
       <h2
         style={{
           fontFamily: 'var(--font-fredoka), sans-serif',
@@ -101,8 +84,7 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
       >
         Back to comics
       </Link>
-      {/* No way to change the age from here on purpose (spec 0003): it would
-          be a one tap way around the block. */}
+      {/* No "change age" here on purpose: it would be a one tap way around the block. */}
     </div>
   )
 }

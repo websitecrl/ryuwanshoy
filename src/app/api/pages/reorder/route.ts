@@ -4,7 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
-// ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

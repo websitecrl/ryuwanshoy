@@ -13,7 +13,6 @@ import { createSeries, createChapter, setPublished } from './save'
 import { describePageError, uploadComicPage } from '@/lib/page-files'
 import { setWizardSaving } from '@/lib/wizard-saving'
 
-// ── Default form state ─────────────────────────────────────────────────────
 
 const DEFAULT_FORM: SeriesFormData = {
   title: '', slug: '', description: '',
@@ -23,30 +22,20 @@ const DEFAULT_FORM: SeriesFormData = {
   minAge: 13,
 }
 
-// ── Wizard shell ───────────────────────────────────────────────────────────
-//
-// Nothing is written to the DB while you move between steps — only "Save as
-// draft" or "Publish" create rows, so in-progress work never shows up as a
-// draft. Once rows exist their ids are kept here, so a retry after a failed
-// upload reuses them instead of creating duplicates.
+// Nothing is written until "Save as draft" or "Publish"; saved row ids are reused on retry.
 
 function WizardShell() {
   const router = useRouter()
 
-  // Wizard state lives in memory only, so a refresh always starts over at
-  // step 1 (the beforeunload warning below guards against losing it).
+  // In memory only: a refresh starts over (beforeunload warns).
   const [step, setStep] = useState(1)
 
-  // Step 1 form — lifted so data persists when going back
   const [formData, setFormData] = useState<SeriesFormData>(DEFAULT_FORM)
 
-  // Step 2 chapter title + pages — lifted so they survive going back, and so
-  // Step 3 can show the real preview and each page's upload status
   const [chapterTitle, setChapterTitle] = useState('')
   const [pages,        setPages]        = useState<LocalPage[]>([])
 
-  // Rows created by a save so far. A ref so a running save always sees the
-  // latest ids; hasSavedRows mirrors it for rendering.
+  // A ref so a running save sees the latest ids; hasSavedRows mirrors it for rendering.
   const savedIds = useRef<{ seriesId?: string; chapterId?: string }>({})
   const [hasSavedRows, setHasSavedRows] = useState(false)
   const [saving,       setSaving]       = useState<SaveState>(null)
@@ -62,22 +51,18 @@ function WizardShell() {
     setPages(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p))
   }
 
-  // ── Warn before closing/refreshing while there's unsaved work ───────────
   const hasWork = formData.title.trim() !== '' || chapterTitle.trim() !== '' || pages.length > 0
   useEffect(() => {
     if (!hasWork) return
     function warn(e: BeforeUnloadEvent) {
       if (leaving.current) return
       e.preventDefault()
-      e.returnValue = '' // still required by some browsers to show the prompt
+      e.returnValue = ''
     }
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [hasWork])
 
-  // ── Hide the sidebar Drafts badge while publishing ──────────────────────
-  // Publish rows stay unpublished until the end; the cleanup clears the flag
-  // on every exit path (success, failure, unmount). Draft saves don't set it.
   const savingKind = saving?.kind
   useEffect(() => {
     if (savingKind !== 'publish') return
@@ -85,7 +70,6 @@ function WizardShell() {
     return () => setWizardSaving(false)
   }, [savingKind])
 
-  // ── Sync URL silently on every step change — no page reload ─────────────
   useEffect(() => {
     router.replace(`/admin/series/new?step=${step}`, { scroll: false })
   }, [step, router])
@@ -100,14 +84,7 @@ function WizardShell() {
     window.location.href = url
   }
 
-  /**
-   * Creates whatever isn't saved yet: the series, then (withChapter) chapter 1
-   * and every page not yet uploaded, one by one in reading order. Stops at the
-   * first failed page: the API appends pages, so carrying on past a failure
-   * would put the retried page out of order.
-   *
-   * @returns true when everything asked for is saved
-   */
+  /** Creates what isn't saved yet: series, then chapter 1 and its pages in order, stopping at the first failed page. */
   async function persist(kind: 'draft' | 'publish', withChapter: boolean): Promise<boolean> {
     const ids = savedIds.current
     setSaving({ kind, page: null })
@@ -142,7 +119,6 @@ function WizardShell() {
     }
   }
 
-  /** "Save as draft" from any step: creates the unpublished rows now, then opens Drafts. */
   async function saveDraft(withChapter: boolean) {
     const ok = await persist('draft', withChapter)
     if (ok) {
@@ -151,12 +127,11 @@ function WizardShell() {
       return
     }
     setSaving(null)
-    // A chapter save that got partway lands on Step 3, where failed pages are
-    // listed and Publish / Save as draft retry them.
+    // A partial chapter save lands on Step 3, where failed pages can be retried.
     if (withChapter && savedIds.current.seriesId) goToStep(3)
   }
 
-  /** Saves everything, and only once every page is uploaded flips both rows live. */
+  /** Saves everything; flips the rows live only once every page is uploaded. */
   async function publish() {
     const ok = await persist('publish', true)
     const { seriesId, chapterId } = savedIds.current
@@ -220,7 +195,6 @@ function WizardShell() {
   )
 }
 
-// ── Saving overlay — covers the whole wizard so nothing can be clicked twice ─
 
 function SavingOverlay({ saving }: { saving: NonNullable<SaveState> }) {
   const { page } = saving
@@ -253,7 +227,6 @@ function SavingOverlay({ saving }: { saving: NonNullable<SaveState> }) {
   )
 }
 
-// ── Default export ─────────────────────────────────────────────────────────
 
 export default function NewSeriesPage() {
   return (

@@ -78,7 +78,6 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
       position: 'relative', height: 470, overflow: 'hidden',
       background: '#0d0d18', borderRadius: 12,
     }}>
-      {/* Slides */}
       {visibleSlides.map((s, i) => {
         const slideHref =
           s.series && s.chapter
@@ -96,7 +95,6 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
               padding: '32px 36px', color: '#fff',
             }}
           >
-            {/* Background image */}
             {s.banner_image && (
               <Image
                 src={s.banner_image}
@@ -107,13 +105,11 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
               />
             )}
 
-            {/* Gradient overlay */}
             <div style={{
               position: 'absolute', inset: 0,
               background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0) 100%)',
             }} />
 
-            {/* Content */}
             <div style={{ position: 'relative', zIndex: 2, maxWidth: 620 }}>
               <div className="flex items-center gap-2" style={{ marginBottom: 12 }}>
                 <span
@@ -168,7 +164,6 @@ export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; 
         )
       })}
 
-      {/* Dot indicators */}
       {visibleSlides.length > 1 && (
         <div className="absolute flex gap-2" style={{ bottom: 16, right: 24, zIndex: 3 }}>
           {visibleSlides.map((_, i) => (

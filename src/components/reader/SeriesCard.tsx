@@ -44,7 +44,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       }}
     >
     <Link href={`/comics/${series.slug}`} className="flex flex-1 flex-col gap-0">
-      {/* Cover */}
       <div
         className="relative overflow-hidden"
         style={{ aspectRatio: '460/640', backgroundColor: 'var(--ryu-surface-3)' }}
@@ -64,9 +63,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
         )}
       </div>
 
-      {/* Body */}
       <div className="flex flex-col gap-2 p-3">
-        {/* Title */}
         <p
           className="text-sm font-semibold leading-snug line-clamp-2"
           style={{
@@ -112,7 +109,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       </div>
     </Link>
 
-      {/* Bookmark button */}
       <button
         type="button"
         onClick={toggleBookmark}

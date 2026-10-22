@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/select'
 import { compressImage } from '@/lib/image-compress'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type PostType = 'sketch' | 'drawing' | 'meme' | 'other'
 
@@ -22,7 +21,6 @@ const POST_TYPES: { value: PostType; label: string }[] = [
   { value: 'other',   label: 'Other' },
 ]
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--ryu-surface-2)',
@@ -36,7 +34,6 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--ryu-text)', marginBottom: 6,
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NewPostPage() {
   const router = useRouter()
@@ -51,13 +48,11 @@ export default function NewPostPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── Derived state ──────────────────────────────────────────────────────────
   const hasImage = imageFile !== null
   const hasTitle = title.trim().length > 0
   const hasType  = Boolean(postType)
   const canSave  = hasImage && hasTitle && hasType
 
-  // ── File handling ──────────────────────────────────────────────────────────
   function pickFile(file: File) {
     if (!file.type.startsWith('image/')) {
       toast.error('Please select an image file')
@@ -86,7 +81,6 @@ export default function NewPostPage() {
     setPreview(null)
   }
 
-  // ── Submit ─────────────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (!imageFile) { toast.error('Please upload an image'); return }
     setSubmitting(true)
@@ -121,11 +115,9 @@ export default function NewPostPage() {
     }
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/posts" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>
@@ -135,7 +127,6 @@ export default function NewPostPage() {
         <span style={{ color: 'var(--ryu-text)' }}>New Illustration</span>
       </div>
 
-      {/* Heading */}
       <div className="px-8 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
           style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -147,20 +138,16 @@ export default function NewPostPage() {
         </h1>
       </div>
 
-      {/* Two-column grid */}
       <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        {/* ── LEFT — Post details ──────────────────────────────────────── */}
         <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* 01 Details card */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
               <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>01</span>
               <span className="font-heading" style={{ fontSize: 16, fontWeight: 600, color: 'var(--ryu-text)' }}>Post details</span>
             </div>
 
-            {/* Checklist */}
               <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: '16px 18px' }}>
                 <div className="font-mono-ryu text-[10px] tracking-widest uppercase mb-3"
                   style={{ color: 'var(--ryu-text-2)' }}>
@@ -185,7 +172,6 @@ export default function NewPostPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {/* Type */}
               <div>
                 <label style={labelStyle}>Type <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
                 <Select value={postType} onValueChange={v => setPostType(v as PostType)}>
@@ -204,7 +190,6 @@ export default function NewPostPage() {
                 </Select>
               </div>
 
-              {/* Title */}
               <div>
                 <label style={labelStyle}>
                   Title <span style={{ color: 'var(--ryu-primary)' }}>*</span>
@@ -217,7 +202,6 @@ export default function NewPostPage() {
                 />
               </div>
 
-              {/* Description */}
               <div>
                 <label style={labelStyle}>
                   Description{' '}
@@ -237,15 +221,12 @@ export default function NewPostPage() {
           </div>
 
         </div>
-        {/* ── END LEFT ─────────────────────────────────────────────────── */}
 
-        {/* ── RIGHT — Image upload ─────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col gap-4"
           style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
 
-            {/* Panel header */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>02</span>
@@ -266,7 +247,6 @@ export default function NewPostPage() {
                 onChange={handleFileChange}
               />
 
-              {/* No image yet — drop zone */}
               {!preview && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
@@ -300,7 +280,6 @@ export default function NewPostPage() {
                 </div>
               )}
 
-              {/* Image selected — preview */}
               {preview && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: '1px solid var(--ryu-border)' }}>
@@ -324,7 +303,6 @@ export default function NewPostPage() {
                     </button>
                   </div>
 
-                  {/* File info */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <ImageIcon size={13} style={{ color: 'var(--ryu-text-3)' }} />
@@ -350,11 +328,9 @@ export default function NewPostPage() {
             </div>
           </div>
         </div>
-        {/* ── END RIGHT ────────────────────────────────────────────────── */}
 
       </div>
 
-      {/* Fixed bottom action bar */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
         background: 'linear-gradient(to top, var(--background) 60%, transparent)',

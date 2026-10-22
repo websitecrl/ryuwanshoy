@@ -8,41 +8,25 @@ import { isProfane } from '@/lib/profanity'
 import { isUuid } from '@/lib/validation'
 import { FEEDBACK_LIMITS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } from '@/lib/feedback'
 
-// Admin reads cookies (requireAdmin) and must never be cached.
 export const dynamic = 'force-dynamic'
 
 // Admin inbox page size, newest first; "Load older" pages through the rest.
 const ADMIN_PAGE_SIZE = 50
-// Most ids "Mark all read" can send at once (what's loaded in the inbox).
 const MAX_MARK_IDS = 500
 
 // Next.js error digests are short numeric/word ids; anything else is dropped.
 const DIGEST_RE = /^[\w-]{1,100}$/
 
 
-/**
- * Trims a free-text value and caps its length.
- * @returns the trimmed string, or null when it's missing or empty
- */
+/** Trimmed and capped text, or null when empty. */
 function cleanText(value: unknown, max: number): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed ? trimmed.slice(0, max) : null
 }
 
-// ─── POST /api/feedback ───────────────────────────────────────────────────────
 // Public. Body: { kind, message, device?, pageUrl?, errorMessage?, errorDigest? }
-// - kind: 'bug' | 'idea' | 'other' from the form, 'crash' from the error screen
-// - message: required (1..1000) except for 'crash', where it's an optional note
-// - device: 'web' | 'phone' | 'both', required except for 'crash' (the reader
-//   isn't asked there; the user agent shows it). No email is collected: any
-//   `email` field sent by an old copy of the form is ignored.
-// - pageUrl: a path on this site (e.g. /comics/x/1), never a full URL;
-//   anything else is stored as null (see isSafeSitePath)
-// User agent is read from the request header (not from the body). It's only
-// a hint: any client can set that header.
-// Nothing about the visitor's IP is stored; the IP is only used by the rate
-// limiter (3 per minute).
+// message and device are optional only for 'crash'. No email or IP is stored (IP only feeds the rate limiter).
 export async function POST(req: NextRequest) {
   const limited = await rateLimit(req, 'FEEDBACK_LIMITER')
   if (limited) return limited
@@ -88,8 +72,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Only a strict same-site path, never a full or disguised external URL
-  // (e.g. "/<tab>/evil.com"), so the admin inbox can't be fed a phishing link.
+  // Same-site paths only, so the inbox can't be fed a phishing link.
   const safePage = isSafeSitePath(pageUrl) ? pageUrl : null
 
   const digest = cleanText(errorDigest, FEEDBACK_LIMITS.errorDigest)
@@ -110,16 +93,11 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true }, { status: 201 })
 }
 
-// ─── GET /api/feedback ────────────────────────────────────────────────────────
-// Admin only. One page, newest first:  [?before=<created_at of the oldest shown>]
-// → { feedback: Row[], unread: number, total: number, nextCursor: string | null }
-// `unread` and `total` cover ALL rows, not just this page, so the inbox can
-// say how much is not loaded yet.
+// Admin. One page, newest first [?before=<cursor>] → { feedback, unread, total, nextCursor }; counts cover all rows.
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
 
-  // created_at is timestamptz, so the cursor is any valid timestamp string.
   const before = req.nextUrl.searchParams.get('before')
   if (before !== null && (before.length > 40 || Number.isNaN(Date.parse(before)))) {
     return NextResponse.json({ error: 'Invalid cursor.' }, { status: 400 })
@@ -129,7 +107,7 @@ export async function GET(req: NextRequest) {
     .from('feedback')
     .select('*')
     .order('created_at', { ascending: false })
-    .limit(ADMIN_PAGE_SIZE + 1) // one extra row tells us if more exist
+    .limit(ADMIN_PAGE_SIZE + 1)
   if (before) pageQuery = pageQuery.lt('created_at', before)
 
   try {
@@ -156,10 +134,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ─── PATCH /api/feedback ──────────────────────────────────────────────────────
-// Admin only. Body: { ids: string[] } → marks exactly those reports read
-// ("Mark all read" sends the ids loaded in the inbox, so reports the admin
-// hasn't seen yet are never marked read by accident). → { ok, unread }
+// Admin. Marks exactly the given ids read (only what the inbox loaded) → { ok, unread }.
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -187,7 +162,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update feedback.' }, { status: 500 })
   }
 
-  // The update worked; a failed recount shouldn't turn that into an error.
+  // A failed recount shouldn't turn a successful update into an error.
   let unread: number | null = null
   try {
     unread = await countUnreadFeedback()

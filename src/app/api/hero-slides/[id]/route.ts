@@ -6,7 +6,6 @@ import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteManyFromR2 } from '@/lib/r2'
 
-// ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -52,7 +51,6 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// ─── DELETE — admin only ──────────────────────────────────────────────────────
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

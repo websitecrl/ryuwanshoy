@@ -6,7 +6,6 @@ import { isProfane } from '@/lib/profanity'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { serverError } from '@/lib/api-errors'
 
-// ─── PATCH /api/comments/[id] ─────────────────────────────────────────────────
 // Edit a comment — requires matching edit_token
 export async function PATCH(
   req: NextRequest,
@@ -66,7 +65,6 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// ─── DELETE /api/comments/[id] ────────────────────────────────────────────────
 // Admin can delete freely; non-admin must supply matching edit_token
 export async function DELETE(
   req: NextRequest,

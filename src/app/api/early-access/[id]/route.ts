@@ -4,7 +4,6 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/require-admin";
 
 
-// ─── DELETE /api/early-access/[id] ───────────────────────────────────────────
 // Admin only — deletes a single early access email row by id
 export async function DELETE(
   _req: NextRequest,

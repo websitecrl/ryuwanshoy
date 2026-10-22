@@ -57,7 +57,6 @@ export default function AdminPostsPage() {
   return (
     <div className="p-8 animate-page-in">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"

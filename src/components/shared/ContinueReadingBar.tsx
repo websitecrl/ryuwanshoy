@@ -67,7 +67,6 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
     >
       <div className="flex items-center gap-4 px-4 py-4">
 
-        {/* Thumbnail */}
         <div
           className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden
                      bg-[var(--ryu-surface-2)] border border-[var(--ryu-border-soft)]"
@@ -87,7 +86,6 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
           )}
         </div>
 
-        {/* Info + progress bar */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-[var(--ryu-text-3)] leading-none mb-0.5">
             Last read

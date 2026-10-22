@@ -70,7 +70,6 @@ const OTHER_AREAS = [
 export default function AdminHelpPage() {
   return (
     <div className="p-8 animate-page-in">
-      {/* Header */}
       <div className="mb-8">
         <Link
           href="/admin/settings"
@@ -88,7 +87,6 @@ export default function AdminHelpPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
 
-        {/* ── Settings field reference ── */}
         {SETTINGS_DOCS.map(section => (
           <div key={section.key} style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -113,7 +111,6 @@ export default function AdminHelpPage() {
           </div>
         ))}
 
-        {/* ── Elsewhere in admin ── */}
         <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
           <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Quick nav</div>
           <div className="font-heading font-semibold mb-4" style={{ fontSize: 18, letterSpacing: -0.2, color: 'var(--ryu-text)' }}>Elsewhere in admin</div>

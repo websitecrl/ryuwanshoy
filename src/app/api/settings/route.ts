@@ -7,9 +7,7 @@ import type { TablesUpdate } from "@/types/database";
 
 export const dynamic = 'force-dynamic'
 
-// Columns the admin may edit. Everything else in the body (id, updated_at,
-// unknown keys) is ignored rather than written — spreading the raw body
-// into the update let a caller set any column.
+// Only these columns are written; spreading the raw body let a caller set any column.
 const EDITABLE_FIELDS = [
   'creator_name', 'donation_message', 'ea_headline', 'ea_subtext',
   'facebook_url', 'instagram_url', 'kofi_url', 'logo_url', 'patreon_url',
@@ -17,19 +15,14 @@ const EDITABLE_FIELDS = [
   'twitter_url', 'youtube_url',
 ] as const satisfies ReadonlyArray<keyof TablesUpdate<'settings'>>
 
-// Columns the public GET returns. Listed by hand, not '*', because GET is
-// public and uses the service role (no RLS): a column added to settings later
-// (e.g. an API key) must stay private unless someone deliberately adds it
-// here. Kept separate from EDITABLE_FIELDS for the same reason: "the admin
-// can edit it" doesn't mean "visitors may read it".
+// Public GET uses the service role, so columns are listed by hand: a new secret column stays private.
 const PUBLIC_FIELDS = `
   creator_name, donation_message, ea_headline, ea_subtext, facebook_url,
   instagram_url, kofi_url, logo_url, patreon_url, paypal_url,
   site_description, site_title, tiktok_url, twitter_url, youtube_url
 `
 
-// ─── GET /api/settings ────────────────────────────────────────────────────────
-// Public — donate page and early-access page need this without auth
+// Public: the donate and early access pages need it.
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
@@ -58,8 +51,6 @@ export async function GET() {
   }
 }
 
-// ─── PATCH /api/settings ──────────────────────────────────────────────────────
-// Admin only — upserts the settings row
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
@@ -96,7 +87,6 @@ export async function PATCH(req: NextRequest) {
 
   let result 
   if (existing?.id) {
-    //Row exist - update it 
     const { data, error } = await supabaseAdmin
       .from("settings")
       .update(payload)
@@ -106,7 +96,6 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
     result = data
   } else {
-    //No row - insert Fresh
     const { data, error } = await supabaseAdmin
       .from('settings')
       .insert(payload)

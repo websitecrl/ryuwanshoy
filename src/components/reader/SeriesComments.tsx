@@ -8,7 +8,6 @@ import { toastRateLimited } from '@/lib/rate-limit-toast'
 import { getToken, getTokenMap, saveToken } from '@/lib/comment-tokens'
 import { timeAgo } from '@/lib/time'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Comment = {
   id: string
@@ -23,7 +22,6 @@ type Props = {
   seriesId: string
 }
 
-// ─── Reply form ───────────────────────────────────────────────────────────────
 
 function ReplyForm({
   parentId,
@@ -107,7 +105,6 @@ function ReplyForm({
   )
 }
 
-// ─── Single comment row ───────────────────────────────────────────────────────
 
 function CommentRow({
   comment,
@@ -167,7 +164,6 @@ function CommentRow({
   return (
     <div className={depth > 0 ? 'ml-11 mt-3' : ''}>
       <div className="flex items-start gap-3">
-        {/* Avatar */}
         <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center
                         text-xs font-bold uppercase select-none
                         bg-[var(--ryu-primary)] text-[var(--ryu-on-primary)]">
@@ -175,7 +171,6 @@ function CommentRow({
         </div>
 
         <div className="flex-1 min-w-0">
-          {/* Name + timestamp */}
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-sm font-semibold text-[var(--ryu-text)]">
               {comment.name}
@@ -188,7 +183,6 @@ function CommentRow({
             </span>
           </div>
 
-          {/* Content or edit */}
           {editing ? (
             <div className="mt-2 space-y-2">
               <textarea
@@ -225,7 +219,6 @@ function CommentRow({
             </p>
           )}
 
-          {/* Action row — Reply + edit/delete */}
           {!editing && (
             <div className="flex items-center gap-3 mt-1.5">
               {/* Reply button — only on top-level comments */}
@@ -240,7 +233,6 @@ function CommentRow({
                 </button>
               )}
 
-              {/* Edit / delete */}
               {isOwn && (
                 <>
                   <button
@@ -264,7 +256,6 @@ function CommentRow({
         </div>
       </div>
 
-      {/* Inline reply form */}
       {showReply && (
         <ReplyForm
           parentId={comment.id}
@@ -277,7 +268,6 @@ function CommentRow({
         />
       )}
 
-      {/* Nested replies */}
       {replies.length > 0 && (
         <div className="mt-3 border-l-2 border-[var(--ryu-border-soft)] pl-4 space-y-4">
           {replies.map(reply => (
@@ -300,7 +290,6 @@ function CommentRow({
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function SeriesComments({ seriesId }: Props) {
   // Newest 30 top-level comments (with their replies); "Show older comments"
@@ -392,7 +381,6 @@ export default function SeriesComments({ seriesId }: Props) {
     <div className="w-full bg-[var(--ryu-surface-1)] border-t border-[var(--ryu-border)]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 sm:pt-10 pb-10 space-y-6">
 
-    {/* Header */}
     <div className="flex items-center gap-2">
       <MessageSquare size={18} className="text-[var(--ryu-primary)]" />
       <h2 className="text-base font-bold text-[var(--ryu-text)]">
@@ -405,7 +393,6 @@ export default function SeriesComments({ seriesId }: Props) {
       </h2>
     </div>
 
-    {/* Comment form */}
     <div className="rounded-xl border border-[var(--ryu-border)] p-4 space-y-3 bg-[var(--ryu-surface-1)]">
       <div className="space-y-1">
         <label className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
@@ -440,7 +427,6 @@ export default function SeriesComments({ seriesId }: Props) {
         </button>
       </div>
     </div>
-        {/* Comment list */}
         <div>
           {loading ? (
             <div className="space-y-4">

@@ -7,7 +7,6 @@ import type { Database } from "@/types/database";
 import { toastRateLimited } from "@/lib/rate-limit-toast";
 
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Settings = Database["public"]["Tables"]["settings"]["Row"];
 
@@ -18,15 +17,12 @@ type FormState =
   | { status: "duplicate" }
   | { status: "error"; message: string };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
-// Lock icon for the "early access chapters" visual
 function LockBadge() {
   return (
     <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
@@ -35,11 +31,9 @@ function LockBadge() {
   );
 }
 
-// Success state — replaces the form after signup
 function SuccessView({ message }: { message: string }) {
   return (
     <div className="flex flex-col items-center gap-6 py-8 text-center">
-      {/* Animated checkmark */}
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100 text-4xl dark:bg-green-900/30">
         🎉
       </div>
@@ -59,7 +53,6 @@ function SuccessView({ message }: { message: string }) {
   );
 }
 
-// Duplicate state — friendly message if they've already signed up
 function DuplicateView() {
   return (
     <div className="flex flex-col items-center gap-6 py-8 text-center">
@@ -86,7 +79,6 @@ function DuplicateView() {
   );
 }
 
-// ─── Main Page Component ──────────────────────────────────────────────────────
 
 /** The signup page. Only rendered when Early Access is on (see page.tsx). */
 export default function EarlyAccessClient() {
@@ -96,7 +88,6 @@ export default function EarlyAccessClient() {
   const [formState, setFormState] = useState<FormState>({ status: "idle" });
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
-  // ── Fetch settings on mount ──────────────────────────────────────────────
   useEffect(() => {
     async function fetchSettings() {
       try {
@@ -111,13 +102,11 @@ export default function EarlyAccessClient() {
     void fetchSettings();
   }, []);
 
-  // ── Derived content from settings ───────────────────────────────────────
   const headline = settings?.ea_headline ?? "Get Early Access";
   const subtext =
     settings?.ea_subtext ??
     "Sign up to read new chapters before everyone else. Free — no payment required.";
 
-  // ── Email validation on blur ─────────────────────────────────────────────
   function handleEmailBlur() {
     if (email && !isValidEmail(email)) {
       setEmailError("Please enter a valid email address.");
@@ -126,17 +115,14 @@ export default function EarlyAccessClient() {
     }
   }
 
-  // ── Form submission ──────────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // Client-side validation before hitting the API
     if (!isValidEmail(email)) {
       setEmailError("Please enter a valid email address.");
       return;
     }
 
-    // Get reCAPTCHA token
     const recaptchaToken = recaptchaRef.current?.getValue() ?? "";
     if (!recaptchaToken) {
       setFormState({
@@ -156,8 +142,7 @@ export default function EarlyAccessClient() {
       });
 
       if (res.status === 429) {
-        // Rate limited before reCAPTCHA was verified. The token may expire
-        // during the wait, so reset it and let them try again after the toast.
+        // The token may expire while rate limited, so reset it.
         toastRateLimited();
         setFormState({ status: "idle" });
         recaptchaRef.current?.reset();
@@ -170,7 +155,6 @@ export default function EarlyAccessClient() {
       };
 
       if (res.status === 409) {
-        // Duplicate email
         setFormState({ status: "duplicate" });
         return;
       }
@@ -180,7 +164,6 @@ export default function EarlyAccessClient() {
           status: "error",
           message: json.error ?? "Something went wrong. Please try again.",
         });
-        // Reset reCAPTCHA so they can try again
         recaptchaRef.current?.reset();
         return;
       }
@@ -205,7 +188,6 @@ export default function EarlyAccessClient() {
 
   return (
     <main className="flex-1">
-      {/* ── Hero section ──────────────────────────────────────────────────── */}
       <section className="border-b border-border bg-muted/30 px-4 py-16 text-center">
         <div className="mx-auto max-w-2xl space-y-4">
           <LockBadge />
@@ -218,10 +200,8 @@ export default function EarlyAccessClient() {
         </div>
       </section>
 
-      {/* ── Form section ──────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-md px-4 py-16">
         <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
-          {/* Render form or result depending on state */}
           {formState.status === "success" ? (
             <SuccessView message={formState.message} />
           ) : formState.status === "duplicate" ? (
@@ -241,9 +221,7 @@ export default function EarlyAccessClient() {
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
-                    // Clear error as soon as they start typing again
                     if (emailError) setEmailError(null);
-                    // Clear API errors too
                     if (formState.status === "error")
                       setFormState({ status: "idle" });
                   }}
@@ -256,7 +234,6 @@ export default function EarlyAccessClient() {
                   aria-describedby={emailError ? "email-error" : undefined}
                   aria-invalid={Boolean(emailError)}
                 />
-                {/* Email validation error */}
                 {emailError && (
                   <p
                     id="email-error"
@@ -268,19 +245,17 @@ export default function EarlyAccessClient() {
                 )}
               </div>
 
-              {/* reCAPTCHA widget */}
               <div className="flex justify-center">
                 {siteKey ? (
                   <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} />
                 ) : (
-                  // Development fallback when NEXT_PUBLIC_RECAPTCHA_SITE_KEY isn't set yet
+                  // Dev fallback when NEXT_PUBLIC_RECAPTCHA_SITE_KEY isn't set.
                   <div className="flex h-16 w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground">
                     reCAPTCHA — add NEXT_PUBLIC_RECAPTCHA_SITE_KEY to .env.local
                   </div>
                 )}
               </div>
 
-              {/* API error message */}
               {formState.status === "error" && (
                 <div
                   role="alert"
@@ -297,7 +272,6 @@ export default function EarlyAccessClient() {
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
-                    {/* Spinner — pure CSS, no library needed */}
                     <span
                       className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"
                       aria-hidden="true"
@@ -317,7 +291,6 @@ export default function EarlyAccessClient() {
         </div>
       </section>
 
-      {/* ── What is early access section ──────────────────────────────────── */}
       <section className="border-t border-border bg-muted/30 px-4 py-12">
         <div className="mx-auto max-w-2xl space-y-8 text-center">
           <h2 className="text-lg font-bold tracking-tight">

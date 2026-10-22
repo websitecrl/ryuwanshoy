@@ -100,7 +100,6 @@ export default function HomeClient({
         <LatestReleases chapters={visibleChapters} />
         <SketchbookPreview posts={posts} />
 
-        {/* About section */}
         <section style={{ paddingBottom: 24 }}>
         <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
             <div style={{ width: 5, height: 26, background: 'var(--ryu-primary)', borderRadius: 2, flexShrink: 0 }} />
@@ -110,7 +109,6 @@ export default function HomeClient({
         </div>
 
         <div className="grid gap-5 grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px]">
-            {/* Creator card */}
             <div
             className="flex gap-4 items-start"
             style={{
@@ -163,7 +161,6 @@ export default function HomeClient({
             </div>
             </div>
 
-            {/* Support card */}
             <div
             style={{
                 border: '0.5px solid var(--ryu-border)',

@@ -1,9 +1,6 @@
-// Shared profanity filter — used by comments create (route.ts) and comments
-// edit (`[id]/route.ts`). Previously duplicated verbatim in both files; kept
-// here so a change (adding a word, tuning normalize()) only has to happen once.
+// Shared by comment create and edit.
 
-// ─── Normalize text before checking ──────────────────────────────────────────
-// Collapses repeated chars, maps common leetspeak substitutions to base letters
+// Collapses repeated chars and maps leetspeak to letters.
 function normalize(text: string): string {
   return text
     .toLowerCase()
@@ -20,10 +17,7 @@ function normalize(text: string): string {
     .replace(/\+/g, 't')
 }
 
-// ─── Hard block list (English only) ──────────────────────────────────────────
-// All entries are already in their normalized form (post-leetspeak substitution).
-// normalize() is applied to both the input AND each word before matching,
-// so you don't need to add leetspeak variants here.
+// Normalized form; normalize() runs on input and words, so no leetspeak variants needed.
 const HARD_BLOCK: string[] = [
   // Racial slurs
   'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger','negro',
@@ -71,9 +65,6 @@ const HARD_BLOCK: string[] = [
   'go hang yourself', 'slit your wrists',
 ]
 
-// ─── Core check ───────────────────────────────────────────────────────────────
-// Normalize both the input AND each blocked word before comparing.
-// This catches all leetspeak / repeated-char bypasses in one pass.
 export function isProfane(text: string): boolean {
   const normalizedInput = normalize(text)
   return HARD_BLOCK.some(word => normalizedInput.includes(normalize(word)))

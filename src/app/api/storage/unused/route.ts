@@ -9,7 +9,6 @@ export const dynamic = 'force-dynamic'
 // Most keys one DELETE may carry; matches one R2 DeleteObjects batch.
 const MAX_KEYS = 1000
 
-// ─── GET /api/storage/unused ──────────────────────────────────────────────────
 // Admin only. Read only: lists files in the public bucket nothing uses.
 //   → { files: [{ key, size, lastModified }], totalBytes, scannedCount, usedCount }
 export async function GET() {
@@ -23,7 +22,6 @@ export async function GET() {
   }
 }
 
-// ─── DELETE /api/storage/unused ───────────────────────────────────────────────
 // Admin only. Body { keys: string[] } from a previous GET. The server scans
 // again and deletes only keys that are still unused (see deleteUnusedFiles).
 //   → { deleted, failed, skipped, freedBytes }

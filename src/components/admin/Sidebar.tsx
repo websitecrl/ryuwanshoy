@@ -96,7 +96,6 @@ useEffect(() => {
     return () => window.removeEventListener('settings-updated', loadSettings)
   }, [])
 
-  // ── Nav helpers ────────────────────────────────────────────────────────
   function isActive(href: string) {
     return pathname.startsWith(href)
   }
@@ -117,7 +116,6 @@ useEffect(() => {
       }}
     >
 
-      {/* ── Logo ──────────────────────────────────────────────────────── */}
       <div
         className="flex items-center gap-3 px-6 py-5"
         style={{ borderBottom: '1px solid var(--ryu-border)' }}
@@ -153,7 +151,6 @@ useEffect(() => {
         </div>
       </div> 
 
-      {/* ── Workspace label + theme toggle ────────────────────────────── */}
       <div className="flex items-center gap-5 px-5 pt-4 pb-3">
         <span
           className="font-mono-ryu text-[10px] tracking-widest uppercase flex-1"
@@ -165,7 +162,6 @@ useEffect(() => {
         <ThemeToggle />
       </div>
 
-      {/* ── Nav items ─────────────────────────────────────────────────── */}
       <nav className="flex-1 flex flex-col gap-0.5 px-3 py-1">
         {navItems.map(({ label, href, icon: Icon }) => {
           const active = isActive(href)
@@ -185,7 +181,6 @@ useEffect(() => {
                 if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'
               }}
             >
-              {/* Left accent bar */}
               <span
                 className="absolute left-0 top-2 bottom-2 w-0.75 rounded-r-full transition-colors duration-100"
                 style={{ background: active ? 'var(--ryu-primary)' : 'transparent' }}
@@ -244,7 +239,6 @@ useEffect(() => {
         })()}
       </nav>
 
-      {/* ── Cloudflare R2 storage chip ─────────────────────────────────── */}
       <div className="mx-3 mb-3 p-3 rounded-xl" style={{
         background: 'var(--ryu-surface-1)',
         border: '1px solid var(--ryu-border)',
@@ -264,7 +258,6 @@ useEffect(() => {
           </span>
         </div>
 
-        {/* Progress bar */}
         <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ryu-border-soft)' }}>
           <div
             className="h-full rounded-full transition-all duration-500"
@@ -276,7 +269,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ── User chip / logout ─────────────────────────────────────────── */}
       <div className="px-3 pb-4" style={{ borderTop: '1px solid var(--ryu-border)' }}>
         <button
           onClick={handleLogout}
@@ -293,7 +285,6 @@ useEffect(() => {
             el.style.borderColor = 'transparent'
           }}
         >
-          {/* Avatar */}
          <div className="flex items-center gap-1.5" style={{ color: 'var(--ryu-danger)' }}>
             <LogOut size={14} />
             <span className="text-[11px] font-semibold">Log out</span>

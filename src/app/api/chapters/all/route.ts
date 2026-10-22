@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 
-// ─── GET /api/chapters/all ────────────────────────────────────────────────────
 // Admin only — returns all chapters including unpublished (used by hero slide manager)
 export async function GET() {
   const auth = await requireAdmin()

@@ -3,19 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database'
 
 /**
- * Supabase client for PUBLIC, cacheable reads (server only).
- *
- * Unlike `@/lib/supabase/server`, this never touches `cookies()`, so pages
- * that use it can be statically cached (ISR) and shared across visitors.
- *
- * It always runs as the `anon` role, never the visitor's session. That is a
- * safety property, not just a perf one: even if an admin is logged in when a
- * page regenerates, RLS hides admin-only rows, so a draft can never be baked
- * into a cached page that everyone gets served.
- *
- * Do NOT use it for admin reads or anything per-user; use the cookie client.
- *
- * @returns a fresh client per call (cheap: no session, no network until a query)
+ * Anon client for cacheable public reads (no cookies). Always anon, so RLS keeps drafts out of cached pages
+ * even when an admin is logged in. Never use it for admin or per-user reads.
  */
 export function createPublicClient() {
   return createClient<Database>(

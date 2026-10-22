@@ -13,7 +13,6 @@ export const maxDuration = 60
 
 const MAX_PAGE_SIZE = 100
 
-// ─── GET /api/posts ───────────────────────────────────────────────────────────
 // Public, newest first, one page at a time:
 //   ?type=sketch|drawing|meme|other  [&before=<cursor>] [&limit=1..100]
 //   → { data, nextCursor }   (nextCursor: pass as ?before= for the next page)
@@ -62,7 +61,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ─── POST /api/posts ──────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

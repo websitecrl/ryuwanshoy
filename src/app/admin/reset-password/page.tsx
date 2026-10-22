@@ -35,7 +35,6 @@ export default function ResetPasswordPage() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // ── Send reset email ────────────────────────────────────────────────────────
   async function handleRequest(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -55,7 +54,6 @@ export default function ResetPasswordPage() {
     setSent(true)
   }
 
-  // ── Update password ─────────────────────────────────────────────────────────
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -102,7 +100,6 @@ export default function ResetPasswordPage() {
         padding: '48px 24px',
       }}>
 
-        {/* Background image */}
         <div style={{
           position: 'fixed', inset: 0,
           backgroundImage: 'url(/login.png)',
@@ -110,13 +107,11 @@ export default function ResetPasswordPage() {
           backgroundRepeat: 'no-repeat', zIndex: 0,
         }} />
 
-        {/* Dark overlay */}
         <div style={{
           position: 'fixed', inset: 0,
           background: 'color-mix(in srgb, var(--ryu-shadow) 55%, transparent)', zIndex: 1,
         }} />
 
-        {/* Card */}
         <div className="fade-up" style={{
           position: 'relative', zIndex: 2,
           width: '100%', maxWidth: 400,
@@ -125,7 +120,6 @@ export default function ResetPasswordPage() {
           boxShadow: '0 32px 80px -16px color-mix(in srgb, var(--ryu-shadow) 55%, transparent), 0 0 0 1px color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
         }}>
 
-          {/* ── MODE: request — enter email ──────────────────────────── */}
           {mode === 'request' && !sent && (
             <>
               <div style={{ marginBottom: 20 }}>
@@ -222,7 +216,6 @@ export default function ResetPasswordPage() {
             </>
           )}
 
-          {/* ── MODE: request — email sent confirmation ──────────────── */}
           {mode === 'request' && sent && (
             <div style={{ textAlign: 'center' }}>
               <div style={{
@@ -257,7 +250,6 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {/* ── MODE: update — set new password ─────────────────────── */}
           {mode === 'update' && !done && (
             <>
               <div style={{ marginBottom: 20 }}>
@@ -283,7 +275,6 @@ export default function ResetPasswordPage() {
 
               <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-                {/* New password */}
                 <div>
                   <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                     New password <span style={{ color: 'var(--ryu-primary)' }}>*</span>
@@ -319,7 +310,6 @@ export default function ResetPasswordPage() {
                   </div>
                 </div>
 
-                {/* Confirm password */}
                 <div>
                   <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                     Confirm password <span style={{ color: 'var(--ryu-primary)' }}>*</span>
@@ -416,7 +406,6 @@ export default function ResetPasswordPage() {
             </>
           )}
 
-          {/* ── MODE: update — success ───────────────────────────────── */}
           {mode === 'update' && done && (
             <div style={{ textAlign: 'center' }}>
               <div style={{

@@ -73,7 +73,6 @@
 :root {
   color-scheme: light;
 
-  /* Ryuwanshoy design tokens */
   --ryu-primary: #F97316;
   --ryu-primary-deep: #EA580C;
   --ryu-primary-soft: #FFEDD5;
@@ -91,41 +90,30 @@
   --ryu-text-2: #78716C;
   --ryu-text-3: #A8A29E;
   --ryu-ink: #1C1917; /* outlines + hard offset shadows on cartoon-style buttons/cards */
-  /* Full screen backdrop behind the age gate. Fully opaque on purpose: the
-     page behind it is in the HTML, so a mature page must not show through.
-     Same in light and dark, so .dark doesn't override it. */
+  /* Age gate backdrop: fully opaque so a mature page never shows through. */
   --ryu-overlay: #000000;
-  /* Illustration type tags (SketchbookPreview): a soft tint with dark text in
-     light mode, a deep tint with light text in dark mode (.dark below). */
+  /* Illustration type tags (dark values in .dark). */
   --ryu-tag-sketch-bg: #FFF7ED;   --ryu-tag-sketch-fg: #9A3412;
   --ryu-tag-wip-bg: #FEF08A;      --ryu-tag-wip-fg: #713F12;
   --ryu-tag-meme-bg: #E1F5EE;     --ryu-tag-meme-fg: #085041;
   --ryu-tag-fanart-bg: #FBEAF0;   --ryu-tag-fanart-fg: #72243E;
   --ryu-tag-announce-bg: #E6F1FB; --ryu-tag-announce-fg: #0C447C;
 
-  /* Aliases for names used across the app that were never defined (the
-     browser silently ignored them, e.g. see-through backgrounds). They point
-     at the real tokens, so they follow .dark automatically (the .dark class
-     sits on <html>, the same element as :root). Prefer the real names in
-     new code. */
+  /* Aliases for names the app used without defining; prefer the real tokens. */
   --ryu-bg: var(--background);
   --ryu-text-muted: var(--ryu-text-3);
   --ryu-text-secondary: var(--ryu-text-2);
   --ryu-border-hover: var(--ryu-primary);
 
-  /* Delete / destructive actions (DeleteButton). The red follows shadcn's
-     --destructive; text on it is white in light mode and dark in dark mode,
-     because white on the lighter dark-mode red (#F87171) only reaches ~2.8:1. */
+  /* Delete actions. Text on it is dark in .dark: white on #F87171 is only 2.8:1. */
   --ryu-danger: var(--destructive);
   --ryu-on-danger: #FFFFFF;
 
-  /* Status colors (saved, success, warning). Light: green-600 / amber-600,
-     both above 3:1 on white for icons and bold text. Dark values in .dark. */
+  /* Status colors (dark values in .dark). */
   --ryu-success: #16A34A;
   --ryu-warning: #D97706;
 
-  /* Tints for banners, badges and icon bubbles. Mixed from the base color,
-     so they follow .dark without their own dark values. */
+  /* Tints mixed from the base colors, so they follow .dark. */
   --ryu-danger-soft:    color-mix(in srgb, var(--ryu-danger) 10%, transparent);
   --ryu-danger-border:  color-mix(in srgb, var(--ryu-danger) 30%, transparent);
   --ryu-success-soft:   color-mix(in srgb, var(--ryu-success) 10%, transparent);
@@ -133,25 +121,21 @@
   --ryu-warning-soft:   color-mix(in srgb, var(--ryu-warning) 12%, transparent);
   --ryu-warning-border: color-mix(in srgb, var(--ryu-warning) 30%, transparent);
 
-  /* Text/icons on a solid --ryu-success (white here, dark in .dark, like --ryu-on-danger). */
+  /* Text on --ryu-success. */
   --ryu-on-success: #FFFFFF;
-  /* Text on --ryu-primary-soft badges (orange-800 here; the soft tint is
-     translucent in .dark, where it needs a light orange). */
+  /* Text on --ryu-primary-soft badges. */
   --ryu-on-primary-soft: #9A3412;
 
   /* Drop shadows and modal backdrops: black in both themes. */
   --ryu-shadow: #000000;
-  /* Text and icons over photos or dark glass (cover art, banner previews):
-     white in both themes, because the image behind doesn't change. */
+  /* Text over photos: white in both themes. */
   --ryu-on-image: #FFFFFF;
   /* Knob of a toggle switch: white in both themes. */
   --ryu-thumb: #FFFFFF;
   --ryu-page-edge: #EDE8DF;
   --ryu-page-edge-line: #C2B9AA;
 
-  /* Placeholder covers for a series with no cover image (admin series list,
-     wizard preview, hero banner preview). Dark art under --ryu-on-image text,
-     the same in both themes. The series list picks one by title. */
+  /* Placeholder covers for a series with no image (same in both themes). */
   --ryu-cover-1: linear-gradient(145deg, #3D1A0E 0%, #7C2D12 100%);
   --ryu-cover-2: linear-gradient(145deg, #1A1A3E 0%, #312E81 100%);
   --ryu-cover-3: linear-gradient(145deg, #0F2A1A 0%, #14532D 100%);
@@ -161,8 +145,7 @@
   --ryu-cover-7: linear-gradient(145deg, #2A1A0A 0%, #78350F 100%);
   --ryu-cover-8: linear-gradient(145deg, #1A0A2A 0%, #4C1D95 100%);
 
-  /* shadcn tokens — remapped to warm palette.
-     The primary/accent family aliases the --ryu-* tokens so the two systems can't drift. */
+  /* shadcn tokens (primary/accent alias the --ryu-* tokens). */
   --background: #FFFBF5;
   --foreground: #1C1917;
   --card: #FFFFFF;
@@ -205,15 +188,12 @@
 .dark {
   color-scheme: dark;
 
-  /* Ryuwanshoy dark tokens */
-  /* Same hue as light (#F97316), nudged ~4 points lighter and ~5 less saturated so it
-     doesn't glare on charcoal. #1C1917 on it is 6.7:1. */
+  /* A bit lighter and less saturated than light mode so it doesn't glare. */
   --ryu-primary: #F4812F;
   --ryu-primary-deep: #FB923C;
   --ryu-primary-soft: rgba(244, 129, 47, 0.16);
   --ryu-on-primary: #1C1917;
-  /* Same gold family as light (#FEF08A) but much lower lightness — the pale yellow blew out
-     against charcoal. Still clearly distinct from the orange primary; #1C1917 on it is 7.4:1. */
+  /* Darker gold: the pale yellow blew out on charcoal. */
   --ryu-accent: #D4A017;
   --ryu-accent-deep: #FACC15;
   --ryu-on-accent: #1C1917;
@@ -242,7 +222,7 @@
   --ryu-page-edge: #CFC8BC;
   --ryu-page-edge-line: #8F8676;
 
-  /* shadcn tokens — remapped to warm dark palette (primary/accent family aliases --ryu-*) */
+  /* shadcn tokens */
   --background: #14110F;
   --foreground: #FFFBF5;
   --card: #221E1A;
@@ -290,9 +270,7 @@
 }
 
 /* ─── Age gate (src/components/shared/AgeGate.tsx) ──────────────────────── */
-/* The gate is in every page's HTML. AGE_INIT_SCRIPT sets the attribute before
-   first paint for readers who already picked an age, so it never flashes.
-   !important beats the gate's inline display: flex. */
+/* Set before first paint (AGE_INIT_SCRIPT), so the gate never flashes. */
 html[data-age-confirmed] .age-gate {
   display: none !important;
 }
@@ -301,11 +279,7 @@ html:not([data-age-confirmed]):has(.age-gate) {
   overflow: hidden;
 }
 
-/* Age restricted pages (src/components/shared/AgeRestricted.tsx, spec 0003).
-   Before React loads, data-reader-age (set by AGE_INIT_SCRIPT) picks the page
-   or the block screen, so a younger reader never sees a flash of the page.
-   Bands are 13, 16, 18 (the admin min_age choices). !important beats the
-   content wrapper's inline display: contents. */
+/* Age restricted pages (spec 0003): data-reader-age picks page or block screen before React loads. */
 .age-restricted-block {
   display: none;
 }

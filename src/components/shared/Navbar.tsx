@@ -39,11 +39,9 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         style={{ maxWidth: 1600 }}
       >
 
-    {/* Logo */}
     <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.02em' }}>
       {logoUrl && !logoFailed ? (
         <>
-          {/* Logo shifts left on hover */}
           <img
             src={logoUrl}
             alt={siteTitle ?? 'Logo'}
@@ -56,7 +54,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             }}
             className="group-hover:-translate-x-1"
           />
-          {/* Title slides in from the right */}
           <span
             className="font-comic max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap"
             style={{
@@ -91,7 +88,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
       )}
     </Link>
 
-        {/* Desktop links */}
         <nav className="hidden md:flex items-center gap-8 flex-1 ml-10">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
@@ -163,7 +159,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile drawer */}
       {menuOpen && (
         <div
           style={{

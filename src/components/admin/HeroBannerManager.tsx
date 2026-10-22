@@ -32,7 +32,6 @@ export default function HeroBannerManager() {
   const [actioningId, setActioningId] = useState<string | null>(null)
   const [previewSlide, setPreviewSlide] = useState<HeroSlide | null>(null)
 
-  // Form fields
   const [seriesSearch, setSeriesSearch]       = useState('')
   const [seriesDropOpen, setSeriesDropOpen]   = useState(false)
   const [selectedSeries, setSelectedSeries]   = useState<SeriesSummary | null>(null)
@@ -42,7 +41,6 @@ export default function HeroBannerManager() {
   const [creating, setCreating]               = useState(false)
   const [createError, setCreateError]         = useState<string | null>(null)
 
-  // Edit wow
   const [editingId, setEditingId]         = useState<string | null>(null)
   const [editHeadline, setEditHeadline]   = useState('')
   const [editSeries, setEditSeries]       = useState<SeriesSummary | null>(null)
@@ -103,8 +101,7 @@ export default function HeroBannerManager() {
     }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error
-  // (this used to fail silently with only a console.error).
+  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
   async function deleteSlide(id: string) {
     const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -151,16 +148,12 @@ export default function HeroBannerManager() {
     setCreateError(null)
 
     try {
-      // Recommended 1920x1080 — cap a bit above that for retina without
-      // sending a multi-MB original straight to the Worker. Forced to JPEG:
-      // banners are full-bleed art with no transparency, and a 2200px PNG
-      // came out around 6 MB, downloaded by every home page visitor.
+      // JPEG, a bit above 1920px: a 2200px PNG banner was about 6 MB for every home page visitor.
       const bannerImageBase64 = newImageFile
         ? await compressImage(newImageFile, { maxDimension: 2200, forceJpeg: true })
         : null
 
-      // The image goes with the slide so the server can delete it again if
-      // saving the slide fails (no orphan left in R2).
+      // Sent with the slide so the server can delete the image if saving fails.
       const res = await fetch('/api/hero-slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -193,7 +186,6 @@ export default function HeroBannerManager() {
 return (
     <div className="space-y-4">
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>
           Max 5 slides. Only visible slides show on the site.
@@ -213,7 +205,6 @@ return (
         )}
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-lg px-4 py-3 text-sm"
           style={{ background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)' }}>
@@ -221,7 +212,6 @@ return (
         </div>
       )}
 
-      {/* Create form */}
       {showForm && (
         <div className="rounded-xl p-5 space-y-4"
           style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
@@ -234,7 +224,6 @@ return (
             </div>
           )}
 
-          {/* Series search */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>
               Series
@@ -286,7 +275,6 @@ return (
             </div>
           </div>
 
-          {/* Headline */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>Headline</label>
             <input type="text" value={newHeadline} onChange={e => setNewHeadline(e.target.value)}
@@ -298,7 +286,6 @@ return (
             />
           </div>
 
-          {/* Banner image upload */}
           <div className="space-y-1.5">
             <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>
               Banner Image
@@ -334,7 +321,6 @@ return (
             )}
           </div>
 
-          {/* Site preview */}
           {(newImagePreview || selectedSeries) && (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--ryu-text-2)' }}>
@@ -368,17 +354,14 @@ return (
         </div>
       )}
 
-      {/* Slides list */}
       <div className="space-y-3">
         {slides.map(slide => (
           <div key={slide.id} className="space-y-2">
 
-            {/* Slide row */}
             <div className="flex items-center gap-4 rounded-xl p-4"
               style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
               <GripVertical size={18} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
 
-              {/* Thumbnail */}
               <div className="relative shrink-0 rounded-lg overflow-hidden"
                 style={{ width: 112, height: 56, background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
                 {slide.banner_image
@@ -387,7 +370,6 @@ return (
                 }
               </div>
 
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
                   {slide.headline ?? '(No headline)'}
@@ -397,7 +379,6 @@ return (
                 </p>
               </div>
 
-              {/* Visible badge */}
               <span className="text-xs px-2.5 py-1 rounded-full font-semibold shrink-0"
                 style={slide.is_visible
                   ? { background: 'var(--ryu-success-soft)', color: 'var(--ryu-success)' }
@@ -405,10 +386,8 @@ return (
                 {slide.is_visible ? 'Visible' : 'Hidden'}
               </span>
 
-              {/* Actions */}
               <div className="flex items-center gap-1 shrink-0">
 
-                {/* Edit */}
                 <button
                   onClick={() => editingId === slide.id ? setEditingId(null) : startEdit(slide)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
@@ -422,7 +401,6 @@ return (
                   <Pencil size={15} />
                 </button>
 
-                {/* Preview */}
                 <button
                   onClick={() => setPreviewSlide(previewSlide?.id === slide.id ? null : slide)}
                   className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
@@ -436,7 +414,6 @@ return (
                   <Monitor size={15} />
                 </button>
 
-                {/* Toggle visible */}
                 <button
                   onClick={() => handleToggleVisible(slide)}
                   disabled={actioningId === slide.id}
@@ -447,7 +424,6 @@ return (
                   {slide.is_visible ? <Eye size={15} /> : <EyeOff size={15} />}
                 </button>
 
-                {/* Delete */}
                 <DeleteButton
                   label="Delete slide"
                   disabled={actioningId === slide.id}
@@ -467,12 +443,10 @@ return (
               </div>
             </div>
 
-            {/* Inline edit form */}
             {editingId === slide.id && (
               <div className="rounded-xl p-4 space-y-3"
                 style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
 
-                {/* Series search */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>Series</label>
                   <div className="relative">
@@ -521,7 +495,6 @@ return (
                   </div>
                 </div>
 
-                {/* Headline */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold" style={{ color: 'var(--ryu-text)' }}>Headline</label>
                   <input
@@ -536,7 +509,6 @@ return (
                   />
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleSaveEdit(slide.id)}
@@ -557,7 +529,6 @@ return (
               </div>
             )}
 
-            {/* Inline preview panel */}
             {previewSlide?.id === slide.id && (
               <div className="relative w-full rounded-xl overflow-hidden flex items-end"
                 style={{

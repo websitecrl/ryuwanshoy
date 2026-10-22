@@ -72,7 +72,6 @@ export default function AdminChaptersPage() {
   return (
     <div className="p-8 animate-page-in">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
@@ -117,7 +116,6 @@ export default function AdminChaptersPage() {
           </Link>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-lg px-4 py-3 text-sm mb-6"
           style={{ border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)' }}>
@@ -125,7 +123,6 @@ export default function AdminChaptersPage() {
         </div>
       )}
 
-      {/* Empty state */}
       {chapters.length === 0 && !error && (
         <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
@@ -155,7 +152,6 @@ export default function AdminChaptersPage() {
         </div>
       )}
 
-      {/* Chapters table */}
       {filteredChapters.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
           <table className="w-full text-sm">
@@ -205,7 +201,6 @@ export default function AdminChaptersPage() {
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
 
-                      {/* Edit */}
                       <Link href={`/admin/chapters/${c.id}`}
                           aria-label="Edit chapter"
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -216,7 +211,6 @@ export default function AdminChaptersPage() {
                           <Pencil size={14} />
                         </Link>
 
-                      {/* Delete */}
                       <DeleteButton
                         label="Delete chapter"
                         title={`Delete ${chapterLabel(c)}?`}

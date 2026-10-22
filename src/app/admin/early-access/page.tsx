@@ -65,7 +65,6 @@ export default function EarlyAccessPage() {
   return (
     <div className="p-8 animate-page-in">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -81,7 +80,6 @@ export default function EarlyAccessPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div style={{ position: 'relative', marginBottom: 24 }}>
         <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--ryu-text-3)', pointerEvents: 'none' }} />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by email..."

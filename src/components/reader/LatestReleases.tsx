@@ -10,7 +10,6 @@ type Chapter = {
 export default function LatestReleases({ chapters }: { chapters: Chapter[] }) {
   return (
     <section>
-      {/* Section head */}
       <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
      <div style={{ width: 5, height: 26, background: 'var(--ryu-primary)', borderRadius: 2, flexShrink: 0 }} />
      <span className="font-comic" style={{ fontSize: 22, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ryu-text)' }}>

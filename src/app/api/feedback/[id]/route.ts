@@ -7,7 +7,6 @@ import { isUuid } from '@/lib/validation'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-// ─── PATCH /api/feedback/[id] ─────────────────────────────────────────────────
 // Admin only. Body: { is_read: boolean }
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
@@ -41,7 +40,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   return NextResponse.json({ ok: true, unread: await unreadOrNull() })
 }
 
-// ─── DELETE /api/feedback/[id] ────────────────────────────────────────────────
 // Admin only.
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
