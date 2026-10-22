@@ -2,6 +2,7 @@ import 'server-only'
 import type { TablesUpdate } from '@/types/database'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { serverError } from '@/lib/api-errors'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteManyFromR2 } from '@/lib/r2'
@@ -46,7 +47,7 @@ export async function PATCH(
     .single()
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverError('PATCH /api/hero-slides/[id]', error, 'Failed to update slide.')
   }
 
   return NextResponse.json(data)
@@ -80,7 +81,7 @@ export async function DELETE(
     .eq('id', id)
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverError('DELETE /api/hero-slides/[id]', error, 'Failed to delete slide.')
   }
 
   // Clean up R2 after DB delete succeeds. Awaited — Workers can cut off

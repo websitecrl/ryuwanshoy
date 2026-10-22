@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { serverError } from '@/lib/api-errors'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     .order('chapter_number', { ascending: true })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverError('GET /api/chapters', error, 'Failed to load chapters.')
   }
 
   return NextResponse.json({ data })
@@ -70,7 +71,7 @@ export async function POST(req: NextRequest) {
         { status: 409 }
       )
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverError('POST /api/chapters', error, 'Failed to create chapter.')
   }
 
   return NextResponse.json({ data }, { status: 201 })

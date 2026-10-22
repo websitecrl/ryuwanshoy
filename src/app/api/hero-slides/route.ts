@@ -25,7 +25,7 @@ export async function GET() {
     .order('order_index', { ascending: true })
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return serverError('GET /api/hero-slides', error, 'Failed to load slides.')
   }
 
   return NextResponse.json(data)
