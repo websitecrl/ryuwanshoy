@@ -8,11 +8,11 @@ import ReaderShell from '@/components/reader/ReaderShell'
 import AgeRestricted from '@/components/shared/AgeRestricted'
 import { seriesShareImage } from '@/lib/share-image'
 
-// Rendered per request; only the Supabase reads are cached. Unknown series and chapters are real 404s.
+// per request; Supabase reads cached; unknown -> real 404
 
 type AdjacentChapter = { chapter_number: number } | null
 
-// Misses and Supabase errors throw, so neither is cached. Bump the version when the returned shape changes.
+// miss/error -> throw -> not cached. bump version when the shape changes
 const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: string, chapterNumber: number) => {
   const supabase = createPublicClient()
 
@@ -94,12 +94,12 @@ const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: str
   }
 })
 
-/** Only a plain whole number is a chapter URL ("1abc" or "01" would duplicate chapter 1). */
+/** whole number only ("1abc", "01" would duplicate chapter 1) */
 function parseChapterNumber(segment: string): number | null {
   return /^(0|[1-9]\d*)$/.test(segment) ? Number(segment) : null
 }
 
-// cache() dedupes the call between generateMetadata and the page.
+// cache() -> one call for metadata + page
 const getChapterData = cache((slug: string, chapterNumber: number) =>
   nullIfNotFound(queryChapterData(slug, chapterNumber))
 )
@@ -144,7 +144,7 @@ export default async function ChapterReaderPage({
 }: {
   params: Promise<{ slug: string; chapter: string }>
 }) {
-  // Per request, not force-dynamic: that would also disable the data cache.
+  // per request; force-dynamic would also disable the data cache
   await connection()
 
   const { slug, chapter } = await params

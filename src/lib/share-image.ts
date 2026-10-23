@@ -2,7 +2,7 @@ import { ALL_AGES, fitsAge } from '@/lib/age'
 
 const DEFAULT_SHARE_IMAGE = { url: '/og-default.png', width: 1200, height: 630 }
 
-/** Link preview image: the cover only for all ages series, since previews skip the age gate. */
+/** all ages -> cover; else og-default (previews skip the age gate) */
 export function seriesShareImage(series: {
   cover_image: string | null
   min_age: number | null

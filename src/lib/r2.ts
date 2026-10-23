@@ -3,10 +3,9 @@ import { AwsClient } from 'aws4fetch'
 import { createHash } from 'node:crypto'
 import { v4 as uuidv4 } from 'uuid'
 
-// R2 through aws4fetch, not the AWS SDK: SDK signing blew the Workers 10ms CPU limit (error 1102).
-// fetch() doesn't throw on non-2xx and list calls return raw XML, so both are handled by hand.
+// aws4fetch (AWS SDK blew the 10ms CPU limit). fetch: check res.ok yourself; lists: raw XML
 
-/** R2 client and config. Throws on a missing var, or an endpoint/public URL with a path (silent wrong-folder bug). */
+/** env -> R2 client + config. missing var or URL with a path -> throw */
 function getR2() {
   const bucket    = process.env.R2_BUCKET_NAME ?? ''
   const endpoint  = process.env.R2_ENDPOINT ?? ''
@@ -23,7 +22,7 @@ function getR2() {
     throw new Error(`R2 misconfigured — missing env var(s): ${missing.join(', ')}`)
   }
 
-  // A path here would be prepended to every key (the old "<bucket>/" cover bug).
+  // a path here would prefix every key
   for (const [name, value] of [['R2_ENDPOINT', endpoint], ['R2_PUBLIC_URL', publicUrl]] as const) {
     const path = new URL(value).pathname
     if (path !== '' && path !== '/') {
@@ -44,7 +43,7 @@ function getR2() {
 /** Thrown when an upload isn't a well-formed data URI of an allowed image type. */
 export class InvalidImageError extends Error {}
 
-// Real type from magic bytes: the data URI header is client-controlled (text/html would be served as HTML).
+// type from magic bytes (the data URI header is client-controlled)
 const IMAGE_SIGNATURES: Array<{ type: string; ext: string; matches: (b: Buffer) => boolean }> = [
   { type: 'image/jpeg', ext: 'jpg',  matches: b => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
   { type: 'image/png',  ext: 'png',  matches: b => b.length > 8 && b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
@@ -52,7 +51,7 @@ const IMAGE_SIGNATURES: Array<{ type: string; ext: string; matches: (b: Buffer) 
   { type: 'image/gif',  ext: 'gif',  matches: b => b.length > 6 && /^GIF8[79]a$/.test(b.toString('ascii', 0, 6)) },
 ]
 
-/** Decodes a base64 image data URI. Throws InvalidImageError unless JPEG, PNG, WebP or GIF. */
+/** data URI -> bytes -> real type (JPEG, PNG, WebP, GIF) else InvalidImageError */
 function parseImageDataUri(base64: string): { buffer: Buffer<ArrayBuffer>; contentType: string; ext: string } {
   const commaIdx   = base64.indexOf(',')
   const headerPart = base64.slice(0, commaIdx)
@@ -70,7 +69,7 @@ function parseImageDataUri(base64: string): { buffer: Buffer<ArrayBuffer>; conte
   return { buffer, contentType: match.type, ext: match.ext }
 }
 
-/** Uploads a base64 image data URI to the public bucket and returns its public URL. */
+/** data URI -> fresh key -> PUT -> public URL */
 export async function uploadToR2(
   base64: string,
   folder: string
@@ -78,7 +77,7 @@ export async function uploadToR2(
   const { client, bucket, endpoint, publicUrl } = getR2()
 
   const { buffer, contentType, ext } = parseImageDataUri(base64)
-  // Always a fresh key: stable keys let one row overwrite another row's file, cached for a year.
+  // fresh key every time (stable keys overwrote other rows' files)
   const key = `${folder}/${uuidv4()}.${ext}`
 
   const signed = await client.sign(`${endpoint}/${bucket}/${key}`, {
@@ -96,7 +95,7 @@ export async function uploadToR2(
     body: buffer,
   })
 
-  // fetch() doesn't throw on non-2xx; without this a broken URL would be saved.
+  // non-2xx -> throw
   if (!res.ok) {
     throw new Error(`R2 upload failed (${res.status}): ${await res.text()}`)
   }
@@ -104,13 +103,13 @@ export async function uploadToR2(
   return `${publicUrl}/${key}`
 }
 
-// Old r2.dev origin, still in rows saved before the custom domain. Remove once none use it.
+// old r2.dev origin in older rows
 const LEGACY_PUBLIC_URLS = ['https://pub-5657faa0f50f468797255fb5df45f6ae.r2.dev']
 
-/** Key for a URL on this bucket (current or legacy origin, "?v=" stripped), else null. */
+/** URL on this bucket -> key ("?v=" stripped), else null */
 function keyFromPublicUrl(url: string, publicUrl: string): string | null {
   for (const origin of [publicUrl, ...LEGACY_PUBLIC_URLS]) {
-    // Match "origin/" so a look-alike host can't pass.
+    // "origin/" -> look-alike hosts don't match
     const prefix = `${origin.replace(/\/$/, '')}/`
     if (url.startsWith(prefix)) {
       return url.slice(prefix.length).split('?')[0] || null
@@ -119,7 +118,7 @@ function keyFromPublicUrl(url: string, publicUrl: string): string | null {
   return null
 }
 
-/** Deletes a public-bucket file by URL. Non-R2 URLs are skipped. */
+/** URL -> key -> DELETE (non-R2 URLs skipped) */
 export async function deleteFromR2(url: string): Promise<void> {
   const { client, bucket, endpoint, publicUrl } = getR2()
 
@@ -133,7 +132,7 @@ export async function deleteFromR2(url: string): Promise<void> {
     method: 'DELETE',
   })
 
-  // DELETE is idempotent (a missing key is 204), so this only catches real failures.
+  // missing key = 204, so only real failures land here
   if (!res.ok) {
     throw new Error(`R2 delete failed (${res.status}): ${await res.text()}`)
   }
@@ -142,14 +141,11 @@ export async function deleteFromR2(url: string): Promise<void> {
 const xmlEscape = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-/**
- * Bulk delete, 1000 keys per request (the Workers free plan allows 50 subrequests).
- * Takes public URLs and "ea:" keys. Returns the refs it couldn't delete instead of throwing.
- */
+/** refs -> group by bucket -> DeleteObjects per 1000 keys -> { failed } (never throws per file) */
 export async function deleteManyFromR2(refs: string[]): Promise<{ failed: string[] }> {
   const { client, bucket, eaBucket, endpoint, publicUrl } = getR2()
 
-  // bucket name → (key → original ref, for reporting)
+  // bucket -> key -> original ref
   const byBucket = new Map<string, Map<string, string>>([[bucket, new Map()], [eaBucket, new Map()]])
   for (const ref of new Set(refs)) {
     if (ref.startsWith('ea:')) {
@@ -192,7 +188,7 @@ export async function deleteManyFromR2(refs: string[]): Promise<{ failed: string
           continue
         }
 
-        // A 200 can still list per-key errors; a missing key isn't one.
+        // 200 can still list per-key errors
         for (const m of xml.matchAll(/<Error>[\s\S]*?<Key>([\s\S]*?)<\/Key>[\s\S]*?<\/Error>/g)) {
           const ref = keys.get(m[1] ?? '')
           console.error('R2 DeleteObjects per-key error:', m[0])
@@ -208,7 +204,7 @@ export async function deleteManyFromR2(refs: string[]): Promise<{ failed: string
   return { failed }
 }
 
-/** R2 key from a public URL. */
+/** public URL -> key */
 export function extractR2Key(url: string): string {
   const { publicUrl } = getR2()
   return keyFromPublicUrl(url, publicUrl) ?? ''
@@ -221,7 +217,7 @@ const xmlUnescape = (s: string) =>
   s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
    .replace(/&apos;/g, "'").replace(/&amp;/g, '&')
 
-/** Lists every public-bucket object. Throws on any failed page, so cleanup never acts on a partial list. */
+/** every public object; failed page -> throw (no partial list) */
 export async function listR2Objects(): Promise<R2ObjectInfo[]> {
   const { client, bucket, endpoint } = getR2()
 
@@ -262,7 +258,7 @@ export async function listR2Objects(): Promise<R2ObjectInfo[]> {
   return objects
 }
 
-/** Public-bucket keys for many refs, reading config once (CPU limit). EA and non-R2 refs are left out. */
+/** refs -> public keys (config read once) */
 export function publicKeysFromRefs(refs: string[]): Set<string> {
   const { publicUrl } = getR2()
   const keys = new Set<string>()
@@ -273,13 +269,13 @@ export function publicKeysFromRefs(refs: string[]): Set<string> {
   return keys
 }
 
-/** Returns total storage used in the public R2 bucket, in bytes. */
+/** public bucket size in bytes */
 export async function getR2StorageBytes(): Promise<number> {
   const objects = await listR2Objects()
   return objects.reduce((sum, o) => sum + o.size, 0)
 }
 
-/** Deletes public-bucket objects by key. Returns the keys that failed. */
+/** keys -> batched delete -> { failed } */
 export async function deleteR2Keys(keys: string[]): Promise<{ failed: string[] }> {
   const { publicUrl } = getR2()
   const base = publicUrl.replace(/\/$/, '')
@@ -287,9 +283,9 @@ export async function deleteR2Keys(keys: string[]): Promise<{ failed: string[] }
   return { failed: failed.map(ref => ref.slice(base.length + 1)) }
 }
 
-// Early Access bucket: private, reachable only through presigned URLs from an entitlement-checked route.
+// EA bucket: private -> presigned URLs only
 
-/** Uploads to the private EA bucket. Returns an "ea:folder/file" key, not a URL. */
+/** data URI -> private bucket -> "ea:folder/file" key */
 export async function uploadToEAR2(
   base64: string,
   folder: string,
@@ -319,7 +315,7 @@ export async function uploadToEAR2(
   return `ea:${key}`
 }
 
-/** Short-lived signed URL for an EA object. Does no auth: call only after the entitlement check. */
+/** "ea:" key -> signed URL. no auth check: call after entitlement */
 export async function getEASignedUrl(
   eaImageUrl: string,
   expiresInSeconds = 300
@@ -329,9 +325,9 @@ export async function getEASignedUrl(
   if (!eaImageUrl.startsWith('ea:')) {
     throw new Error(`Not an EA image_url: ${eaImageUrl}`)
   }
-  const key = eaImageUrl.slice(3) // strip the "ea:" prefix
+  const key = eaImageUrl.slice(3)
 
-  // X-Amz-Expires must be on the URL before signing; signQuery puts the signature in the query string.
+  // X-Amz-Expires -> URL -> sign (signature in the query)
   const signed = await client.sign(
     `${endpoint}/${eaBucket}/${key}?X-Amz-Expires=${expiresInSeconds}`,
     { method: 'GET', aws: { signQuery: true } }

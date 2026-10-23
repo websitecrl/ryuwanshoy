@@ -18,18 +18,13 @@ type Post = {
 
 type Props = {
   initialPosts: Post[];
-  /** Where "Load more" continues from; null when the first page was all. */
+  /** null -> no more pages */
   initialCursor: string | null;
   activeType?: string;
 };
 
 export default function PostsClient({ initialPosts, initialCursor, activeType }: Props) {
-  // No realtime on purpose (free plan 200 connection cap, refetch burst on
-  // every admin save). Post data is cached and admin saves purge it, so a
-  // reload shows new posts. See docs/caching.md.
-  // The first page (POSTS_PAGE_SIZE) comes from the cached server render;
-  // "Load more" appends the next page from GET /api/posts. The parent keys
-  // this component by type, so a filter change starts over from props.
+  // no realtime. first page: cached render -> "Load more" -> GET /api/posts
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -45,7 +40,7 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
       if (!res.ok) throw new Error("Failed to load more posts.");
       const json = await res.json() as { data: Post[]; nextCursor: string | null };
       setPosts(prev => {
-        // Skip anything already shown (e.g. if posts shifted between loads).
+        // skip already shown
         const seen = new Set(prev.map(p => p.id));
         return [...prev, ...json.data.filter(p => !seen.has(p.id))];
       });

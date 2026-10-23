@@ -120,7 +120,6 @@ function ChapterRow({
         </div>
       </div>
 
-      {/* Date + page count — hidden on small screens */}
       <div className="hidden sm:flex flex-col items-end gap-0.5 flex-shrink-0">
         {chapter.published_at && (
           <span className="text-xs text-[var(--ryu-text-3)]">
@@ -134,7 +133,6 @@ function ChapterRow({
         )}
       </div>
 
-      {/* Bookmark star — only on in-progress chapter */}
       {readState.state === 'reading' && (
         <Star
           size={14}
@@ -167,7 +165,7 @@ export default function ChapterList({
   const [chapterStates, setChapterStates] = useState<Record<string, ChapterReadState>>({})
   const chapterIds = useMemo(() => chapters.map(c => c.id), [chapters])
 
-  // Load per-chapter read states from localStorage on mount
+  // read states from localStorage
   useEffect(() => {
     try {
       const progressRaw = localStorage.getItem(`reading-progress-${seriesId}`)
@@ -195,7 +193,7 @@ export default function ChapterList({
 
       setChapterStates(states)
     } catch {
-      // Silently ignore localStorage errors — defaults to all-unread
+      // unreadable -> all unread
     }
   }, [seriesId, chapters])
 
@@ -215,7 +213,6 @@ export default function ChapterList({
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-5 sm:pb-16">
 
-      {/* Continue reading bar — above tabs, only shown if progress exists */}
       <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} chapterIds={chapterIds} />
 
       <div className="flex items-end border-b border-[var(--ryu-border)] mb-5">
@@ -234,7 +231,6 @@ export default function ChapterList({
 
       {activeTab === 'chapters' && (
         <div>
-          {/* List header: count + sort toggle */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-[var(--ryu-text-2)]">
               {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'}

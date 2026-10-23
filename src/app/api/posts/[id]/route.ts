@@ -103,7 +103,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       .select()
       .single()
 
-    // Awaited: delete the old image after a good update, or the new upload after a failed one.
+    // ok -> delete old image; failed -> delete new upload (awaited)
     const orphan = error ? update.image_url : oldImageUrl
     if (orphan) {
       const { failed } = await deleteManyFromR2([orphan])
@@ -149,7 +149,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     if (deleteErr) throw deleteErr
 
-    // Awaited: Workers can drop pending promises after the response.
+    // awaited (Workers drop pending promises)
     if (post.image_url) {
       const { failed } = await deleteManyFromR2([post.image_url])
       if (failed.length) {

@@ -3,7 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from "@/lib/rate-limit-cf"
 
-// GET — get like count + check if token already liked
+// count + liked by this token?
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const postId    = searchParams.get('post_id')
@@ -32,9 +32,9 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ count: count ?? 0, liked })
 }
 
-// POST — toggle like
+// toggle like
 export async function POST(req: NextRequest) {
-  // Max 20 likes or unlikes per IP per 60 seconds (LIKE_LIMITER in wrangler.jsonc)
+  // 20 per IP per minute (LIKE_LIMITER)
   const limited = await rateLimit(req, 'LIKE_LIMITER')
   if (limited) return limited
 
@@ -44,7 +44,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'post_id and like_token are required' }, { status: 400 })
   }
 
-  // Check if already liked
   const { data: existing } = await supabaseAdmin
     .from('likes')
     .select('id')
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
     .single()
 
   if (existing) {
-    // Unlike
     await supabaseAdmin.from('likes').delete().eq('id', existing.id)
     const { count } = await supabaseAdmin
       .from('likes')
@@ -62,10 +60,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ liked: false, count: count ?? 0 })
   }
 
-  // Like
   const { error: insertError } = await supabaseAdmin
     .from('likes')
-    //upsert - insert , but if therss a conflict do something else instead of failing 
+    // duplicate -> ignored
     .upsert({ post_id, like_token }, { onConflict: 'post_id,like_token', ignoreDuplicates:true })
 
    if (insertError) {

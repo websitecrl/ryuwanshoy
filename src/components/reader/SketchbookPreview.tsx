@@ -6,7 +6,7 @@ type Post = {
   post_type: string | null; created_at: string | null
 }
 
-// Tokens in globals.css (--ryu-tag-*), so the tags follow dark mode.
+// --ryu-tag-* tokens -> dark mode
 const typeColors: Record<string, { bg: string; color: string }> = {
   sketch:   { bg: 'var(--ryu-tag-sketch-bg)',   color: 'var(--ryu-tag-sketch-fg)' },
   wip:      { bg: 'var(--ryu-tag-wip-bg)',      color: 'var(--ryu-tag-wip-fg)' },

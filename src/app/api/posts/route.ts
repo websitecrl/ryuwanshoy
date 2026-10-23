@@ -13,11 +13,7 @@ export const maxDuration = 60
 
 const MAX_PAGE_SIZE = 100
 
-// Public, newest first, one page at a time:
-//   ?type=sketch|drawing|meme|other  [&before=<cursor>] [&limit=1..100]
-//   → { data, nextCursor }   (nextCursor: pass as ?before= for the next page)
-// Admin only: ?all=1 returns every post in one list (the admin posts table).
-// Posts have no draft/hidden state, so the service role client is safe here.
+// public: ?type [&before][&limit] -> { data, nextCursor }; admin: ?all=1 -> every post (posts have no draft state)
 export async function GET(req: NextRequest) {
   try {
     const params = req.nextUrl.searchParams
@@ -41,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     if (type) query = query.eq('post_type', type)
     if (before) query = query.lt('created_at', before)
-    // One extra row tells us whether another page exists.
+    // +1 row -> another page exists?
     if (!all) query = query.limit(limit + 1)
 
     const { data, error } = await query
@@ -79,9 +75,6 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string
       try {
-        // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
-        // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
-        // currently broken on this deployment. See src/lib/image-processing.ts.
         imageUrl = await uploadToR2(body.imageBase64, 'posts')
       } catch (uploadErr) {
         if (uploadErr instanceof InvalidImageError) {

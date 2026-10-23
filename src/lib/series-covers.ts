@@ -1,9 +1,9 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-// Old covers were keyed by slug, so one legacy file can back several series.
+// old slug-keyed covers can back several series
 
-/** Object path of a cover URL — ignores origin and the old "?v=" suffix. */
+/** cover URL -> path (no origin, no "?v=") */
 function objectPath(url: string): string {
   try {
     return new URL(url).pathname
@@ -12,7 +12,7 @@ function objectPath(url: string): string {
   }
 }
 
-/** Covers no other series still uses, safe to delete. Call after deleting the rows; returns [] if the lookup fails. */
+/** covers no other series uses -> safe to delete. call after deleting rows; lookup fails -> [] */
 export async function filterUnsharedCovers(
   coverUrls: string[],
   exceptSeriesId?: string

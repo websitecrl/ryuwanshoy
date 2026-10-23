@@ -1,6 +1,6 @@
 import 'server-only'
 
-/** Whether this reader may see Early Access content. Placeholder: always false until the rule is decided. */
+/** may this reader see EA content? placeholder: always false */
 export async function checkEarlyAccessEntitlement(
   request: Request
 ): Promise<boolean> {

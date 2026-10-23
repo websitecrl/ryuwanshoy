@@ -3,9 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { deleteManyFromR2 } from '@/lib/r2'
 import { filterUnsharedCovers } from '@/lib/series-covers'
 
-// One draft rule for the badge, the dialog and the bulk delete.
-// Draft chapter: is_published not true (is_draft misses wizard drafts).
-// Draft series: unpublished AND no published chapter, so the delete cascade only removes drafts.
+// one draft rule (badge, dialog, delete). chapter: not published. series: not published + no published chapter
 
 export type DraftSeriesItem = {
   id: string
@@ -21,15 +19,15 @@ export type DraftChapterItem = {
 }
 
 export type DraftPreview = {
-  /** Draft series — deleted with all their (draft) chapters. */
+  /** deleted with their chapters */
   series: DraftSeriesItem[]
-  /** Draft chapters whose series is NOT a draft — deleted individually. */
+  /** in a non-draft series -> deleted one by one */
   chapters: DraftChapterItem[]
-  /** Every chapter that would be deleted, including those inside draft series. */
+  /** including chapters inside draft series */
   totalChapters: number
-  /** hero_slides that cascade away with draft series. */
+  /** cascade with draft series */
   heroSlideCount: number
-  /** Badge number: draft series + every draft chapter. */
+  /** badge: draft series + draft chapters */
   count: number
 }
 
@@ -59,7 +57,7 @@ async function findDraftTargets() {
       chapterCount: s.chapters.length,
       chapters:     s.chapters.length,
       heroSlides:   s.hero_slides.length,
-      // A legacy cover may be shared with a kept series; checked before deletion.
+      // legacy cover may be shared -> checked before deletion
       coverImage:   s.cover_image,
       imageRefs: [
         s.banner_image,
@@ -100,7 +98,6 @@ function toPreview(
   }
 }
 
-/** What "Delete all drafts" would remove right now. */
 export async function getDraftPreview(): Promise<DraftPreview> {
   const { series, chapters } = await findDraftTargets()
   return toPreview(series, chapters)
@@ -108,14 +105,11 @@ export async function getDraftPreview(): Promise<DraftPreview> {
 
 export type DeleteDraftsResult = {
   deleted: DraftPreview
-  /** R2 objects that could not be removed (rows are already gone). */
+  /** R2 objects not removed (rows already gone) */
   imageCleanupFailed: number
 }
 
-/**
- * Deletes confirmed ids that still match the draft rule. Rows first, then their R2 images,
- * so a failed row delete never leaves live rows pointing at missing files.
- */
+/** confirmed ids still drafts -> delete rows -> delete R2 images */
 export async function deleteConfirmedDrafts(confirmed: {
   seriesIds: string[]
   chapterIds: string[]
@@ -127,7 +121,7 @@ export async function deleteConfirmedDrafts(confirmed: {
   const series   = targets.series.filter(s => seriesIds.has(s.id))
   const chapters = targets.chapters.filter(c => chapterIds.has(c.id))
 
-  // Each DELETE repeats the published guard, in case something was published meanwhile.
+  // each DELETE repeats the published guard
   let deletedSeriesIds = new Set<string>()
   if (series.length) {
     const { data, error } = await supabaseAdmin
@@ -155,7 +149,7 @@ export async function deleteConfirmedDrafts(confirmed: {
   const deletedSeries   = series.filter(s => deletedSeriesIds.has(s.id))
   const deletedChapters = chapters.filter(c => deletedChapterIds.has(c.id))
 
-  // Rows are gone by now, so only surviving series count as sharing a cover.
+  // rows gone -> only surviving series share a cover
   const covers = await filterUnsharedCovers(
     deletedSeries.map(s => s.coverImage).filter((c): c is string => !!c)
   )

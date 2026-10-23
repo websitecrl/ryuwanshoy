@@ -1,15 +1,11 @@
 import type { Tables } from './database'
 
-/** Chapter row from Supabase, augmented with computed page count from pages(count) */
+/** chapter + pages(count) */
 export type ChapterWithPageCount = Tables<'chapters'> & {
   page_count: number
 }
 
-/**
- * Shape the chapter reader writes to localStorage.
- * Key: reading-progress-{seriesId}
- * currentPage / totalPages / thumbnailUrl are optional for backward compat.
- */
+/** localStorage reading-progress-{seriesId} */
 export type ReadingProgress = {
   chapterNumber: number
   chapterId: string

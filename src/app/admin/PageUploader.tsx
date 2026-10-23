@@ -66,7 +66,7 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
           P{String(page.page_number).padStart(2, '0')}
         </span>
 
-        {/* Always visible: hover-only never showed on touch devices. */}
+        {/* always visible (touch has no hover) */}
         <button
           onClick={() => onDelete(page.id)}
           disabled={isDeleting}
@@ -115,14 +115,14 @@ export default function PageUploader({
 
   useEffect(() => {
     onPagesChange?.(pages)
-    // Only on page changes (a parent may pass an inline function).
+    // page changes only
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages])
 
   const sensors = useSensors(useSensor(PointerSensor))
 
   const uploadFiles = useCallback(async (files: File[]) => {
-    // In the order the browser hands over, no filename sort.
+    // browser order, no sort
     const imgs = keepImageFiles(files)
     if (!imgs.length) return
     setError(null)
@@ -136,7 +136,7 @@ export default function PageUploader({
         const page = await uploadComicPage(chapterId, file, is_spread)
         setPages(prev => [...prev, page])
       } catch (err) {
-        // Stop: the API appends pages, so skipping one would break the order.
+        // stop: API appends -> skipping breaks order
         const reason = err instanceof Error ? err.message : 'Upload failed.'
         const rest   = imgs.length - i - 1
         setError(`"${file.name}": ${reason}${rest > 0 ? ` ${rest} file(s) after it were not uploaded.` : ''}`)
@@ -159,7 +159,7 @@ export default function PageUploader({
   }
 
 
-  // No confirm dialog: these are unpublished draft pages, so the X is enough.
+  // no confirm: unpublished draft pages
   async function handleDelete(id: string) {
     setDeletingId(id)
     try {

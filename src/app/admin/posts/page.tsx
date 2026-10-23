@@ -20,7 +20,7 @@ export default function AdminPostsPage() {
   useEffect(() => {
     async function fetchPosts() {
       try {
-        // ?all=1: admin only, every post in one list (public calls are paged).
+        // ?all=1 -> admin, every post
         const res = await fetch('/api/posts?all=1')
         if (!res.ok) throw new Error('Failed to load posts')
         const json = await res.json()
@@ -31,7 +31,7 @@ export default function AdminPostsPage() {
     fetchPosts()
   }, [])
 
-  // Throws on failure; DeleteButton shows the error and the success toast.
+  // throw -> DeleteButton shows error
   async function handleDelete(id: string) {
     const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' })
     if (!res.ok) {

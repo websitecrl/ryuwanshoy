@@ -8,7 +8,7 @@ import type { TablesUpdate } from '@/types/database'
 
 type ChapterUpdate = TablesUpdate<'chapters'>
 
-// Admin only — returns chapter with pages
+// admin: chapter + pages
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -38,7 +38,7 @@ export async function GET(
   }
 }
 
-// Admin only — update chapter metadata
+// admin: update chapter
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -85,7 +85,7 @@ export async function PATCH(
   }
 }
 
-// Admin only — deletes chapter + cleans up all page images from R2
+// admin: delete chapter -> pages cascade -> R2 images removed
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -97,7 +97,6 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Fetch pages first so we can clean up R2 after deletion
     const { data: chapter, error: fetchError } = await supabaseAdmin
       .from('chapters')
       .select('pages (image_url)')
@@ -111,7 +110,6 @@ export async function DELETE(
       )
     }
 
-    // Delete from DB — pages cascade automatically via FK
     const { error } = await supabaseAdmin
       .from('chapters')
       .delete()
@@ -119,9 +117,7 @@ export async function DELETE(
 
     if (error) throw error
 
-    // Clean up R2 after DB delete succeeds. Awaited, not fire-and-forget:
-    // Workers can cut off promises still pending after the response is sent.
-    // One batched request also stays under the per-request subrequest cap.
+    // DB delete ok -> awaited, batched R2 cleanup (Workers drop pending promises)
     const pages = (chapter as { pages: Array<{ image_url: string }> }).pages ?? []
     const imageRefs = pages.map(p => p.image_url).filter(Boolean)
     if (imageRefs.length) {

@@ -12,10 +12,10 @@ import type { Tables } from '@/types/database'
 type Series = Tables<'series'>
 
 
-// Number of --ryu-cover-N placeholder gradients defined in globals.css.
+// count of --ryu-cover-N in globals.css
 const COVER_COUNT = 8
 
-// Stable placeholder cover picked from the title.
+// title -> stable placeholder gradient
 function titleToGradient(title: string): string {
   const idx = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % COVER_COUNT
   return `var(--ryu-cover-${idx + 1})`
@@ -31,7 +31,7 @@ function getInitials(title: string): string {
 }
 
 
-// The API may return chapters count — we handle both shapes
+// chapter_count is optional
 type SeriesWithCount = Series & { chapter_count?: number }
 
 
@@ -43,7 +43,7 @@ export default function AdminSeriesPage() {
 
   useEffect(() => {
     async function fetchSeries() {
-      // Inside try so the skeleton always clears, even on a network or non-JSON error.
+      // try/finally -> skeleton always clears
       try {
         const res  = await fetch('/api/series')
         const json = await res.json()
@@ -59,7 +59,7 @@ export default function AdminSeriesPage() {
     fetchSeries()
   }, [])
 
-  // Throws on failure; DeleteButton shows the error and the success toast.
+  // throw -> DeleteButton shows error
   async function handleDelete(id: string) {
     const res  = await fetch(`/api/series/${id}`, { method: 'DELETE' })
     const json = await res.json().catch(() => ({})) as { error?: string }
@@ -314,7 +314,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="absolute top-3 right-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            // Dark glass on cover art in both themes.
+            // dark glass on cover art
             style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 65%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }}
           >
             <span

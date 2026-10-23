@@ -4,9 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { AtSign, ArrowRight, ArrowLeft, KeyRound, Eye, EyeOff } from 'lucide-react'
 
-// Two modes:
-// 'request' — user enters email, we send the reset link
-// 'update'  — user landed from the email link, we show new password fields
+// 'request' -> email a reset link; 'update' -> set a new password
 
 type Mode = 'request' | 'update'
 
@@ -22,9 +20,7 @@ export default function ResetPasswordPage() {
   const [done,       setDone]       = useState(false)
   const [error,      setError]      = useState<string | null>(null)
 
-  // When Supabase redirects back with a recovery token, it sets the session
-  // automatically via the URL hash. We just need to detect that we're in
-  // recovery mode and switch to the 'update' form.
+  // recovery link -> session from URL hash -> 'update' mode
   useEffect(() => {
     const supabase = createClient()
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
@@ -78,7 +74,6 @@ export default function ResetPasswordPage() {
     }
 
     setDone(true)
-    // Redirect to login after 2s
     setTimeout(() => { window.location.href = '/admin' }, 2000)
   }
 
@@ -429,7 +424,6 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          {/* Back to login — shown on request mode only */}
           {mode === 'request' && (
             <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px dashed var(--ryu-border)' }}>
               <a

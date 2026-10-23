@@ -18,16 +18,16 @@ import {
 type Variant = 'icon' | 'text' | 'pill'
 
 type Props = {
-  /** Throw on failure: the dialog stays open and shows the message. */
+  /** throw -> dialog stays open with the message */
   onConfirm: () => Promise<void>
   title: string
   description?: ReactNode
   children?: ReactNode
   confirmLabel?: string
   successMessage?: string
-  /** 'icon' (lists), 'text' (edit pages) or 'pill' (bulk actions). */
+  /** 'icon' lists, 'text' edit pages, 'pill' bulk actions */
   variant?: Variant
-  /** Visible text for 'text'/'pill'; accessible name (and tooltip) for 'icon'. */
+  /** text for 'text'/'pill'; label + tooltip for 'icon' */
   label?: string
   size?: number
   disabled?: boolean
@@ -35,7 +35,7 @@ type Props = {
   onOpenChange?: (open: boolean) => void
 }
 
-/** The one admin delete control: confirm dialog, spinner while deleting, error keeps the dialog open. */
+/** admin delete: confirm -> spinner -> close, or error keeps the dialog open */
 export default function DeleteButton({
   onConfirm,
   title,
@@ -55,7 +55,7 @@ export default function DeleteButton({
   const [error, setError] = useState<string | null>(null)
 
   function changeOpen(next: boolean) {
-    if (deleting) return // don't close mid-delete
+    if (deleting) return
     setOpen(next)
     if (next) setError(null)
     onOpenChange?.(next)

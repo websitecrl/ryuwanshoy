@@ -44,8 +44,7 @@ export default function ReaderTopBar({
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
 
-  // All colors are --ryu-* tokens, so the bar follows the site-wide theme
-  // (the `.dark` class on <html>) with no reader-specific theme state.
+  // --ryu-* tokens -> follows the site theme
   const bar          = 'bg-[var(--ryu-surface-1)] border-[var(--ryu-border)]'
   const mutedText    = 'text-[var(--ryu-text-2)]'
   const hoverText    = 'hover:text-[var(--ryu-text)]'
@@ -60,7 +59,7 @@ export default function ReaderTopBar({
           ${bar}
           ${visible ? 'translate-y-0' : '-translate-y-full pointer-events-none'}
         `}
-        // relative so the picker panel positions against this header
+        // relative -> picker panel anchors here
         style={{ position: 'sticky' }}
       >
         <div className="flex h-12 items-center gap-2 px-3">
@@ -88,7 +87,6 @@ export default function ReaderTopBar({
                 {chapterLabel}
               </p>
             </div>
-            {/* Dropdown chevron — subtle, shows intent */}
             <List
               size={14}
               className={`flex-shrink-0 transition-colors ${
@@ -149,7 +147,7 @@ export default function ReaderTopBar({
               </button>
             </div>
 
-            {/* Light/Dark toggle — same site-wide state as the navbar toggle */}
+            {/* same theme state as the navbar */}
             <ThemeToggle
               variant="icon"
               className={`p-2 transition-colors ${mutedText} ${hoverText}`}
@@ -208,7 +206,6 @@ export default function ReaderTopBar({
                     }`}
                   />
                   <span className="flex-1 truncate">{label}</span>
-                  {/* Chapter number badge for quick scanning */}
                   {!isCurrent && (
                     <span className={`text-xs flex-shrink-0 ${mutedText}`}>
                       {ch.chapter_number}

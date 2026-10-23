@@ -13,8 +13,7 @@ type Props = {
 export default function DeleteDraftRowButton({ kind, id, label }: Props) {
   const router = useRouter()
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error
-  // (this used to fail silently with only a console.error).
+  // throw -> dialog stays open with error
   async function handleDelete() {
     const endpoint = kind === 'series' ? `/api/series/${id}` : `/api/chapters/${id}`
     const res = await fetch(endpoint, { method: 'DELETE' })

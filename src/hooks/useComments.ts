@@ -38,16 +38,13 @@ async function fetchPage<T>(target: CommentTarget, before?: string): Promise<Pag
   return await res.json() as Page<T>
 }
 
-/**
- * Loads one comment section, 30 top-level comments (with replies) per page, and applies local
- * add/edit/remove without a reload. add() only works once status is 'loaded'.
- */
+/** one section: 30 top-level (+ replies) per page; add/edit/remove locally. add() needs status loaded */
 export function useComments<T extends BaseComment>(target: CommentTarget) {
   const [state, setState] = useState<State<T>>({ status: 'loading' })
   const [loadingOlder, setLoadingOlder] = useState(false)
   const key = targetQuery(target)
 
-  // Ignores responses for an old target or after unmount.
+  // old target or unmounted -> ignore response
   const generation = useRef(0)
 
   const reload = useCallback(async () => {
@@ -67,7 +64,7 @@ export function useComments<T extends BaseComment>(target: CommentTarget) {
     } catch {
       if (gen === generation.current) setState({ status: 'error' })
     }
-    // `key` stands in for `target`, a new object every render.
+    // key stands in for target
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 

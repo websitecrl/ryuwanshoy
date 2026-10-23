@@ -20,9 +20,7 @@ type NavbarProps = {
 export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
-  // A stale/broken logo_url (e.g. from before an R2 config fix) would
-  // otherwise render as a permanent broken-image icon — fall back to the
-  // text wordmark instead once the image actually fails to load.
+  // logo_url broken -> text wordmark
   const [logoFailed, setLogoFailed] = useState(false)
 
   return (
@@ -108,8 +106,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
           })}
         </nav>
 
-        {/* Right cluster: theme toggle, then Support (desktop) or hamburger (mobile).
-            Toggle sits in the same row on every breakpoint so it's on every public page. */}
+        {/* theme toggle on every breakpoint */}
         <div className="flex items-center gap-1 md:gap-4">
           <ThemeToggle className="h-11 px-1" />
 
@@ -146,7 +143,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             </Link>
           </div>
 
-          {/* Mobile hamburger — 44px hit area (icon stays 22px) */}
+          {/* 44px hit area */}
           <button
             className="md:hidden flex h-11 w-11 items-center justify-center transition-colors"
             style={{ color: 'var(--ryu-text-2)' }}

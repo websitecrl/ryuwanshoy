@@ -7,9 +7,7 @@ import { deleteConfirmedDrafts, getDraftPreview } from '@/lib/drafts'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// Admin only — what "Delete all drafts" would remove right now. `count` feeds
-// the sidebar badge; the lists feed the confirm dialog. Same rule as DELETE
-// (see src/lib/drafts.ts), so the badge always matches what gets deleted.
+// admin: draft preview -> badge count + dialog lists (same rule as DELETE)
 export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -22,9 +20,7 @@ export async function GET() {
   }
 }
 
-// Admin only — body: { seriesIds: string[], chapterIds: string[] }, the ids the
-// confirm dialog showed. Deletes only those that still match the draft rule;
-// never a published chapter, never a series with a published chapter.
+// admin: { seriesIds, chapterIds } shown -> delete those still drafts
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

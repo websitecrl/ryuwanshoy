@@ -30,12 +30,7 @@ export default function AdminChaptersPage() {
         const res  = await fetch('/api/chapters/all')
         const data = await res.json()
         if (!res.ok) throw new Error(data.error ?? 'Failed to fetch chapters')
-        // /api/chapters/all returns every chapter regardless of publish
-        // state (drafts included) — that's what /admin/drafts needs, but
-        // this table is the "published chapters" list, mirroring how
-        // /admin/series only shows published series and leaves drafts to
-        // the Drafts page. Without this filter, draft chapters showed up
-        // here too, duplicated with their entry on /admin/drafts.
+        // /api/chapters/all includes drafts -> keep published (drafts live on /admin/drafts)
         setChapters((data as Chapter[]).filter(c => c.is_published))
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -46,7 +41,7 @@ export default function AdminChaptersPage() {
     fetchChapters()
   }, [])
 
-  // Throws on failure; DeleteButton shows the error and the success toast.
+  // throw -> DeleteButton shows error
   async function deleteChapter(chapter: Chapter) {
     const res = await fetch(`/api/chapters/${chapter.id}`, { method: 'DELETE' })
     if (!res.ok) {

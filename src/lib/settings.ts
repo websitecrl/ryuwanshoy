@@ -14,10 +14,10 @@ const querySettings = cachedPublicQuery('settings', async () => {
   return data
 })
 
-/** Throws on failure, so a cached page keeps its last good copy. One lookup per request. */
+/** throw -> cached page keeps its last good copy */
 export const getSettingsOrThrow = cache(() => querySettings())
 
-/** Null on failure. Only for the root layout, where a throw would take down every page. */
+/** null on failure -> root layout only */
 export const getSettings = cache(async () => {
   try {
     return await getSettingsOrThrow()

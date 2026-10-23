@@ -101,7 +101,7 @@ export default function HeroBannerManager() {
     }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> dialog stays open with error
   async function deleteSlide(id: string) {
     const res = await fetch(`/api/hero-slides/${id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -148,12 +148,12 @@ export default function HeroBannerManager() {
     setCreateError(null)
 
     try {
-      // JPEG, a bit above 1920px: a 2200px PNG banner was about 6 MB for every home page visitor.
+      // JPEG ~1920px (a 2200px PNG was ~6 MB per visitor)
       const bannerImageBase64 = newImageFile
         ? await compressImage(newImageFile, { maxDimension: 2200, forceJpeg: true })
         : null
 
-      // Sent with the slide so the server can delete the image if saving fails.
+      // image sent with the slide -> save fails -> server deletes it
       const res = await fetch('/api/hero-slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

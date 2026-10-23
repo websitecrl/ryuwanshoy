@@ -5,9 +5,9 @@ import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from './constants'
 import { compressImage, UNREADABLE_IMAGE_MESSAGE } from './image-compress'
 import type { Tables } from '@/types/database'
 
-// Shared by the three comic page uploaders so they give the same feedback.
+// shared by the three page uploaders
 
-/** Keeps image files and toasts about the rest (drag and drop skips accept="image/*"; .heic may have no MIME type). */
+/** images kept, rest -> toast (drag and drop skips accept) */
 export function keepImageFiles(files: File[]): File[] {
   const images  = files.filter(f => f.type.startsWith('image/'))
   const skipped = files.filter(f => !f.type.startsWith('image/'))
@@ -22,7 +22,7 @@ export function keepImageFiles(files: File[]): File[] {
   return images
 }
 
-/** Reads an image's pixel size. Rejects with UNREADABLE_IMAGE_MESSAGE when the browser can't decode it. */
+/** file -> pixel size; undecodable -> UNREADABLE_IMAGE_MESSAGE */
 export function readImageSize(file: File): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -39,7 +39,7 @@ export function readImageSize(file: File): Promise<{ width: number; height: numb
   })
 }
 
-/** Warns (never blocks) when a page is bigger than the comic page size; spreads may be twice as wide. */
+/** too big -> warning only (it gets resized) */
 export function warnIfOversizedPage(file: File, width: number, height: number): boolean {
   const maxWidth  = width > height ? COMIC_PAGE_MAX_WIDTH * 2 : COMIC_PAGE_MAX_WIDTH
   if (width <= maxWidth && height <= COMIC_PAGE_MAX_HEIGHT) return false
@@ -51,21 +51,17 @@ export function warnIfOversizedPage(file: File, width: number, height: number): 
   return true
 }
 
-/** Every stored page is this many px tall, single or spread (see uploadComicPage). */
+/** stored page height (single or spread) */
 const PAGE_HEIGHT = 1600
-/** Widest a stored spread may get (very wide panoramas). */
+/** widest stored spread */
 const MAX_SPREAD_WIDTH = 3200
 
-/** A landscape page (wider than tall) is a double page spread. */
+/** wider than tall -> spread */
 export function isSpreadPage(width: number, height: number): boolean {
   return width > height
 }
 
-/**
- * Compresses one page to PAGE_HEIGHT px tall JPEG and appends it via POST /api/pages.
- * The API assigns the next page_number, so upload one at a time in reading order.
- * Throws an Error whose message is ready to show the admin.
- */
+/** file -> JPEG PAGE_HEIGHT tall -> POST /api/pages (one at a time, in order). throws a message for the admin */
 export async function uploadComicPage(
   chapterId: string,
   file: File,
@@ -95,9 +91,9 @@ export async function uploadComicPage(
   return json.data
 }
 
-/** "Page 3 ("IMG_2041.heic"): <reason>" for toasts and per-page errors. */
+/** -> Page 3 ("IMG.heic"): reason */
 export function describePageError(pageNumber: number, file: File, err: unknown): string {
   const reason = err instanceof Error && err.message ? err.message : 'Upload failed.'
-  // API messages don't all end in a period; callers append more sentences.
+  // add a period if missing
   return `Page ${pageNumber} ("${file.name}"): ${/[.!?]$/.test(reason) ? reason : `${reason}.`}`
 }

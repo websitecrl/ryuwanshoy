@@ -53,7 +53,7 @@ export default function ReaderShell({
   const [uiVisible,   setUiVisible]   = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
 
-  // ?mode= wins over the saved mode.
+  // ?mode= -> else saved mode
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
@@ -67,7 +67,7 @@ export default function ReaderShell({
     } catch {}
   }, [])
 
-  // Every save checks savedAgeAllows: a blocked chapter still mounts once on first load (spec 0003).
+  // every save checks savedAgeAllows (blocked chapter mounts once, spec 0003)
 
   useEffect(() => {
     if (!savedAgeAllows(series.min_age)) return
@@ -80,7 +80,7 @@ export default function ReaderShell({
     if (!isNaN(page) && page > 1) setCurrentPage(page)
   }, [])
 
-  // Only after page 1, so just opening a chapter link isn't saved as progress.
+  // page > 1 only -> opening a link isn't progress
   useEffect(() => {
     if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {
@@ -104,7 +104,7 @@ export default function ReaderShell({
     }
   }, [currentPage, pages.length, chapter.id, series.min_age])
 
-  // Same page 1 guard as above.
+  // same page 1 guard
   useEffect(() => {
     if (currentPage <= 1 || !savedAgeAllows(series.min_age)) return
     try {

@@ -80,7 +80,7 @@ function DuplicateView() {
 }
 
 
-/** The signup page. Only rendered when Early Access is on (see page.tsx). */
+/** signup page (only when Early Access is on) */
 export default function EarlyAccessClient() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [email, setEmail] = useState("");
@@ -96,7 +96,7 @@ export default function EarlyAccessClient() {
         const json = (await res.json()) as { settings: Settings | null };
         setSettings(json.settings);
       } catch {
-        // Settings are optional — page still works without them
+        // settings optional
       }
     }
     void fetchSettings();
@@ -142,7 +142,7 @@ export default function EarlyAccessClient() {
       });
 
       if (res.status === 429) {
-        // The token may expire while rate limited, so reset it.
+        // token may expire while waiting -> reset
         toastRateLimited();
         setFormState({ status: "idle" });
         recaptchaRef.current?.reset();
@@ -249,7 +249,7 @@ export default function EarlyAccessClient() {
                 {siteKey ? (
                   <ReCAPTCHA ref={recaptchaRef} sitekey={siteKey} />
                 ) : (
-                  // Dev fallback when NEXT_PUBLIC_RECAPTCHA_SITE_KEY isn't set.
+                  // dev fallback (no NEXT_PUBLIC_RECAPTCHA_SITE_KEY)
                   <div className="flex h-16 w-full items-center justify-center rounded-lg border border-dashed border-border bg-muted/40 text-xs text-muted-foreground">
                     reCAPTCHA — add NEXT_PUBLIC_RECAPTCHA_SITE_KEY to .env.local
                   </div>

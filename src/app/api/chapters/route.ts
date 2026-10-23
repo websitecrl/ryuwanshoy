@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
-// Admin only — get all chapters for a series
+// admin: chapters of a series
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ data })
 }
 
-// Admin only — create a new chapter
+// admin: create chapter
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

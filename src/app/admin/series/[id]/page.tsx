@@ -207,7 +207,6 @@ export default function EditSeriesPage() {
 
           </div>
 
-          {/* RIGHT — 03 Artwork unified card, sticky */}
           <div className="w-80 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
             <Card>
               <CardLabel n="03" title="Artwork" />

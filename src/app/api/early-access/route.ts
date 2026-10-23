@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     );
   }
   
-  // Before any DB write, reCAPTCHA call, or Mailchimp call
+  // rate limit -> before DB, reCAPTCHA, Mailchimp
   const limited = await rateLimit(req, "EARLY_ACCESS_LIMITER");
   if (limited) return limited;
 

@@ -10,7 +10,7 @@ export default async function AdminLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // No user — render login page only, no sidebar
+  // no user -> login only
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -19,7 +19,7 @@ export default async function AdminLayout({
     )
   }
 
-  // Logged in — full admin shell with sidebar
+  // logged in -> admin shell
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <Sidebar />

@@ -4,10 +4,7 @@ import Link from 'next/link'
 import { useSavedAge } from '@/hooks/useSavedAge'
 import { ALL_AGES } from '@/lib/age'
 
-/**
- * Shows the page only when the saved age reaches min_age, else a block screen (spec 0003).
- * Before React loads, CSS picks one off <html data-reader-age>. Self reported age: not access control.
- */
+/** saved age >= min_age -> page, else block screen (spec 0003). before React: CSS picks via <html data-reader-age>. not access control */
 export default function AgeRestricted({ minAge, children }: {
   minAge: number | null
   children: React.ReactNode
@@ -15,7 +12,7 @@ export default function AgeRestricted({ minAge, children }: {
   const savedAge = useSavedAge()
   const required = minAge ?? ALL_AGES
 
-  // undefined = not known yet, so CSS decides. Same tree in every case, so the page isn't remounted.
+  // undefined -> CSS decides; same tree -> no remount
   const blocked = savedAge == null || required <= ALL_AGES ? undefined : savedAge < required
 
   if (required <= ALL_AGES) return <>{children}</>
@@ -23,7 +20,7 @@ export default function AgeRestricted({ minAge, children }: {
   return (
     <div className="age-restricted" data-min-age={required} style={{ display: 'contents' }}>
       <div className="age-restricted-content" style={{ display: blocked ? 'none' : 'contents' }}>
-        {/* Unmounted, not hidden: a hidden reader still ran and saved progress. */}
+        {/* unmounted, not hidden (a hidden reader still saved progress) */}
         {blocked === true ? null : children}
       </div>
       {blocked !== false && <AgeBlockedScreen minAge={required} shown={blocked === true} />}
@@ -48,7 +45,7 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
         textAlign: 'center',
       }}
     >
-      {/* h2: the page's own h1 stays its title for search engines. */}
+      {/* h2: the page h1 stays its title */}
       <h2
         style={{
           fontFamily: 'var(--font-fredoka), sans-serif',
@@ -84,7 +81,7 @@ function AgeBlockedScreen({ minAge, shown }: { minAge: number; shown: boolean })
       >
         Back to comics
       </Link>
-      {/* No "change age" here on purpose: it would be a one tap way around the block. */}
+      {/* no "change age" here (one-tap bypass) */}
     </div>
   )
 }

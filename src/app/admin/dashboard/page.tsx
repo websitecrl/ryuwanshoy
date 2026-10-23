@@ -14,9 +14,7 @@ async function getDashboardData() {
   const [seriesRes, draftsRes, draftSeriesRes] = await Promise.all([
     supabase
       .from('series')
-      // Dashboard's "Series" box is the published-list preview — drafts
-      // belong only in the Drafts box below. Without this, a draft series
-      // (like "sdad") showed up here too, indistinguishable from live ones.
+      // published only -> drafts go to the Drafts box
       .select('id, title, slug, genre, status, cover_image, created_at')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
@@ -33,9 +31,7 @@ async function getDashboardData() {
       .eq('is_draft', true)
       .order('created_at', { ascending: false })
       .limit(5),
-    // Draft series (not yet published at all) belong in the Drafts box
-    // too — they were previously missing from the dashboard entirely
-    // once excluded from the Series box above.
+    // draft series -> Drafts box
     supabase
       .from('series')
       .select('id, title, created_at')
@@ -158,7 +154,6 @@ export default async function DashboardPage() {
             </a>
           </div>
 
-          {/* Quick Create — client component for hover effects */}
           <DashboardQuickCreate />
         </div>
       </div>

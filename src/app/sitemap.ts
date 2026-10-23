@@ -1,11 +1,10 @@
 import { createPublicClient } from '@/lib/supabase/public'
 
-export const revalidate = 3600 // rebuild sitemap every hour
+export const revalidate = 3600
 
 export default async function sitemap() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'
 
-  // Static pages
   const staticPages = [
     { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 1 },
     { url: `${baseUrl}/comics`, lastModified: new Date(), changeFrequency: 'daily' as const, priority: 0.9 },
@@ -13,12 +12,9 @@ export default async function sitemap() {
     { url: `${baseUrl}/donate`, lastModified: new Date(), changeFrequency: 'monthly' as const, priority: 0.5 },
   ]
 
-  // Public (anon) client: a public route has no need for the service role
-  // key. Errors throw so a failed refresh keeps serving the previous sitemap
-  // instead of caching one with missing URLs for an hour.
+  // anon client; error -> throw -> previous sitemap kept
   const supabase = createPublicClient()
 
-  // Dynamic series pages
   const { data: series, error: seriesError } = await supabase
     .from('series')
     .select('slug, created_at')
@@ -33,8 +29,7 @@ export default async function sitemap() {
     priority: 0.8,
   }))
 
-  // Dynamic chapter pages. Same rule as the reader: published, not a draft,
-  // and in a published series.
+  // published chapters of published series (same rule as the reader)
   const { data: chapters, error: chaptersError } = await supabase
     .from('chapters')
     .select('chapter_number, series:series_id!inner(slug, is_published), published_at')

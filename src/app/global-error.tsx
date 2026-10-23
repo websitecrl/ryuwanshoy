@@ -4,10 +4,10 @@ import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
 import { isChunkLoadError, reloadOnceForChunkError } from '@/lib/chunk-error'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
-// Replaces the root layout, so it imports the styles and renders its own <html> and <body>.
+// replaces the root layout -> own styles, <html> and <body>
 import './globals.css'
 
-/** Last-resort error screen when the root layout crashes. No navbar, fonts, toasts or data on purpose. */
+/** last-resort screen: no navbar, fonts, toasts or data */
 export default function GlobalError({
   error,
   reset,
@@ -23,7 +23,7 @@ export default function GlobalError({
   }, [error, stale])
 
   return (
-    // Same theme bootstrap as the root layout (it adds `dark` before hydration).
+    // same theme bootstrap as layout.tsx
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

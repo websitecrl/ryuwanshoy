@@ -2,8 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "./supabase/server"
 
 export async function requireAdmin() {
-    // Fail closed, loudly: without this, a missing ADMIN_USER_ID only locks
-    // everyone out by accident (user.id !== undefined) and leaves no trace.
+    // no ADMIN_USER_ID -> fail closed, loudly
     const adminId = process.env.ADMIN_USER_ID
     if (!adminId) {
         console.error('[require-admin] ADMIN_USER_ID is not set; denying all admin requests')

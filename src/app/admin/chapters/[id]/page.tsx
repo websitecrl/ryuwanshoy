@@ -9,7 +9,7 @@ import type { Tables } from '@/types/database'
 import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly } from '@/lib/checklists'
 
 type Page    = Tables<'pages'>
-// What GET /api/chapters/[id] returns: select('*, pages(*), series(is_published)')
+// GET /api/chapters/[id] -> chapter + pages + series(is_published)
 type Chapter = Tables<'chapters'> & {
   pages?: Page[]
   series?: Pick<Tables<'series'>, 'is_published'> | null
@@ -87,7 +87,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     } finally { setLoading(false) }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> DeleteButton shows error
   async function handleDelete() {
     if (!chapterId) return
     const res = await fetch(`/api/chapters/${chapterId}`, { method: 'DELETE' })
@@ -170,7 +170,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {/* Chapter number + Title side by side */}
               <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 14 }}>
                 <div>
                   <label style={labelStyle}>
@@ -249,7 +248,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                 </p>
               </div>
             
-              {/* Custom toggle — matches new chapter page */}
               <button
                 type="button"
                 role="switch"

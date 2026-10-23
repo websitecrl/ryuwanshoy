@@ -27,7 +27,7 @@ const CHAPTERS_SELECT = `
   is_early_access, published_at, created_at, is_published, is_draft
 `
 
-/** Cached reader view of a published series and its published chapters (hit by "Continue reading" on every visit). */
+/** cached reader view: published series + published chapters ("Continue reading" hits it every visit) */
 const queryPublicSeries = cachedPublicQuery('api:series', async (key: string) => {
   const { data, error } = await createPublicClient()
     .from('series')
@@ -58,7 +58,7 @@ export async function GET(
     const auth = await requireAdmin()
     const isAdmin = !(auth instanceof NextResponse)
 
-    // Admin: live data, drafts included, never cached.
+    // admin -> live data, drafts included, not cached
     let data: SeriesWithChapters | null
     if (isAdmin) {
       const res = await supabaseAdmin
@@ -73,7 +73,7 @@ export async function GET(
       data = await nullIfNotFound(queryPublicSeries(id)) as SeriesWithChapters | null
     }
 
-    // 404 only when missing: callers prune bookmarks on a 404.
+    // 404 only when missing (callers prune bookmarks on 404)
     if (!data) {
       return NextResponse.json(
         { data: null, error: 'Series not found' },
@@ -151,7 +151,7 @@ export async function PATCH(
       .select()
       .single()
 
-    // Delete the old cover only after the row points at the new one (legacy covers may be shared).
+    // row points at new cover -> delete old (unless shared)
     if (payload.cover_image) {
       const orphans = error
         ? [payload.cover_image]
@@ -195,7 +195,7 @@ export async function DELETE(
   try {
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('series')
-      // Slides cascade with the series, so their images are collected here too.
+      // slides cascade -> collect their images too
       .select(`cover_image, banner_image, chapters (pages (image_url)), hero_slides (banner_image)`)
       .eq('id', id)
       .single()
@@ -214,7 +214,7 @@ export async function DELETE(
 
     if (error) throw error
 
-    // Awaited and batched: Workers can drop pending promises and caps subrequests.
+    // awaited + batched (Workers drop promises, cap subrequests)
     const chapters = existing.chapters ?? []
     const covers = existing.cover_image ? await filterUnsharedCovers([existing.cover_image]) : []
     const imageRefs = [

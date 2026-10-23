@@ -4,10 +4,7 @@ import {
   LayoutDashboard, BookOpen, BookMarked, Image as ImageIcon, FileEdit,
 } from 'lucide-react'
 
-// Static reference content — nothing here reads from the database, so this
-// page stays a plain server component. It exists because the Settings
-// sub-nav has always pointed to "the help center" without one actually
-// existing; this is that destination.
+// static help page (Settings links here)
 
 const isEAEnabled = process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true'
 

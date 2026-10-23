@@ -12,7 +12,7 @@ type Feedback = Tables<'feedback'>
 type Filter = 'all' | 'unread'
 type Page = { feedback: Feedback[]; unread: number; total: number; nextCursor: string | null }
 
-/** Admin inbox for feedback and crash reports (spec 0001). The unread count always comes from the server. */
+/** feedback inbox (spec 0001); unread count comes from the server */
 export default function AdminFeedbackPage() {
   const [items, setItems] = useState<Feedback[]>([])
   const [unread, setUnread] = useState(0)
@@ -88,7 +88,7 @@ export default function AdminFeedbackPage() {
     }
   }
 
-  // Only reports loaded here, never ones the admin hasn't seen.
+  // loaded reports only
   const loadedUnreadIds = items.filter(f => !f.is_read).map(f => f.id)
   async function markAllRead() {
     if (loadedUnreadIds.length === 0) return
@@ -108,7 +108,7 @@ export default function AdminFeedbackPage() {
     }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> dialog stays open with error
   async function remove(item: Feedback) {
     const res = await fetch(`/api/feedback/${item.id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -239,7 +239,7 @@ export default function AdminFeedbackPage() {
                         {item.page_url}
                       </a>
                     ) : (
-                      // Text, never a link.
+                      // text, never a link
                       <span className="truncate max-w-xs">{item.page_url}</span>
                     )
                   )}
@@ -266,7 +266,7 @@ export default function AdminFeedbackPage() {
                 )}
 
                 {item.user_agent && (
-                  // Reported by the reader's browser: a hint, not proof.
+                  // browser-reported: hint, not proof
                   <p className="text-xs text-[var(--ryu-text-3)] break-words">
                     Browser (as reported): {item.user_agent}
                   </p>

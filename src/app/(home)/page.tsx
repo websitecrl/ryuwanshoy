@@ -3,19 +3,16 @@ import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import HomeClient from '@/app/(components)/HomeClient'
 import { getSettingsOrThrow } from '@/lib/settings'
 
-// ISR: served from cache, refreshed in the background at most once a minute,
-// and purged right away by admin writes (revalidatePublicContent).
+// ISR -> refresh every 60s -> admin write purges
 export const revalidate = 60
 
-// No try/catch: a settings failure must throw, so ISR keeps the last good
-// copy instead of caching the default title (see getSettingsOrThrow).
+// no try/catch: throw -> ISR keeps last good copy
 export async function generateMetadata() {
   const data = await getSettingsOrThrow()
 
   const title = data?.site_title ?? 'Ryuwanshoy'
   const description = data?.site_description ?? 'A Filipino webcomic by Ryu'
-  // Not logo_url: the logo is small and not 1200×630, so share cards
-  // cropped or rejected it.
+  // og-default, not the logo (wrong size for share cards)
   const image = '/og-default.png'
 
   return {
@@ -38,9 +35,7 @@ export async function generateMetadata() {
   }
 }
 
-// These throw on a Supabase error instead of returning []: a thrown error is
-// never cached, and when a cached copy of this page exists ISR keeps serving
-// it, rather than freezing an empty home page for every visitor.
+// throw on error -> not cached -> ISR keeps last good page
 const getHeroSlides = cachedPublicQuery('home:hero-slides', async () => {
   const supabase = createPublicClient()
   const { data, error } = await supabase

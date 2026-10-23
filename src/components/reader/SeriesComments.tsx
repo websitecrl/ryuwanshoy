@@ -221,7 +221,6 @@ function CommentRow({
 
           {!editing && (
             <div className="flex items-center gap-3 mt-1.5">
-              {/* Reply button — only on top-level comments */}
               {depth === 0 && (
                 <button
                   onClick={() => setShowReply(s => !s)}
@@ -292,8 +291,7 @@ function CommentRow({
 
 
 export default function SeriesComments({ seriesId }: Props) {
-  // Newest 30 top-level comments (with their replies); "Show older comments"
-  // loads the next 30. Local actions update the list without a reload.
+  // newest 30 top-level + replies; "Show older" -> next 30
   const thread = useComments<Comment>({ seriesId })
   const [submitting, setSubmitting] = useState(false)
   const [content,    setContent]    = useState('')
@@ -353,7 +351,7 @@ export default function SeriesComments({ seriesId }: Props) {
         const { error } = await res.json() as { error: string }
         throw new Error(error ?? 'Delete failed.')
       }
-      // Also drops its replies locally; the DB deletes them with it.
+      // replies go too (DB cascade)
       thread.remove(id)
       toast.success('Comment deleted.')
     } catch (err) {

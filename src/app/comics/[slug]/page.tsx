@@ -12,9 +12,9 @@ import SeriesComments from '@/components/reader/SeriesComments'
 import AgeRestricted from '@/components/shared/AgeRestricted'
 import { seriesShareImage } from '@/lib/share-image'
 
-// Rendered per request; only the Supabase read is cached. Unknown slugs are real 404s.
+// per request; Supabase read cached; unknown slug -> real 404
 
-// Misses and Supabase errors throw, so neither is cached.
+// miss/error -> throw -> not cached
 const querySeriesBySlug = cachedPublicQuery('comics:series', async (slug: string): Promise<{
   series: Tables<'series'>
   chapters: ChapterWithPageCount[]
@@ -48,14 +48,14 @@ chapters (
   if (error) throw error
   if (!data) throw new PublicNotFoundError(`series "${slug}"`)
 
-  // Chapters are split off so the client prop doesn't carry them twice.
+  // split chapters off -> client prop not doubled
   const { chapters: rawChapters, ...series } = data
 
   const chapters: ChapterWithPageCount[] = (rawChapters ?? [])
     .filter(ch => ch.is_published === true && ch.is_draft === false)
     .map(({ pages, ...ch }) => ({
       ...ch,
-      // Number(): PostgREST may send the count as a string.
+      // count may come as a string
       page_count: Number(pages?.[0]?.count ?? 0),
     }))
 
@@ -78,7 +78,7 @@ chapters (
   }
 })
 
-// cache() dedupes the call between generateMetadata and the page.
+// cache() -> one call for metadata + page
 const getSeriesBySlug = cache((slug: string) => nullIfNotFound(querySeriesBySlug(slug)))
 
 export async function generateMetadata({
@@ -117,7 +117,7 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  // Per request, not force-dynamic: that would also disable the data cache.
+  // per request; force-dynamic would also disable the data cache
   await connection()
 
   const { slug } = await params

@@ -3,7 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import { AGE_CONFIRMED_ATTR, AGE_KEY, ALL_AGES, READER_AGE_ATTR } from '@/lib/age'
 
-// Fallback when localStorage is blocked, so picking an age still closes the gate.
+// localStorage blocked -> keep the age in memory
 let memoryAge: number | null = null
 const listeners = new Set<() => void>()
 
@@ -27,7 +27,7 @@ function subscribe(onChange: () => void) {
   }
 }
 
-/** Saves the reader's age band and tells every useSavedAge() reader. */
+/** save -> update <html> attrs -> notify readers */
 export function saveAge(age: number) {
   memoryAge = age
   try { localStorage.setItem(AGE_KEY, String(age)) } catch {}
@@ -36,12 +36,12 @@ export function saveAge(age: number) {
   listeners.forEach(listener => listener())
 }
 
-/** undefined while unknown (server and hydration render), null when none is saved, else the age band. */
+/** undefined unknown (server/hydration), null none saved, else age */
 export function useSavedAge(): number | null | undefined {
   return useSyncExternalStore(subscribe, readSavedAge, () => undefined)
 }
 
-/** For effects that save reader state: reads storage directly, since a blocked page mounts once before the age is known. */
+/** for save effects: reads storage directly (blocked page mounts once before the age is known) */
 export function savedAgeAllows(minAge: number | null): boolean {
   const required = minAge ?? ALL_AGES
   if (required <= ALL_AGES) return true
@@ -49,7 +49,7 @@ export function savedAgeAllows(minAge: number | null): boolean {
   return age !== null && age >= required
 }
 
-/** Highest min_age a list may show: the saved age, or all ages until one is known. */
+/** saved age, else all ages */
 export function useMaxAge(): number {
   return useSavedAge() ?? ALL_AGES
 }

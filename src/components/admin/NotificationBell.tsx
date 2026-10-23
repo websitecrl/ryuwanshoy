@@ -23,7 +23,7 @@ type Notification = {
 
 const SEEN_LIKES_KEY = 'ryu.seen_likes'
 
-// Comments live on a series or on a post (illustration); likes only on posts.
+// comments: series or post; likes: posts only
 function notifLabel(n: Notification): string {
   const target =
     n.post_title ? `"${n.post_title}"` :
@@ -53,7 +53,7 @@ export default function NotificationBell() {
   const [open,    setOpen]    = useState(false)
   const [notifs,  setNotifs]  = useState<Notification[]>([])
   const [unread,  setUnread]  = useState(0)
-  // Feedback isn't cleared by opening the bell; it's handled on /admin/feedback.
+  // feedback: cleared on /admin/feedback, not by the bell
   const [feedbackUnread, setFeedbackUnread] = useState(0)
   const dropdownRef           = useRef<HTMLDivElement>(null)
   const supabase              = createClient()
@@ -67,7 +67,7 @@ export default function NotificationBell() {
       const raw = json.notifications ?? []
       setFeedbackUnread(json.feedbackUnread ?? 0)
 
-      // Likes already seen (localStorage) aren't unread.
+      // seen likes (localStorage) -> not unread
       const seenLikes = getSeenLikes()
       const all = raw.map(n =>
         n.type === 'like' && seenLikes.has(n.id)
@@ -78,7 +78,6 @@ export default function NotificationBell() {
       setNotifs(all)
       setUnread(all.filter(n => n.is_read !== true).length)
     } catch {
-      // silent fail
     }
   }, [])
 
@@ -91,7 +90,7 @@ export default function NotificationBell() {
     setUnread(0)
   }
 
-  // Deletes the real comment or like. Throws so DeleteButton shows the error.
+  // delete the real comment/like; throw -> DeleteButton shows error
   async function deleteNotif(n: Notification) {
     const url = n.type === 'comment' ? `/api/comments/${n.id}` : `/api/likes/${n.id}`
     const res = await fetch(url, { method: 'DELETE' })
@@ -115,7 +114,7 @@ export default function NotificationBell() {
       .channel('notif-bell')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchNotifs)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' },    fetchNotifs)
-      // Needs the admin SELECT policy on feedback.
+      // needs the admin SELECT policy on feedback
       .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, fetchNotifs)
       .subscribe()
 
@@ -124,7 +123,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      // The delete dialog is in a portal; clicks in it must not close the dropdown.
+      // delete dialog is in a portal -> keep the dropdown open
       if ((e.target as Element | null)?.closest?.('[data-slot^="alert-dialog"]')) return
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false)

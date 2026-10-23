@@ -22,12 +22,12 @@ const DEFAULT_FORM: SeriesFormData = {
   minAge: 13,
 }
 
-// Nothing is written until "Save as draft" or "Publish"; saved row ids are reused on retry.
+// nothing saved until Draft/Publish -> saved ids reused on retry
 
 function WizardShell() {
   const router = useRouter()
 
-  // In memory only: a refresh starts over (beforeunload warns).
+  // memory only -> refresh restarts (beforeunload warns)
   const [step, setStep] = useState(1)
 
   const [formData, setFormData] = useState<SeriesFormData>(DEFAULT_FORM)
@@ -35,12 +35,12 @@ function WizardShell() {
   const [chapterTitle, setChapterTitle] = useState('')
   const [pages,        setPages]        = useState<LocalPage[]>([])
 
-  // A ref so a running save sees the latest ids; hasSavedRows mirrors it for rendering.
+  // ref -> a running save sees the latest ids
   const savedIds = useRef<{ seriesId?: string; chapterId?: string }>({})
   const [hasSavedRows, setHasSavedRows] = useState(false)
   const [saving,       setSaving]       = useState<SaveState>(null)
 
-  // Set right before a deliberate navigation so beforeunload stays quiet.
+  // set before navigating -> beforeunload stays quiet
   const leaving = useRef(false)
 
   function patchForm(patch: Partial<SeriesFormData>) {
@@ -84,7 +84,7 @@ function WizardShell() {
     window.location.href = url
   }
 
-  /** Creates what isn't saved yet: series, then chapter 1 and its pages in order, stopping at the first failed page. */
+  /** series -> chapter 1 -> pages in order -> stop at first failed page */
   async function persist(kind: 'draft' | 'publish', withChapter: boolean): Promise<boolean> {
     const ids = savedIds.current
     setSaving({ kind, page: null })
@@ -127,11 +127,11 @@ function WizardShell() {
       return
     }
     setSaving(null)
-    // A partial chapter save lands on Step 3, where failed pages can be retried.
+    // partial chapter save -> Step 3 -> retry failed pages
     if (withChapter && savedIds.current.seriesId) goToStep(3)
   }
 
-  /** Saves everything; flips the rows live only once every page is uploaded. */
+  /** save all -> every page uploaded -> rows go live */
   async function publish() {
     const ok = await persist('publish', true)
     const { seriesId, chapterId } = savedIds.current

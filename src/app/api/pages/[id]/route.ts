@@ -16,7 +16,7 @@ export async function DELETE(
   try {
     const { id } = await params
 
-    // Step 1 — fetch the page
+    // 1. page -> 2. R2 image -> 3. row -> 4. renumber
     const { data: page, error: fetchError } = await supabaseAdmin
       .from('pages')
       .select('*')
@@ -30,14 +30,12 @@ export async function DELETE(
       )
     }
 
-    // Step 2 — delete image from R2
     try {
       await deleteFromR2(page.image_url)
     } catch {
       console.error('R2 delete failed for:', page.image_url)
     }
 
-    // Step 3 — delete the page record from DB
     const { error: deleteError } = await supabaseAdmin
       .from('pages')
       .delete()
@@ -45,7 +43,6 @@ export async function DELETE(
 
     if (deleteError) throw deleteError
 
-    // Step 4 — renumber remaining pages in this chapter
     if (!page.chapter_id) {
       return NextResponse.json({ data: null, error: null })
     }
@@ -67,8 +64,7 @@ export async function DELETE(
       )
     )
 
-    // Supabase returns errors instead of throwing them, so check each one.
-    // The page itself is already deleted, so say that rather than "delete failed".
+    // Supabase returns errors (no throw); the page is already deleted
     const failed = results.filter(r => r.error)
     if (failed.length > 0) {
       console.error(`DELETE /api/pages/[id]: ${failed.length} of ${results.length} renumber updates failed:`, failed[0]?.error)

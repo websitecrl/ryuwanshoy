@@ -20,22 +20,19 @@ type HeroSlide = {
 
 export default function HeroBanner({ slides, siteName }: { slides: HeroSlide[]; siteName: string }) {
   const [idx, setIdx] = useState(0)
-  // All ages until the saved age is read (the cached HTML is shared).
+  // all ages -> saved age once read
   const maxAge = useMaxAge()
 
-  // Filter slides by reader's confirmed age
   const visibleSlides = slides.filter(s => {
     return fitsAge(s.series?.min_age, maxAge)
   })
 
-  // Auto-advance carousel
   useEffect(() => {
     if (visibleSlides.length <= 1) return
     const t = setInterval(() => setIdx(i => (i + 1) % visibleSlides.length), 6500)
     return () => clearInterval(t)
   }, [visibleSlides.length])  
 
-  // Fallback — no visible slides
   if (visibleSlides.length === 0) {
     return (
       <div style={{

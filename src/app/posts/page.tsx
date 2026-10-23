@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Random drawings, WIPs, memes, and everything in between.',
 }
 
-// Rendered per request (?type=); only the first page of posts is cached.
+// per request (?type=); first page of posts cached
 
 const TYPE_FILTERS = [
   { value: undefined,  label: 'All' },
@@ -20,7 +20,7 @@ const TYPE_FILTERS = [
   { value: 'other',    label: 'Other' },
 ]
 
-/** Cached first page of posts for one type (normalized first, so ?type= can't create unlimited cache keys). */
+/** cached first page per normalized type (raw ?type= could create unlimited keys) */
 const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string | null) => {
   const supabase = createPublicClient()
 
@@ -44,7 +44,7 @@ const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string
   return { posts, nextCursor: hasMore && last?.created_at ? last.created_at : null }
 })
 
-// Empty list on failure so the page still renders; failures are never cached.
+// failure -> empty list (never cached)
 async function getFirstPage(type: string | null) {
   try {
     return await queryFirstPage(type)
@@ -89,7 +89,7 @@ export default async function PostsPage({
         </div>
       </div>
 
-      {/* Plain links, so the filter stays in the URL and can be shared. */}
+      {/* plain links -> filter stays in the URL */}
       <div
         className="border-b"
         style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
@@ -124,7 +124,7 @@ export default async function PostsPage({
         </div>
       </div>
 
-      {/* Keyed by type: PostsClient only seeds its state once. */}
+      {/* keyed by type -> fresh state per filter */}
       <PostsClient
         key={type ?? 'all'}
         initialPosts={posts}

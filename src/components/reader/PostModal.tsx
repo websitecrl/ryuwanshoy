@@ -39,7 +39,7 @@ function getLikeToken(): string {
   } catch { return uuidv4() }
 }
 
-/** fetch that throws an Error with the server's message (and `status`) on any HTTP or network failure. */
+/** fetch -> any HTTP/network failure -> throws Error(server message, status) */
 async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init)
   const data: unknown = await res.json().catch(() => null)
@@ -55,13 +55,13 @@ async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
-/** True when fetchJson threw because a Workers rate limiter returned 429. */
+/** 429 from a rate limiter? */
 function isRateLimitError(err: unknown): boolean {
   return err instanceof Error && (err as Error & { status?: number }).status === 429
 }
 
 
-/** One comment. Reply only at depth 0 (no depth column); edit/delete only when this browser owns it. */
+/** one comment; reply at depth 0 only; edit/delete only if this browser owns it */
 function CommentRow({
   comment,
   replies,
@@ -314,13 +314,13 @@ interface Props {
   onClose: () => void
 }
 
-// 'loading' is its own state so the heart can't flash empty or be toggled before the first fetch lands.
+// 'loading' -> heart can't flash empty or toggle early
 type LikeState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'loaded'; liked: boolean; count: number }
 
-// Drag distance (px) on the mobile handle that counts as dismiss.
+// px of handle drag -> dismiss
 const DRAG_CLOSE_THRESHOLD = 80
 
 export default function PostModal({ post, onClose }: Props) {
@@ -329,7 +329,7 @@ export default function PostModal({ post, onClose }: Props) {
   const [justLiked, setJustLiked] = useState(false)
   const likeRequestInFlightRef = useRef(false)
   const [reduceMotion, setReduceMotion] = useState(false)
-  // Newest 30 top-level comments, shown oldest-first like a chat.
+  // newest 30 top-level -> shown oldest first (chat)
   const thread = useComments<Comment>({ postId: post.id })
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -337,12 +337,12 @@ export default function PostModal({ post, onClose }: Props) {
   const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const commentsListRef = useRef<HTMLDivElement>(null)
-  // Distance from the bottom, saved before "Show older" prepends comments.
+  // saved before "Show older" prepends
   const scrollFromBottomRef = useRef<number | null>(null)
 
   const [commentsOpen, setCommentsOpen] = useState(false)
 
-  // Only the handle listens for touch, so scrolling the list never fights with closing.
+  // handle only -> list scroll never fights closing
   const [dragOffset, setDragOffset] = useState(0)
   const draggingRef = useRef(false)
   const touchStartYRef = useRef<number | null>(null)
@@ -384,7 +384,7 @@ export default function PostModal({ post, onClose }: Props) {
       .catch(() => setLikeState({ status: 'error' }))
   }, [post.id])
 
-  // ESC closes the comments panel first, then the modal. Reads commentsOpen directly: an updater would run twice in Strict Mode.
+  // ESC -> close comments -> close modal
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
@@ -400,7 +400,7 @@ export default function PostModal({ post, onClose }: Props) {
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // Skip the like animation for reduced motion (WCAG 2.3.3).
+  // reduced motion -> no like animation
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     setReduceMotion(mq.matches)
@@ -409,7 +409,7 @@ export default function PostModal({ post, onClose }: Props) {
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  /** Optimistic like: flip now, reconcile with the server. A ref blocks double taps. */
+  /** optimistic: flip -> request -> reconcile; ref blocks double taps */
   async function handleLike() {
     if (likeState.status !== 'loaded' || likeRequestInFlightRef.current) return
     likeRequestInFlightRef.current = true
@@ -449,7 +449,7 @@ export default function PostModal({ post, onClose }: Props) {
     }
   }
 
-  /** Native share sheet, else copy the page URL (posts have no own route yet). */
+  /** share sheet -> else copy page URL */
   async function handleShare() {
     const url = typeof window !== 'undefined' ? window.location.href : ''
     if (!url) return
@@ -464,7 +464,7 @@ export default function PostModal({ post, onClose }: Props) {
         toast.success('Link copied!')
       }
     } catch (err) {
-      // AbortError = the reader closed the share sheet.
+      // AbortError = sheet closed
       if (err instanceof Error && err.name !== 'AbortError') {
         toast.error('Could not share this post.')
       }
@@ -509,7 +509,7 @@ export default function PostModal({ post, onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ edit_token: token }),
       })
-      // The DB cascades replies, so no refetch.
+      // DB cascades replies -> no refetch
       thread.remove(id)
       toast.success('Comment deleted.')
     } catch (err) {
@@ -536,7 +536,7 @@ export default function PostModal({ post, onClose }: Props) {
     void thread.loadOlder()
   }
 
-  // Keep the same distance from the bottom after older comments load above (Safari has no scroll anchoring).
+  // older comments loaded above -> keep distance from bottom
   useLayoutEffect(() => {
     const list = commentsListRef.current
     if (thread.loadingOlder || !list || scrollFromBottomRef.current === null) return
@@ -636,7 +636,7 @@ export default function PostModal({ post, onClose }: Props) {
           </div>
         </div>
 
-        {/* Comments: a drawer on desktop, full screen on mobile (drag the handle down to close). */}
+        {/* comments: drawer (desktop) / full screen (mobile, drag handle to close) */}
         <div
           className={`post-modal-comments-panel ${commentsOpen ? 'open' : ''}`}
           style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: 'none' } : undefined}
@@ -943,12 +943,12 @@ export default function PostModal({ post, onClose }: Props) {
             right: 0;
             width: 100%;
             max-width: 100%;
-            /* Leaves the top 20% of the image visible, like Instagram's comment sheet. */
+            /* top 20% of the image stays visible */
             top: 20dvh;
             border-left: none;
             border-top: none;
             border-radius: 20px 20px 0 0;
-            /* Keeps the list's square corners inside the sheet's rounded ones. */
+            /* list corners stay inside the rounded sheet */
             overflow: hidden;
             box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
             transform: translateY(100%);

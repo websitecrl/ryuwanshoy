@@ -4,11 +4,7 @@ import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
 import { isChunkLoadError, reloadOnceForChunkError } from '@/lib/chunk-error'
 
-/**
- * Error screen for anything that throws inside the root layout (pages,
- * loaders). The layout (navbar, footer, toasts) stays on screen.
- * Whole-page crashes are handled by global-error.tsx instead.
- */
+/** error inside the layout -> navbar/footer stay; whole-page crash -> global-error.tsx */
 export default function Error({
   error,
   reset,
@@ -16,8 +12,7 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  // Old tab after a deploy: reset() would rerun the old build and fail again,
-  // so reload to get the new one (see chunk-error.ts).
+  // old tab after deploy -> reload, not reset() (see chunk-error.ts)
   const stale = isChunkLoadError(error)
 
   useEffect(() => {
@@ -52,7 +47,7 @@ export default function Error({
       >
         Something broke!
       </h1>
-      {/* Nothing is reported automatically, so don't claim the admin knows. */}
+      {/* nothing is sent automatically */}
       <p style={{ fontSize: 16, color: 'var(--ryu-text-2)', maxWidth: 400 }}>
         {stale
           ? 'The site was just updated. Reload the page to get the new version.'

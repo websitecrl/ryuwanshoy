@@ -10,11 +10,11 @@ import { FEEDBACK_LIMITS, isFeedbackDevice, isFeedbackKind, isSafeSitePath } fro
 
 export const dynamic = 'force-dynamic'
 
-// Admin inbox page size, newest first; "Load older" pages through the rest.
+// admin inbox page size
 const ADMIN_PAGE_SIZE = 50
 const MAX_MARK_IDS = 500
 
-// Next.js error digests are short numeric/word ids; anything else is dropped.
+// digest: short id, else dropped
 const DIGEST_RE = /^[\w-]{1,100}$/
 
 
@@ -25,8 +25,7 @@ function cleanText(value: unknown, max: number): string | null {
   return trimmed ? trimmed.slice(0, max) : null
 }
 
-// Public. Body: { kind, message, device?, pageUrl?, errorMessage?, errorDigest? }
-// message and device are optional only for 'crash'. No email or IP is stored (IP only feeds the rate limiter).
+// public. body { kind, message, device?, pageUrl?, errorMessage?, errorDigest? }; message/device optional for 'crash'; no email or IP stored
 export async function POST(req: NextRequest) {
   const limited = await rateLimit(req, 'FEEDBACK_LIMITER')
   if (limited) return limited
@@ -72,7 +71,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // Same-site paths only, so the inbox can't be fed a phishing link.
+  // same-site path only (no phishing links in the inbox)
   const safePage = isSafeSitePath(pageUrl) ? pageUrl : null
 
   const digest = cleanText(errorDigest, FEEDBACK_LIMITS.errorDigest)
@@ -93,7 +92,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true }, { status: 201 })
 }
 
-// Admin. One page, newest first [?before=<cursor>] → { feedback, unread, total, nextCursor }; counts cover all rows.
+// admin. ?before=<cursor> -> { feedback, unread, total, nextCursor }
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -134,7 +133,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// Admin. Marks exactly the given ids read (only what the inbox loaded) → { ok, unread }.
+// admin. ids loaded in the inbox -> marked read -> { ok, unread }
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -162,7 +161,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update feedback.' }, { status: 500 })
   }
 
-  // A failed recount shouldn't turn a successful update into an error.
+  // recount failed != update failed
   let unread: number | null = null
   try {
     unread = await countUnreadFeedback()

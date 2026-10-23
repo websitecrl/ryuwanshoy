@@ -102,8 +102,7 @@ export default async function DraftsPage() {
 
   const drafts = await getDrafts()
   const chapterDrafts = await getChapterDrafts()
-  // Same rule as the bulk delete, so the button shows exactly when there is
-  // something it would delete (including draft chapters with no draft series).
+  // same rule as the bulk delete
   const { count: deletableCount } = await getDraftPreview()
 
   return (
@@ -194,8 +193,7 @@ export default async function DraftsPage() {
                     })}
                   </div>
                 </div>
-                {/* Badge is derived from the same series checklist shown on
-                    the Series edit page, so the two can never disagree. */}
+                {/* same checklist as the series edit page */}
                 {missingCount > 0 && (
                   <span
                     className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
@@ -263,8 +261,7 @@ export default async function DraftsPage() {
                       {ch.series.title}
                     </p>
                   </div>
-                  {/* Badge is derived from the same checklist shown on the
-                      Chapter edit page, so the two can never disagree. */}
+                  {/* same checklist as the chapter edit page */}
                   {missingCount > 0 && (
                     <span
                       className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"

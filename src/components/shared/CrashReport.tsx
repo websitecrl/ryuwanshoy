@@ -10,7 +10,7 @@ type Status =
   | { state: 'sent' }
   | { state: 'failed'; message: string }
 
-/** "Send report" box for the error screens. Sends only on tap; status is inline (global-error has no Toaster). */
+/** error screen "Send report": tap -> POST /api/feedback; status inline (no Toaster in global-error) */
 export default function CrashReport({ error }: { error: Error & { digest?: string } }) {
   const [status, setStatus] = useState<Status>({ state: 'idle' })
   const [note, setNote] = useState('')
@@ -20,7 +20,7 @@ export default function CrashReport({ error }: { error: Error & { digest?: strin
     const payload: FeedbackPayload = {
       kind: 'crash',
       message: note.trim(),
-      // Path only: a query string can carry values the reader didn't mean to share.
+      // path only (query may hold private values)
       pageUrl: window.location.pathname,
       errorMessage: error.message,
       errorDigest: error.digest,

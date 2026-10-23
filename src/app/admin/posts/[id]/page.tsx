@@ -47,12 +47,10 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   const [postId,      setPostId]      = useState<string | null>(null)
   const [error,       setError]       = useState<string | null>(null)
 
-  // Form fields
   const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
   const [postType,    setPostType]    = useState<PostType>('sketch')
 
-  // Image replacement
   const [newImageFile,   setNewImageFile]   = useState<File | null>(null)
   const [newPreview,     setNewPreview]     = useState<string | null>(null)
 
@@ -106,7 +104,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         post_type:   postType,
       }
 
-      // If a new image was selected, convert and send it
       if (newImageFile) {
         body.imageBase64 = await compressImage(newImageFile, { maxDimension: 1600 })
       }
@@ -127,7 +124,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     } finally { setSubmitting(false) }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> dialog stays open with error
   async function handleDelete() {
     if (!postId) return
     const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' })
@@ -157,7 +154,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     )
   }
 
-  // The image shown in the right panel — new preview takes priority over saved URL
+  // new preview -> else saved image
   const displayImage = newPreview ?? post.image_url
 
   return (
@@ -288,7 +285,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                     height={400}
                     style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 380, objectFit: 'contain', background: 'var(--ryu-surface-2)' }}
                   />
-                  {/* Clear new image if one is selected */}
                   {newPreview && (
                     <button
                       type="button"

@@ -1,7 +1,7 @@
 import { compressImage } from '@/lib/image-compress'
 import { type SeriesFormData } from './types'
 
-// Wizard save helpers. Rows are created unpublished and flipped live once every page uploads.
+// rows created unpublished -> all pages uploaded -> published
 
 /** true = free, false = taken, null = couldn't check. */
 export async function isSlugAvailable(slug: string): Promise<boolean | null> {
@@ -18,7 +18,7 @@ export async function isSlugAvailable(slug: string): Promise<boolean | null> {
 export async function createSeries(data: SeriesFormData): Promise<string> {
   let coverImageBase64: string | undefined
   try {
-    // Covers show at 460x640, so 1280px is plenty for retina.
+    // covers show at 460x640 -> 1280px is enough
     if (data.coverFile) coverImageBase64 = await compressImage(data.coverFile, { maxDimension: 1280 })
   } catch {
     throw new Error('Failed to process images')

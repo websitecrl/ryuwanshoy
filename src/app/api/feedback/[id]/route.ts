@@ -7,7 +7,7 @@ import { isUuid } from '@/lib/validation'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-// Admin only. Body: { is_read: boolean }
+// admin. body { is_read }
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   return NextResponse.json({ ok: true, unread: await unreadOrNull() })
 }
 
-// Admin only.
+// admin
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -56,8 +56,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   return NextResponse.json({ ok: true, unread: await unreadOrNull() })
 }
 
-/** Fresh unread count, or null if counting failed (the action itself already
- *  succeeded, so it isn't turned into an error; the inbox keeps its count). */
+/** unread count, or null (the action already succeeded) */
 async function unreadOrNull(): Promise<number | null> {
   try {
     return await countUnreadFeedback()

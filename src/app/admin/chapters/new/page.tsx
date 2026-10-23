@@ -43,7 +43,7 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--ryu-text)', marginBottom: 6,
 }
 
-/** One sortable page thumbnail (its own component: useSortable is a hook). */
+/** sortable thumbnail (useSortable needs its own component) */
 function SortablePageThumbnail({
   page, index, onRemove,
 }: {
@@ -80,7 +80,7 @@ function SortablePageThumbnail({
         {!page.uploading && !page.uploaded && (
           <button
             type="button"
-            // Keeps a click on remove from starting a drag.
+            // remove click != drag start
             onPointerDown={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
             style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
@@ -122,7 +122,7 @@ export default function NewChapterPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sensors = useSensors(
-    // 8px before a drag starts, so clicks still work.
+    // 8px -> drag, less -> click
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
@@ -239,7 +239,7 @@ export default function NewChapterPage() {
       if (!chRes.ok || chJson.error) { toast.error(chJson.error ?? 'Failed to create chapter'); setSubmitting(false); return }
       const chapterId = chJson.data.id
 
-      // One at a time, in on-screen order: the server assigns page_number as max + 1.
+      // one at a time, in order -> server page_number = max + 1
       const failures: string[] = []
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i]; if (!page) continue
@@ -254,7 +254,7 @@ export default function NewChapterPage() {
         }
       }
 
-      // The page redirects, so errors go in a toast (it survives navigation).
+      // redirect next -> errors go in a toast
       if (failures.length) {
         toast.error(
           `${failures.length} page(s) failed to upload. Add them from the chapter's edit page. ${failures.join(' ')}`,

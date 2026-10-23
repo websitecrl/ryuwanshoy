@@ -15,11 +15,11 @@ type Props = {
   totalPages: number
   lastPublishedAt: string | null
   firstChapterNumber: number
-  /** Published chapter ids — progress pointing anywhere else is stale. */
+  /** published chapter ids; anything else is stale */
   chapterIds: string[]
 }
 
-// Same key/shape as ContinueReadingBar and ChapterList — reading-progress-{seriesId}
+// key reading-progress-{seriesId} (shared with ContinueReadingBar, ChapterList)
 function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProgress | null {
   if (typeof window === 'undefined') return null
   try {
@@ -30,7 +30,7 @@ function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProg
     if (typeof parsed.chapterNumber !== 'number' || typeof parsed.chapterId !== 'string') {
       return null
     }
-    // Chapter deleted or unpublished since it was read: no Continue for it
+    // chapter gone -> no Continue
     if (!chapterIds.includes(parsed.chapterId)) {
       localStorage.removeItem(`reading-progress-${seriesId}`)
       return null
@@ -52,13 +52,11 @@ export default function SeriesHeader({
   const [copied, setCopied] = useState(false)
   const [progress, setProgress] = useState<ReadingProgress | null>(null)
 
-  // Hydrate bookmark state from localStorage (same key as BookmarksNavLink/BookmarksGrid)
   useEffect(() => {
     const map = getBookmarkMap()
     setBookmarked(map[series.id] === true)
   }, [series.id])
 
-  // Hydrate reading progress from localStorage (same key as ContinueReadingBar/ChapterList)
   useEffect(() => {
     setProgress(getReadingProgress(series.id, chapterIds))
   }, [series.id, chapterIds])
@@ -72,7 +70,7 @@ export default function SeriesHeader({
 
   function toggleBookmark() {
     const next = !bookmarked
-    // Also notifies BookmarksNavLink/BookmarksGrid on the same page
+    // also updates BookmarksNavLink/BookmarksGrid
     setSeriesBookmarked(series.id, next)
     setBookmarked(next)
   }
@@ -203,7 +201,6 @@ export default function SeriesHeader({
             {ctaLabel}
           </Link>
 
-          {/* RESTART — only shown when there's progress to restart from */}
           {hasProgress && (
             <Link
               href={startHref}

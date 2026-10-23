@@ -86,8 +86,7 @@ export default function NewPostPage() {
     setSubmitting(true)
 
     try {
-      // Posts can be any size/orientation — cap at 1600px, keep original
-      // format so a transparent PNG sticker/meme isn't flattened to black.
+      // cap 1600px, keep format (transparent PNG stays PNG)
       const imageBase64 = await compressImage(imageFile, { maxDimension: 1600 })
 
       const res  = await fetch('/api/posts', {

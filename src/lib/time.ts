@@ -1,6 +1,6 @@
 const HAS_ZONE = /(Z|[+-]\d{2}:?\d{2})$/i
 
-/** "just now" / "5m ago" / "3h ago" / "2d ago". Zoneless timestamps are UTC, so "Z" is added only when no zone is given. */
+/** "just now" / "5m ago" / "3h ago" / "2d ago"; no zone -> UTC */
 export function timeAgo(dateStr: string | null): string {
   if (!dateStr) return ''
   const normalized = HAS_ZONE.test(dateStr) ? dateStr : dateStr + 'Z'
@@ -15,7 +15,7 @@ export function timeAgo(dateStr: string | null): string {
   return `${days}d ago`
 }
 
-/** "Oct 9, 2026" style date (en-PH), or '' when there is no date. */
+/** "Oct 9, 2026" (en-PH), '' if none */
 export function formatDate(dateStr: string | null): string {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('en-PH', {

@@ -2,15 +2,15 @@ import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { deleteR2Keys, listR2Objects, publicKeysFromRefs } from '@/lib/r2'
 
-// Finds public-bucket files no row points at. Deleting a used file breaks the site, so every rule errs on keeping.
+// unused public files. deleting a used one breaks the site -> every rule keeps when unsure
 
-/** Folders uploadToR2 writes to. Anything outside them was put there by hand and is never touched. */
+/** uploadToR2 folders; anything else is never touched */
 const MANAGED_PREFIXES = ['covers/', 'pages/', 'posts/', 'hero-banners/', 'settings/']
 
-/** New files are skipped: an upload lands in R2 just before its row is inserted. */
+/** upload lands before its row -> skip new files */
 const MIN_AGE_MS = 24 * 60 * 60 * 1000
 
-// PostgREST caps rows per request, so columns are read in pages.
+// PostgREST row cap -> read in pages
 const PAGE_SIZE = 1000
 
 export type UnusedFile = { key: string; size: number; lastModified: string }
@@ -24,13 +24,13 @@ export type UnusedScan = {
   usedCount: number
 }
 
-/** Reads one image column from every row, page by page. Throws on any error (never a partial list). */
+/** column -> every row, paged; error -> throw */
 async function readColumn(
   table: 'series' | 'pages' | 'posts' | 'hero_slides' | 'settings',
   column: string
 ): Promise<string[]> {
   const values: string[] = []
-  // Stop only on an empty page, in case max-rows is set below PAGE_SIZE.
+  // stop on an empty page (max-rows may be lower)
   for (let from = 0; ; ) {
     const { data, error } = await supabaseAdmin
       .from(table)
@@ -49,7 +49,7 @@ async function readColumn(
   }
 }
 
-/** Every public-bucket key the database points at. */
+/** DB refs -> public keys */
 async function getUsedKeys(): Promise<Set<string>> {
   const columns = await Promise.all([
     readColumn('series', 'cover_image'),
@@ -62,7 +62,7 @@ async function getUsedKeys(): Promise<Set<string>> {
   return publicKeysFromRefs(columns.flat())
 }
 
-/** Unused files in managed folders, older than MIN_AGE_MS, biggest first. Throws instead of returning a partial result. */
+/** list R2 -> managed + old enough + unreferenced -> biggest first */
 export async function findUnusedFiles(now = new Date()): Promise<UnusedScan> {
   const [objects, used] = await Promise.all([listR2Objects(), getUsedKeys()])
   const cutoff = now.getTime() - MIN_AGE_MS
@@ -82,7 +82,7 @@ export async function findUnusedFiles(now = new Date()): Promise<UnusedScan> {
   }
 }
 
-/** Deletes only the confirmed keys a fresh scan still reports as unused. */
+/** confirmed keys -> rescan -> delete still-unused */
 export async function deleteUnusedFiles(keys: string[]): Promise<{
   deleted: string[]
   failed: string[]

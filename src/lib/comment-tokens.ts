@@ -1,8 +1,7 @@
-// A comment's edit_token, kept in this browser as the only proof of ownership (no reader accounts).
-// Never rename the key: readers would lose control of comments they posted.
+// edit_token per comment in this browser = proof of ownership. never rename the key
 const TOKEN_STORE = 'ryu.comment.tokens'
 
-/** @returns every comment id → edit_token this browser holds */
+/** comment id -> edit_token */
 export function getTokenMap(): Record<string, string> {
   try {
     const raw = localStorage.getItem(TOKEN_STORE)
@@ -19,7 +18,7 @@ export function saveToken(commentId: string, token: string) {
   }
 }
 
-/** @returns the edit_token for this comment, or null when this browser didn't post it */
+/** null -> not posted from this browser */
 export function getToken(commentId: string): string | null {
   return getTokenMap()[commentId] ?? null
 }

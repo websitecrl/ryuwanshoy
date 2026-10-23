@@ -10,7 +10,7 @@ interface Step3Props {
   seriesData: SeriesFormData
   uploadedPages: LocalPage[]
   saving: SaveState
-  /** Going back is locked once rows exist, so edits can't drift from them. */
+  /** rows exist -> back is locked */
   hasSavedRows: boolean
   onBack: () => void
   onSaveDraft: () => void

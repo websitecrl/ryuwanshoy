@@ -19,10 +19,10 @@ export type FlipReaderProps = {
   onPageChange: (page: number) => void
 }
 
-/** A flip book item. Spreads split into two items on desktop, so `position` is the page number readers see. */
+/** spread -> two items (desktop); position = page number readers see */
 export type DisplayPage = Page & { spreadSide: 'left' | 'right' | null; position: number }
 
-// No cover or divider: an extra item before page 1 got readers stuck.
+// no cover/divider (readers got stuck on it)
 export function buildDisplayPages(pages: Page[], portrait: boolean): DisplayPage[] {
   return [...pages]
     .sort((a, b) => a.page_number - b.page_number)
@@ -105,7 +105,7 @@ export function PageContent({ page, width, height, eager, spine }: {
   return (
     <>
       {page.spreadSide ? (
-        // Image at 2x page width, shifted one page left or right.
+        // 2x width image -> shifted left or right
         <div
           style={{
             position: 'absolute',

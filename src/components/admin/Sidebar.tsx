@@ -36,9 +36,7 @@ export default function Sidebar() {
   const [draftCount, setDraftCount] = useState<number>(0)
 
 useEffect(() => {
-  // Skipped while the wizard publishes: its rows are unpublished until the
-  // end and would flash in the badge. Re-checked before setting, since the
-  // flag can turn on while a fetch is in flight.
+  // wizard publishing -> skip (its rows look like drafts until the end)
   function refreshDrafts() {
     if (isWizardSaving()) return
     fetch('/api/drafts')
@@ -49,7 +47,6 @@ useEffect(() => {
 
   refreshDrafts()
 
-  // Realtime
   const channel = supabase
     .channel('drafts-count')
     .on(
@@ -59,13 +56,13 @@ useEffect(() => {
     )
     .subscribe()
 
-  // Catch up once publishing ends (or fails and leaves real drafts behind)
+  // publishing ends -> refresh once
   const unsubscribe = subscribeWizardSaving(saving => { if (!saving) refreshDrafts() })
 
   return () => { supabase.removeChannel(channel); unsubscribe() }
 }, [])
 
-// R2 storage — on mount, and again after Settings → Storage deletes files
+// R2 storage: on mount + after a Settings cleanup
 useEffect(() => {
   function loadStorage() {
     fetch('/api/r2-storage')
@@ -206,7 +203,6 @@ useEffect(() => {
           )
         })}
 
-        {/* Early Access — behind feature flag */}
         {isEAEnabled && (() => {
           const active = isActive('/admin/early-access')
           return (

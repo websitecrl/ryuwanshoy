@@ -8,7 +8,7 @@ import type { ReadingProgress } from '@/types/reader'
 type Props = {
   seriesId: string
   seriesSlug: string
-  /** Published chapter ids — progress pointing anywhere else is stale. */
+  /** published chapter ids; anything else is stale */
   chapterIds: string[]
 }
 
@@ -22,7 +22,7 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
 
       const parsed = JSON.parse(raw) as ReadingProgress
 
-      // Validate minimum shape, and drop progress for a deleted/unpublished chapter
+      // bad shape or unpublished chapter -> drop
       if (
         typeof parsed.chapterNumber !== 'number' ||
         typeof parsed.chapterId !== 'string' ||

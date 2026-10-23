@@ -1,10 +1,10 @@
-// Shared by comment create and edit.
+// comment create + edit
 
-// Collapses repeated chars and maps leetspeak to letters.
+// repeated chars -> one; leetspeak -> letters
 function normalize(text: string): string {
   return text
     .toLowerCase()
-    .replace(/(.)\1+/g, '$1')   // dedupe repeated chars (aaaa → a)
+    .replace(/(.)\1+/g, '$1')
     .replace(/@/g,  'a')
     .replace(/0/g,  'o')
     .replace(/1/g,  'i')
@@ -17,7 +17,7 @@ function normalize(text: string): string {
     .replace(/\+/g, 't')
 }
 
-// Normalized form; normalize() runs on input and words, so no leetspeak variants needed.
+// normalized words (normalize() runs on both sides)
 const HARD_BLOCK: string[] = [
   // Racial slurs
   'nigger', 'nigga', 'niggah', 'niga', 'nigah', 'niger','negro',

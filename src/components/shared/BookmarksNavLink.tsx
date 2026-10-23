@@ -12,7 +12,6 @@ type Series = Database["public"]["Tables"]["series"]["Row"];
 
 interface Props {
   allSeries: Series[];
-  /** Extra layout classes from the parent (e.g. flex-grow inside a toolbar row). */
   className?: string;
 }
 
@@ -28,15 +27,15 @@ export default function BookmarksNavLink({ allSeries, className = "" }: Props) {
     function refresh() {
       setBookmarkMap(getBookmarkMap());
     }
-    // Sync when a SeriesCard on the same page toggles a bookmark
+    // same-page bookmark toggles
     window.addEventListener("storage", refresh);
     return () => window.removeEventListener("storage", refresh);
   }, []);
 
-  // Same rule as the /bookmarks page, so the badge matches what it shows.
+  // same rule as /bookmarks
   const count = allSeries.filter((s) => bookmarkMap[s.id] === true && fitsAge(s.min_age, maxAge)).length;
 
-  // Don't render the count badge until localStorage is read (avoids hydration flash)
+  // no badge until localStorage is read
   if (!mounted) return null;
 
   return (

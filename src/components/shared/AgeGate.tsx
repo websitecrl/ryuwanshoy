@@ -28,19 +28,19 @@ const TIERS = [
   },
 ]
 
-// The page always renders (search engines, previews); the gate is an overlay decided in the browser.
+// page always renders (SEO, previews) -> gate overlay decided in the browser
 export default function AgeGate({ children }: { children: React.ReactNode }) {
   const savedAge = useSavedAge()
   const [selected, setSelected] = useState<number | null>(null)
   const pathname = usePathname()
 
   const showGate = !pathname.startsWith('/admin') && savedAge == null
-  // Only once we KNOW no age is saved, or returning readers would be blocked until JS loads.
+  // block only when we KNOW no age is saved
   const blockPage = showGate && savedAge === null
 
   return (
     <>
-      {/* contents keeps the flex layout; inert blocks the page behind the gate. */}
+      {/* contents -> keeps flex layout; inert -> page unreachable */}
       <div style={{ display: 'contents' }} inert={blockPage}>
         {children}
       </div>
@@ -101,7 +101,7 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           </div>
         </div>
 
-        {/* h2: the page's own h1 stays its title for search engines. */}
+        {/* h2: the page h1 stays its title */}
         <h2 id="age-gate-title" style={{
           fontFamily: "var(--font-fredoka), sans-serif",
           fontWeight: 600,

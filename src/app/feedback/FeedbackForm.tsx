@@ -21,7 +21,7 @@ const PLACEHOLDERS: Record<FormKind, string> = {
   other: 'Anything you want to tell us.',
 }
 
-/** ?from= page from the footer link, kept only when it's a strict same-site path. */
+/** ?from= -> kept only if a strict same-site path */
 function sourcePage(): string | undefined {
   const from = new URLSearchParams(window.location.search).get('from')
   return isSafeSitePath(from) ? from : undefined
@@ -87,7 +87,7 @@ export default function FeedbackForm() {
       onSubmit={handleSubmit}
       className="rounded-xl border border-[var(--ryu-border)] bg-[var(--ryu-surface-1)] p-5 space-y-5"
     >
-      {/* Native radios styled as pills, so keyboard and screen readers work. */}
+      {/* native radios as pills (keyboard + screen readers) */}
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Type
@@ -117,7 +117,7 @@ export default function FeedbackForm() {
         </div>
       </fieldset>
 
-      {/* At least one required; both is stored as 'both'. */}
+      {/* at least one; both -> 'both' */}
       <fieldset className="space-y-2" aria-describedby="feedback-device-note">
         <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Where did it happen?

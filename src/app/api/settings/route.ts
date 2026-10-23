@@ -7,7 +7,7 @@ import type { TablesUpdate } from "@/types/database";
 
 export const dynamic = 'force-dynamic'
 
-// Only these columns are written; spreading the raw body let a caller set any column.
+// only these columns are written
 const EDITABLE_FIELDS = [
   'creator_name', 'donation_message', 'ea_headline', 'ea_subtext',
   'facebook_url', 'instagram_url', 'kofi_url', 'logo_url', 'patreon_url',
@@ -15,14 +15,14 @@ const EDITABLE_FIELDS = [
   'twitter_url', 'youtube_url',
 ] as const satisfies ReadonlyArray<keyof TablesUpdate<'settings'>>
 
-// Public GET uses the service role, so columns are listed by hand: a new secret column stays private.
+// public GET (service role) -> listed by hand so new columns stay private
 const PUBLIC_FIELDS = `
   creator_name, donation_message, ea_headline, ea_subtext, facebook_url,
   instagram_url, kofi_url, logo_url, patreon_url, paypal_url,
   site_description, site_title, tiktok_url, twitter_url, youtube_url
 `
 
-// Public: the donate and early access pages need it.
+// public: donate and early access pages
 export async function GET() {
   try {
     const { data, error } = await supabaseAdmin

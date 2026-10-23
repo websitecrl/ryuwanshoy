@@ -18,11 +18,11 @@ type ContinueReadingData = {
 export default function ContinueReading() {
   const [mounted, setMounted] = useState(false)
   const [data, setData] = useState<ContinueReadingData | null>(null)
-  // The series min_age, from the same /api/series call that checks it's live
+  // min_age from the same /api/series check
   const [minAge, setMinAge] = useState<number | null>(null)
   const maxAge = useMaxAge()
 
-  // Stale entry (series/chapter gone): drop it so it never comes back
+  // stale entry -> drop it
   const forget = useCallback(() => {
     try { localStorage.removeItem('continueReading') } catch {}
     setData(null)
@@ -37,9 +37,7 @@ export default function ContinueReading() {
       entry = JSON.parse(raw) as ContinueReadingData
     } catch { return /* corrupted — ignore */ }
 
-    // Only show once the series and chapter are confirmed to still be live.
-    // The public series route 404s for a deleted/unpublished series and only
-    // lists published chapters. A network/server error keeps the entry.
+    // show only if series + chapter still live (404 -> forget; network error -> keep)
     let cancelled = false
     fetch(`/api/series/${encodeURIComponent(entry.seriesSlug)}`)
       .then(async res => {
@@ -59,8 +57,7 @@ export default function ContinueReading() {
   }, [forget])
 
   if (!mounted || !data) return null
-  // Hidden, not forgotten: a series above the reader's saved age (spec 0003)
-  // never shows its cover here; it comes back if they pick an older age.
+  // above saved age -> hidden, not forgotten
   if (!fitsAge(minAge, maxAge)) return null
 
   const href = `/comics/${data.seriesSlug}/${data.chapterNumber}${

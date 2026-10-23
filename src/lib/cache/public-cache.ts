@@ -1,16 +1,13 @@
 import 'server-only'
 import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 
-// Safety net for a write path that forgot to purge. Page files repeat the literal: Next rejects imported values.
+// safety net if a write forgot to purge. pages repeat the literal (Next rejects imports)
 export const PUBLIC_REVALIDATE_SECONDS = 60
 
-// One tag for every public read: purge-everything is cheap with one admin and can't miss a renamed slug.
+// one tag -> purge everything (one admin, renamed slugs never missed)
 export const PUBLIC_CONTENT_TAG = 'public-content'
 
-/**
- * Caches a public read across requests (key: name + args). Logs `[cache] MISS <name>` when it runs.
- * fn must use createPublicClient() and THROW on a Supabase error, so a failure is never cached.
- */
+/** cachedPublicQuery -> key: name + args -> MISS runs fn (anon client, must throw on error) -> errors never cached */
 export function cachedPublicQuery<Args extends unknown[], Result>(
   name: string,
   fn: (...args: Args) => Promise<Result>
@@ -27,7 +24,7 @@ export function cachedPublicQuery<Args extends unknown[], Result>(
   )
 }
 
-/** Throw for a missing row: thrown misses aren't cached, so bots can't fill R2. Convert with nullIfNotFound. */
+/** missing row -> throw (misses not cached) -> nullIfNotFound -> null */
 export class PublicNotFoundError extends Error {
   constructor(what: string) {
     super(`${what} not found`)
@@ -35,7 +32,7 @@ export class PublicNotFoundError extends Error {
   }
 }
 
-/** Awaits a cached query, turning PublicNotFoundError into null. */
+/** PublicNotFoundError -> null */
 export async function nullIfNotFound<T>(query: Promise<T>): Promise<T | null> {
   try {
     return await query
@@ -45,11 +42,7 @@ export async function nullIfNotFound<T>(query: Promise<T>): Promise<T | null> {
   }
 }
 
-/**
- * Purges every cached public page and query. Call it in every admin write route, right after the admin check.
- * Next applies it once the handler returns (any status), so early returns are covered; an uncaught throw skips it.
- * Never throws; if the purge fails, pages refresh within PUBLIC_REVALIDATE_SECONDS.
- */
+/** admin write -> call after the admin check -> purge after the response (any status; uncaught throw skips it). never throws */
 export function revalidatePublicContent(reason: string): void {
   try {
     revalidatePath('/', 'layout')

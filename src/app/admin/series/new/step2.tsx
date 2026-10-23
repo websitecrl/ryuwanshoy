@@ -102,7 +102,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
     })
   }
 
-  /** Appends picked or dropped images in the browser's order (no filename sort: "day_two" sorts wrong). */
+  /** files -> local pages, browser order (no filename sort) */
   async function handleFiles(files: File[]) {
     const imageFiles = keepImageFiles(files)
     if (!imageFiles.length) return

@@ -8,12 +8,7 @@ import type { DraftPreview, DeleteDraftsResult } from '@/lib/drafts'
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 
-/**
- * Bulk delete of every draft. Opening the dialog loads a fresh preview (the
- * page's count may be stale, and the admin must see exactly what will be
- * deleted); the confirm button stays disabled until that preview is in, and
- * the server deletes only the ids that were shown.
- */
+/** open -> fresh preview -> confirm -> server deletes only the shown ids */
 export default function DeleteAllDraftsButton({ count }: { count: number }) {
   const router = useRouter()
   const [preview, setPreview]     = useState<DraftPreview | null>(null)
@@ -35,10 +30,9 @@ export default function DeleteAllDraftsButton({ count }: { count: number }) {
     }
   }
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> dialog stays open with error
   async function handleDeleteAll() {
     if (!preview) return
-    // Send back exactly what was shown; the server deletes only those.
     const res = await fetch('/api/drafts', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },

@@ -5,10 +5,7 @@ import { requireAdmin } from '@/lib/require-admin'
 
 export const dynamic = 'force-dynamic'
 
-// GET: admin bell feed.
-// { notifications: (comment | like)[] newest first, feedbackUnread: number }
-// Comments live on a series or a post (chapters have none), so the label
-// target is the series title or the post title.
+// admin bell -> { notifications: (comment | like)[] newest first, feedbackUnread }
 export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

@@ -8,19 +8,19 @@ import { isProfane } from '@/lib/profanity'
 import { isCursor, readLimit } from '@/lib/cursor'
 import { serverError } from '@/lib/api-errors'
 
-// A comment is on a series or a post (chapter_id is a leftover and no longer accepted).
+// target: series or post (chapter_id no longer accepted)
 type CommentTarget = {
   seriesId?: string | null
   postId?:   string | null
 }
 
-// Top-level comments per page. Replies of those comments always come along.
+// top-level per page (+ their replies)
 const PAGE_SIZE = 30
 const MAX_PAGE_SIZE = 50
 
 const COMMENT_FIELDS = 'id, name, content, created_at, updated_at, parent_id'
 
-/** True only for a published series or an existing post, so hidden content can't get comments by guessed id. */
+/** published series or existing post only */
 async function isPublicTarget({ seriesId, postId }: CommentTarget): Promise<boolean> {
   if (seriesId) {
     const { data } = await supabaseAdmin
@@ -42,7 +42,7 @@ async function isPublicTarget({ seriesId, postId }: CommentTarget): Promise<bool
   return true
 }
 
-/** series_id XOR post_id, each a uuid; null otherwise. */
+/** series_id XOR post_id (uuid) -> target, else null */
 function readTarget(seriesId: unknown, postId: unknown): CommentTarget | null {
   const s = seriesId ? seriesId : null
   const p = postId ? postId : null
@@ -52,9 +52,7 @@ function readTarget(seriesId: unknown, postId: unknown): CommentTarget | null {
   return { seriesId: s as string | null, postId: p as string | null }
 }
 
-// GET ?series_id= | ?post_id= [&before=<cursor>] [&limit=1..50]
-// One page of top-level comments, newest first, with all their replies: { comments, total, nextCursor }.
-// total is only counted on the first page.
+// GET ?series_id|post_id [&before][&limit] -> top-level newest first + replies -> { comments, total (page 1 only), nextCursor }
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const target = readTarget(searchParams.get('series_id'), searchParams.get('post_id'))
@@ -79,7 +77,7 @@ export async function GET(req: NextRequest) {
   const targetColumn = target.seriesId ? 'series_id' : 'post_id'
   const targetId = (target.seriesId ?? target.postId) as string
 
-  // One extra row tells us whether an older page exists.
+  // +1 row -> older page exists?
   let topQuery = supabaseAdmin
     .from('comments')
     .select(COMMENT_FIELDS)
@@ -160,7 +158,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Not found.' }, { status: 404 })
   }
 
-  // Replies only to a top-level comment on the same target; anything else would never be shown.
+  // reply -> top-level parent on the same target only
   if (parentId) {
     const { data: parent, error: parentError } = await supabaseAdmin
       .from('comments')

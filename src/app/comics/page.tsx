@@ -24,12 +24,12 @@ export async function generateMetadata() {
 
 export const revalidate = 60
 
-// Throws on error so a failed read is never cached. Bump the version when the shape changes.
+// error -> throw -> not cached. bump version when the shape changes
 const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   const supabase = createPublicClient()
 
   const [seriesRes, pagesRes] = await Promise.all([
-    // chapters(count): one number per series; no !inner, so series with 0 chapters still show.
+    // chapters(count) per series; no !inner -> 0-chapter series still show
     supabase
       .from('series')
       .select('*, chapters(count)')

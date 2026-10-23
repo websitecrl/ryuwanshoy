@@ -1,10 +1,8 @@
-// In the (home) route group (no effect on the URL) so its loading.tsx
-// skeleton, which mirrors the home layout, only shows for "/".
+// (home) group -> skeleton only on "/"
 export default function Loading() {
   return (
     <div className="flex flex-col gap-10 pb-16">
 
-      {/* Hero skeleton — full width, 300px, no border radius */}
       <div style={{ height: 300, width: '100%', background: 'var(--ryu-surface-3)', animation: 'pulse 2s infinite' }} />
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 20px', width: '100%' }}

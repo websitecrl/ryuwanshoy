@@ -153,8 +153,7 @@ export default function SettingsPage() {
     const file = e.target.files?.[0]; if (!file) return
     setUploadingLogo(true)
     try {
-      // Logo only ever renders small — 800px is generous. A transparent logo
-      // stays PNG (compressImage checks the pixels), so it never flattens to black.
+      // logo shows small -> 800px; transparent stays PNG
       const imageBase64 = await compressImage(file, { maxDimension: 800 })
 
       const res  = await fetch('/api/upload-logo', {

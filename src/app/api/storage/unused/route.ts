@@ -6,11 +6,10 @@ import { deleteUnusedFiles, findUnusedFiles } from '@/lib/storage-cleanup'
 
 export const dynamic = 'force-dynamic'
 
-// Most keys one DELETE may carry; matches one R2 DeleteObjects batch.
+// one R2 DeleteObjects batch
 const MAX_KEYS = 1000
 
-// Admin only. Read only: lists files in the public bucket nothing uses.
-//   → { files: [{ key, size, lastModified }], totalBytes, scannedCount, usedCount }
+// admin, read only -> { files, totalBytes, scannedCount, usedCount }
 export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -22,9 +21,7 @@ export async function GET() {
   }
 }
 
-// Admin only. Body { keys: string[] } from a previous GET. The server scans
-// again and deletes only keys that are still unused (see deleteUnusedFiles).
-//   → { deleted, failed, skipped, freedBytes }
+// admin. { keys } from GET -> rescan -> delete still-unused -> { deleted, failed, skipped, freedBytes }
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

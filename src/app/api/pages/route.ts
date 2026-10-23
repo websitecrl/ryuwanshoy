@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
 
-    // Spreads are ~2× the size of a single page before processing
+    // spreads ~2x a single page
     const MAX_SIZE = body.is_spread ? 100_000_000 : 34_000_000
     if (body.imageBase64 && body.imageBase64.length > MAX_SIZE) {
       return NextResponse.json(
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
-    // Check the chapter first, so a bad id doesn't orphan an upload.
+    // chapter check first -> no orphaned upload
     const { data: chapter, error: chapterError } = await supabaseAdmin
       .from('chapters')
       .select('id')
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // page_number is assigned here (max + 1), never by the client: client numbers go stale after a delete.
+    // page_number = max + 1 here, never from the client
     const { data: last, error: lastError } = await supabaseAdmin
       .from('pages')
       .select('page_number')
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
     let imageUrl: string
     try {
-      // Uploaded as sent (no server resize on Workers), under a fresh UUID key.
+      // uploaded as sent, fresh UUID key
       imageUrl = await uploadToR2(body.imageBase64, 'pages')
     } catch (err) {
       if (err instanceof InvalidImageError) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      // Remove the orphaned upload before reporting the failure.
+      // insert failed -> remove the upload
       try {
         await deleteFromR2(imageUrl)
       } catch (cleanupErr) {

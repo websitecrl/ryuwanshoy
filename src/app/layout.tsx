@@ -8,12 +8,7 @@ import { Toaster } from 'sonner'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
 import { AGE_INIT_SCRIPT } from '@/lib/age'
 
-// metadataBase turns relative image URLs (/og-default.png) into absolute
-// ones — Facebook and X ignore relative og:image URLs.
-// The openGraph/twitter images are the share-card fallback for any page
-// that doesn't set its own. Next merges metadata shallowly: a page that
-// defines `openGraph` replaces this whole object, so it must list its own
-// images.
+// metadataBase -> absolute og:image URLs. a page that sets openGraph replaces this object -> list its images
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'),
   openGraph: {
@@ -38,9 +33,7 @@ export default async function RootLayout({ children,}: Readonly<{
 
   const settings = await getSettings()
   return (
-    // suppressHydrationWarning: THEME_INIT_SCRIPT adds `dark` and
-    // AGE_INIT_SCRIPT adds data-age-confirmed to <html> before React hydrates,
-    // so its attributes intentionally differ from the server's.
+    // theme + age init scripts change <html> before hydration
     <html
       lang="en"
       className={`${fredoka.variable} h-full antialiased`}
