@@ -2,6 +2,7 @@ import 'server-only'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
+import { serverError } from '@/lib/api-errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,6 +91,6 @@ export async function POST() {
     .update({ is_read: true })
     .or('is_read.eq.false,is_read.is.null')
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return serverError('POST /api/notifications', error, 'Failed to mark as read.')
   return NextResponse.json({ ok: true })
 }

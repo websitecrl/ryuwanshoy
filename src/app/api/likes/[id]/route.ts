@@ -1,6 +1,7 @@
 import 'server-only'
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { serverError } from '@/lib/api-errors'
 import { requireAdmin } from '@/lib/require-admin'
 
 export async function DELETE(
@@ -17,6 +18,6 @@ export async function DELETE(
     .delete()
     .eq('id', id)
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) return serverError('DELETE /api/likes/[id]', error, 'Failed to delete like.')
   return NextResponse.json({ success: true })
 }

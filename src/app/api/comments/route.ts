@@ -200,7 +200,7 @@ export async function POST(req: NextRequest) {
       .select('id, parent_id, series_id, post_id')
       .eq('id', parentId)
       .maybeSingle()
-    if (parentError) return NextResponse.json({ error: parentError.message }, { status: 500 })
+    if (parentError) return serverError('POST /api/comments', parentError, 'Failed to post reply.')
     const sameTarget = target.seriesId
       ? parent?.series_id === target.seriesId
       : parent?.post_id === target.postId

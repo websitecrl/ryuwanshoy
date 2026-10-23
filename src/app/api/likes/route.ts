@@ -2,6 +2,7 @@ import 'server-only'
 import { supabaseAdmin } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from "@/lib/rate-limit-cf"
+import { serverError } from '@/lib/api-errors'
 
 // GET — get like count + check if token already liked
 export async function GET(req: NextRequest) {
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     .upsert({ post_id, like_token }, { onConflict: 'post_id,like_token', ignoreDuplicates:true })
 
    if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 })
+    return serverError('POST /api/likes', insertError, 'Failed to save like.')
    }
 
    const { count } = await supabaseAdmin
