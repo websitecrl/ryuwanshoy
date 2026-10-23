@@ -71,7 +71,6 @@ export default function AdminLoginPage() {
         }
       `}</style>
 
-      {/* Full-screen background */}
       <div style={{
         minHeight: '100vh',
         width: '100%',
@@ -82,7 +81,6 @@ export default function AdminLoginPage() {
         padding: '48px 24px',
       }}>
 
-        {/* Background image */}
         <div style={{
           position: 'fixed',
           inset: 0,
@@ -93,7 +91,6 @@ export default function AdminLoginPage() {
           zIndex: 0,
         }} />
 
-        {/* Dark overlay */}
         <div style={{
           position: 'fixed',
           inset: 0,
@@ -101,7 +98,6 @@ export default function AdminLoginPage() {
           zIndex: 1,
         }} />
 
-        {/* Centered form card */}
         <div
           className={shake ? 'shake' : ''}
           style={{
@@ -130,7 +126,6 @@ export default function AdminLoginPage() {
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-            {/* Email */}
             <div className="fade-up fade-up-1">
               <label style={{ display: 'block', fontSize: 12.5, fontWeight: 600, marginBottom: 6, color: 'var(--ryu-text)' }}>
                 Email <span style={{ color: 'var(--ryu-primary)' }}>*</span>
@@ -165,7 +160,6 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Password */}
             <div className="fade-up fade-up-2">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <label style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ryu-text)' }}>
@@ -224,14 +218,12 @@ export default function AdminLoginPage() {
               </div>
             </div>
 
-            {/* Error */}
             {error && (
               <p style={{ fontSize: 13.5, textAlign: 'center', color: 'var(--ryu-danger)', margin: 0 }}>
                 {error}
               </p>
             )}
 
-            {/* Submit */}
             <div className="fade-up fade-up-3" style={{ paddingTop: 4 }}>
               <button
                 type="submit" disabled={isLoading}
@@ -264,7 +256,6 @@ export default function AdminLoginPage() {
             </div>
           </form>
 
-          {/* Footer */}
           <div
             className="fade-up fade-up-4"
             style={{

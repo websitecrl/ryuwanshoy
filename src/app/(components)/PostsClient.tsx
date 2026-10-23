@@ -18,18 +18,13 @@ type Post = {
 
 type Props = {
   initialPosts: Post[];
-  /** Where "Load more" continues from; null when the first page was all. */
+  /** null -> no more pages */
   initialCursor: string | null;
   activeType?: string;
 };
 
 export default function PostsClient({ initialPosts, initialCursor, activeType }: Props) {
-  // No realtime on purpose (free plan 200 connection cap, refetch burst on
-  // every admin save). Post data is cached and admin saves purge it, so a
-  // reload shows new posts. See docs/caching.md.
-  // The first page (POSTS_PAGE_SIZE) comes from the cached server render;
-  // "Load more" appends the next page from GET /api/posts. The parent keys
-  // this component by type, so a filter change starts over from props.
+  // no realtime. first page: cached render -> "Load more" -> GET /api/posts
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [cursor, setCursor] = useState<string | null>(initialCursor);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -45,7 +40,7 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
       if (!res.ok) throw new Error("Failed to load more posts.");
       const json = await res.json() as { data: Post[]; nextCursor: string | null };
       setPosts(prev => {
-        // Skip anything already shown (e.g. if posts shifted between loads).
+        // skip already shown
         const seen = new Set(prev.map(p => p.id));
         return [...prev, ...json.data.filter(p => !seen.has(p.id))];
       });
@@ -59,7 +54,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
 
   return (
     <>
-      {/* ── Empty state ──────────────────────────────────────────── */}
       {posts.length === 0 && (
         <div className="max-w-400 mx-auto px-12 py-24 text-center">
           <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
@@ -77,7 +71,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
         </div>
       )}
 
-      {/* ── Masonry grid ─────────────────────────────────────────── */}
       {posts.length > 0 && (
         <div className="max-w-400 mx-auto px-12 py-6">
           <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
@@ -97,7 +90,6 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
                   (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--ryu-border)';
                 }}
               >
-                {/* Image */}
                 <div className="relative w-full" style={{ background: 'var(--ryu-surface-2)' }}>
                   <Image
                     src={post.image_url}
@@ -110,16 +102,13 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
                   />
                 </div>
 
-                {/* Body */}
                 <div className="p-3.5 flex flex-col gap-2">
-                  {/* Date */}
                   {post.created_at && (
                     <span className="text-[11px] whitespace-nowrap" style={{ color: 'var(--ryu-text-muted)' }}>
                       {formatDate(post.created_at)}
                     </span>
                   )}
 
-                  {/* Title */}
                   {post.title && (
                     <p
                       className="text-sm font-semibold leading-snug line-clamp-2"

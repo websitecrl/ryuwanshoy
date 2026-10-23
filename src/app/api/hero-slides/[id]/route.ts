@@ -7,7 +7,6 @@ import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteManyFromR2 } from '@/lib/r2'
 
-// ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,10 +24,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  // Only touch fields actually sent in the body — this is a PATCH, not a
-  // full replace. Writing every column unconditionally (the old behavior)
-  // meant editing just the headline silently wiped banner_image and
-  // chapter_id to null whenever they weren't included in the request.
+  // PATCH: only fields sent (writing every column wiped banner_image and chapter_id)
   const updatable = ['series_id', 'chapter_id', 'banner_image', 'headline', 'is_visible', 'order_index'] as const
   const payload: TablesUpdate<'hero_slides'> = {}
   for (const field of updatable) {
@@ -53,7 +49,6 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// ─── DELETE — admin only ──────────────────────────────────────────────────────
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -64,7 +59,6 @@ export async function DELETE(
 
   const { id } = await params
 
-  // Fetch banner_image first so we can clean up R2
   const { data: slide, error: fetchError } = await supabaseAdmin
     .from('hero_slides')
     .select('banner_image')
@@ -84,8 +78,7 @@ export async function DELETE(
     return serverError('DELETE /api/hero-slides/[id]', error, 'Failed to delete slide.')
   }
 
-  // Clean up R2 after DB delete succeeds. Awaited — Workers can cut off
-  // promises still pending after the response is sent.
+  // DB delete ok -> awaited R2 cleanup
   if (slide.banner_image) {
     const { failed } = await deleteManyFromR2([slide.banner_image])
     if (failed.length) {

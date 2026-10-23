@@ -13,7 +13,7 @@ export type LocalPage = {
   is_spread?: boolean
 }
 
-// All Step 1 form data — lifted to WizardShell so it persists across step changes
+// Step 1 form data, kept across steps
 export type SeriesFormData = {
   title: string
   slug: string

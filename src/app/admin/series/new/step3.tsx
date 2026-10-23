@@ -10,14 +10,13 @@ interface Step3Props {
   seriesData: SeriesFormData
   uploadedPages: LocalPage[]
   saving: SaveState
-  /** A save already created rows — going back is locked so edits can't drift from them. */
+  /** rows exist -> back is locked */
   hasSavedRows: boolean
   onBack: () => void
   onSaveDraft: () => void
   onPublish: () => void
 }
  
-// ── Scroll viewer — pages stacked vertically ───────────────────────────────
  
 function ScrollViewer({ pages }: { pages: LocalPage[] }) {
   if (pages.length === 0) {
@@ -48,9 +47,7 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
   )
 }
 
-// ── Flip viewer — 2 pages side by side, paginated ─────────────────────────
  
-// Replace the entire FlipViewer function in Step3.tsx with this
 
 function FlipViewer({ pages }: { pages: LocalPage[] }) {
   const [spread, setSpread]       = useState(0)
@@ -58,7 +55,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
   const [direction, setDirection] = useState<'next' | 'prev'>('next')
   const [showNext, setShowNext]   = useState(false)
 
-  // Spread pages expand into two leaves — left half + right half
   type Leaf = LocalPage & { spreadSide: 'left' | 'right' | null }
   const leaves: Leaf[] = pages.flatMap((page): Leaf[] =>
     page.is_spread
@@ -92,7 +88,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
     ? leaves[(spread + 1) * 2 + 1]
     : leaves[(spread - 1) * 2]
 
-  // CSS sizes so the open book fits the viewport (0.8108 ≈ the old 420 / 518)
   const PAGE_H = 'clamp(260px, calc(100dvh - 440px), 518px)'
   const PAGE_W = `calc(${PAGE_H} * 0.8108)`
 
@@ -121,7 +116,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
       <div style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
 
-        {/* Spread label */}
         <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace', letterSpacing: 1 }}>
           P{String(spread * 2 + 1).padStart(2, '0')}
           {rightLeaf ? ` — P${String(spread * 2 + 2).padStart(2, '0')}` : ''}
@@ -131,7 +125,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'stretch' }}>
 
-        {/* ── LEFT PAGE ── */}
         <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: 'var(--ryu-surface-3)', borderRadius: '6px 0 0 6px', overflow: 'hidden', flexShrink: 0 }}>
           {leftLeaf ? (
             <div style={{
@@ -160,10 +153,8 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
           )}
         </div>
 
-          {/* ── SPINE ── */}
           <div style={{ width: 8, flexShrink: 0, background: 'linear-gradient(to right, var(--ryu-surface-2) 0%, var(--ryu-border) 30%, var(--ryu-border) 70%, var(--ryu-surface-2) 100%)', boxShadow: '-3px 0 10px color-mix(in srgb, var(--ryu-shadow) 60%, transparent), 3px 0 10px color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', zIndex: 3 }} />
 
-          {/* ── RIGHT PAGE ── */}
           <div style={{ position: 'relative', width: PAGE_W, height: PAGE_H, background: 'var(--ryu-surface-3)', borderRadius: '0 6px 6px 0', overflow: 'hidden', flexShrink: 0 }}>
             {rightLeaf ? (
               <div style={{
@@ -196,7 +187,6 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         </div>
 
-        {/* Controls */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
           <button onClick={() => go('prev')} disabled={spread === 0 || flipping}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? 'var(--ryu-surface-2)' : 'var(--ryu-surface-1)', color: spread === 0 ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', border: '1px solid var(--ryu-border)', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
@@ -220,13 +210,11 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
   )
 }
 
-// ── Step 3 ─────────────────────────────────────────────────────────────────
  
 export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows, onBack, onSaveDraft, onPublish }: Step3Props) {
   const [mode, setMode] = useState<'scroll' | 'flip'>('scroll')
   const publishing = saving !== null
 
-  // Pages a previous save attempt didn't finish — Publish / Save as draft retry these only
   const failedPages  = uploadedPages.flatMap((p, i) => p.error ? [i + 1] : [])
   const pendingCount = uploadedPages.filter(p => !p.uploaded).length
 
@@ -244,10 +232,8 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
     <>
       <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
  
-        {/* LEFT — reader preview */}
         <div className="flex-1 space-y-5">
 
-          {/* Partial save — rows exist unpublished, some pages still need uploading */}
           {hasSavedRows && !publishing && pendingCount > 0 && (
             <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
               <strong>Nothing is published yet.</strong>{' '}
@@ -257,9 +243,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
             </div>
           )}
 
-          {/* Reader preview */}
           <Card>
-            {/* Header row */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--ryu-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>👁</div>
@@ -268,7 +252,6 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
                   <p style={{ fontSize: 11, color: 'var(--ryu-text-3)', margin: 0 }}>What your audience sees · {uploadedPages.length} pages</p>
                 </div>
               </div>
-              {/* Mode toggle */}
               <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 10, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
                 <button onClick={() => setMode('scroll')}
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
@@ -281,14 +264,12 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               </div>
             </div>
  
-            {/* Mode label */}
             <div style={{ marginBottom: 10, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace' }}>
               {mode === 'scroll'
                 ? '↕ Scroll mode — pages stacked vertically, like Webtoon'
                 : '⇆ Flip mode — 2 pages side by side, like an open book'}
             </div>
  
-            {/* Viewer */}
             {mode === 'scroll'
               ? <ScrollViewer pages={uploadedPages} />
               : <FlipViewer   pages={uploadedPages} />
@@ -297,11 +278,9 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
 
         </div>
  
-        {/* RIGHT — sticky panel */}
         <div className="w-72 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <div className="space-y-4">
  
-            {/* Pre-flight checklist */}
             <Card>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Pre-flight</div>
@@ -320,11 +299,9 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               ))}
             </Card>
  
-            {/* Series summary */}
             <Card>
               <CardLabel n="01" title="Series summary" />
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 12 }}>
-                {/* Cover */}
                 <div style={{ width: 72, height: 100, borderRadius: 6, overflow: 'hidden', flexShrink: 0, position: 'relative', background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
                   {seriesData.coverPreview
                     ? <Image src={seriesData.coverPreview} alt="Cover" fill className="object-cover" />
@@ -368,7 +345,6 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
       </div>
  
       <div style={BOTTOM_BAR}>
-        {/* Hide back + draft buttons while publishing; back is locked once rows exist */}
         {!publishing && !hasSavedRows && (
           <button onClick={onBack}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: 'pointer' }}>

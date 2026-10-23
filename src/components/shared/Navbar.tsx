@@ -20,9 +20,7 @@ type NavbarProps = {
 export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
-  // A stale/broken logo_url (e.g. from before an R2 config fix) would
-  // otherwise render as a permanent broken-image icon — fall back to the
-  // text wordmark instead once the image actually fails to load.
+  // logo_url broken -> text wordmark
   const [logoFailed, setLogoFailed] = useState(false)
 
   return (
@@ -39,11 +37,9 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         style={{ maxWidth: 1600 }}
       >
 
-    {/* Logo */}
     <Link href="/" className="font-comic shrink-0 flex items-center overflow-hidden group" style={{ letterSpacing: '0.02em' }}>
       {logoUrl && !logoFailed ? (
         <>
-          {/* Logo shifts left on hover */}
           <img
             src={logoUrl}
             alt={siteTitle ?? 'Logo'}
@@ -56,7 +52,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             }}
             className="group-hover:-translate-x-1"
           />
-          {/* Title slides in from the right */}
           <span
             className="font-comic max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 ease-in-out whitespace-nowrap"
             style={{
@@ -91,7 +86,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
       )}
     </Link>
 
-        {/* Desktop links */}
         <nav className="hidden md:flex items-center gap-8 flex-1 ml-10">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href))
@@ -112,8 +106,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
           })}
         </nav>
 
-        {/* Right cluster: theme toggle, then Support (desktop) or hamburger (mobile).
-            Toggle sits in the same row on every breakpoint so it's on every public page. */}
+        {/* theme toggle on every breakpoint */}
         <div className="flex items-center gap-1 md:gap-4">
           <ThemeToggle className="h-11 px-1" />
 
@@ -150,7 +143,7 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
             </Link>
           </div>
 
-          {/* Mobile hamburger — 44px hit area (icon stays 22px) */}
+          {/* 44px hit area */}
           <button
             className="md:hidden flex h-11 w-11 items-center justify-center transition-colors"
             style={{ color: 'var(--ryu-text-2)' }}
@@ -163,7 +156,6 @@ export default function Navbar({ siteTitle, logoUrl }: NavbarProps) {
         </div>
       </div>
 
-      {/* Mobile drawer */}
       {menuOpen && (
         <div
           style={{

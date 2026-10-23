@@ -14,9 +14,7 @@ async function getDashboardData() {
   const [seriesRes, draftsRes, draftSeriesRes] = await Promise.all([
     supabase
       .from('series')
-      // Dashboard's "Series" box is the published-list preview — drafts
-      // belong only in the Drafts box below. Without this, a draft series
-      // (like "sdad") showed up here too, indistinguishable from live ones.
+      // published only -> drafts go to the Drafts box
       .select('id, title, slug, genre, status, cover_image, created_at')
       .eq('is_published', true)
       .order('created_at', { ascending: false })
@@ -33,9 +31,7 @@ async function getDashboardData() {
       .eq('is_draft', true)
       .order('created_at', { ascending: false })
       .limit(5),
-    // Draft series (not yet published at all) belong in the Drafts box
-    // too — they were previously missing from the dashboard entirely
-    // once excluded from the Series box above.
+    // draft series -> Drafts box
     supabase
       .from('series')
       .select('id, title, created_at')
@@ -60,7 +56,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8 space-y-6 animate-page-in">
-      {/* ── Header ──────────────────────────────────────────────────── */}
 <div className="flex items-center justify-between gap-4">
   <div>
     <div
@@ -86,10 +81,8 @@ export default async function DashboardPage() {
   <NotificationBell />
 </div>
 
-      {/* ── Top row — Hero Banner + Right column ────────────────────── */}
       <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 280px' }}>
 
-        {/* Hero Banner Manager */}
         <div
           className="rounded-xl overflow-hidden"
           style={{
@@ -119,10 +112,8 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Right column */}
         <div className="flex flex-col gap-4">
 
-          {/* Live Status */}
           <div
             className="rounded-xl p-5"
             style={{
@@ -163,12 +154,10 @@ export default async function DashboardPage() {
             </a>
           </div>
 
-          {/* Quick Create — client component for hover effects */}
           <DashboardQuickCreate />
         </div>
       </div>
 
-      {/* ── Bottom row — Series + Drafts (client component) ─────────── */}
       <DashboardContent
         series={series.map(s => ({
           id:          s.id,

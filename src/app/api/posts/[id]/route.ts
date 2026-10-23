@@ -7,8 +7,6 @@ import { uploadToR2, deleteManyFromR2, InvalidImageError } from '@/lib/r2'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
-// ─── GET /api/posts/[id] ──────────────────────────────────────────────────────
-// Admin only
 export async function GET(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -36,8 +34,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   }
 }
 
-// ─── PATCH /api/posts/[id] ────────────────────────────────────────────────────
-// Admin only
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -84,9 +80,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
           return NextResponse.json({ error: 'Image too large'}, { status: 413 })
         }
 
-        // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
-        // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
-        // currently broken on this deployment. See src/lib/image-processing.ts.
         update.image_url = await uploadToR2(body.imageBase64, 'posts')
       } catch (uploadErr) {
         if (uploadErr instanceof InvalidImageError) {
@@ -110,10 +103,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       .select()
       .single()
 
-    // R2 cleanup is awaited (Workers can cut off promises still pending after
-    // the response) and happens only once we know which file the row points
-    // at: the old image after a successful update, the new upload after a
-    // failed one.
+    // ok -> delete old image; failed -> delete new upload (awaited)
     const orphan = error ? update.image_url : oldImageUrl
     if (orphan) {
       const { failed } = await deleteManyFromR2([orphan])
@@ -131,8 +121,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   }
 }
 
-// ─── DELETE /api/posts/[id] ───────────────────────────────────────────────────
-// Admin only
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -161,7 +149,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
 
     if (deleteErr) throw deleteErr
 
-    // Awaited — Workers can cut off promises still pending after the response.
+    // awaited (Workers drop pending promises)
     if (post.image_url) {
       const { failed } = await deleteManyFromR2([post.image_url])
       if (failed.length) {

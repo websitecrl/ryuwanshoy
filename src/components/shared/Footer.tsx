@@ -29,7 +29,7 @@ export default function Footer({
 }: FooterProps) {
   const currentYear = new Date().getFullYear()
   const pathname = usePathname()
-  // Tell the feedback form which page the reader was on (not when already there).
+  // ?from= -> feedback form knows the page
   const feedbackHref = pathname && pathname !== '/feedback'
     ? `/feedback?from=${encodeURIComponent(pathname)}`
     : '/feedback'
@@ -42,13 +42,11 @@ export default function Footer({
         background: 'var(--ryu-surface-1)',
       }}
     >
-      {/* minHeight, not height, + flex-wrap: on narrow phones the row wraps
-          instead of overflowing. Desktop stays one 80px row. */}
+      {/* minHeight + wrap -> no overflow on narrow phones */}
       <div
         className="mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-8 py-4"
         style={{ maxWidth: 1600, minHeight: 80 }}
       >
-        {/* Left — copyright + social icons */}
         <div className="flex items-center gap-5">
           <p
             className="font-reader"
@@ -66,7 +64,6 @@ export default function Footer({
           />
         </div>
 
-        {/* Right — nav links (hidden on mobile) + Feedback (always shown) */}
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex items-center gap-6">
             {footerLinks.map((link) => (
@@ -82,13 +79,10 @@ export default function Footer({
               </Link>
             ))}
           </nav>
-          {/* A soft pill, not a plain link like the nav: it's the one place
-              readers report bugs, so it should be findable without shouting.
-              Text uses --ryu-text (not the orange) so it passes contrast on
-              the soft tint in both themes. */}
+          {/* soft pill, --ryu-text for contrast */}
           <Link
             href={feedbackHref}
-            prefetch={false} // static page; avoid prefetching a separate ?from= URL per page
+            prefetch={false}
             className="font-reader inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5
                        text-[13px] font-semibold transition-colors
                        border-[var(--ryu-border)] bg-[var(--ryu-primary-soft)] text-[var(--ryu-text)]

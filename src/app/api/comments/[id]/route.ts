@@ -6,8 +6,7 @@ import { isProfane } from '@/lib/profanity'
 import { rateLimit } from '@/lib/rate-limit-cf'
 import { serverError } from '@/lib/api-errors'
 
-// ─── PATCH /api/comments/[id] ─────────────────────────────────────────────────
-// Edit a comment — requires matching edit_token
+// edit -> edit_token must match
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,7 +26,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
-  // Authorization first
+  // auth first
   const { data: comment, error: fetchError } = await supabaseAdmin
     .from('comments')
     .select('edit_token')
@@ -41,7 +40,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
   }
 
-  // Validation second
+  // then validate
   if (!content?.trim()) {
     return NextResponse.json({ error: 'Content is required.' }, { status: 400 })
   }
@@ -66,8 +65,7 @@ export async function PATCH(
   return NextResponse.json(data)
 }
 
-// ─── DELETE /api/comments/[id] ────────────────────────────────────────────────
-// Admin can delete freely; non-admin must supply matching edit_token
+// delete -> admin, or matching edit_token
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -76,14 +74,12 @@ export async function DELETE(
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  // Both sides must be set: undefined === undefined would make an anonymous
-  // caller "admin" if ADMIN_USER_ID were missing from the environment.
+  // both must be set (undefined === undefined)
   const adminId = process.env.ADMIN_USER_ID
   const isAdmin = !!user && !!adminId && user.id === adminId
 
   if (!isAdmin) {
-    // Admin moderation (e.g. bulk deletes from NotificationBell) skips the limit;
-    // everyone else is limited before any DB access.
+    // admin -> no limit; others -> rate limit before any DB call
     const limited = await rateLimit(req, 'COMMENT_EDIT_LIMITER')
     if (limited) return limited
 
@@ -92,7 +88,6 @@ export async function DELETE(
       const body = await req.json()
       edit_token = body?.edit_token
     } catch {
-      // No body sent — treat as unauthorized
     }
 
     if (!edit_token) {

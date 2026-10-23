@@ -6,7 +6,7 @@ type Post = {
   post_type: string | null; created_at: string | null
 }
 
-// Tokens in globals.css (--ryu-tag-*), so the tags follow dark mode.
+// --ryu-tag-* tokens -> dark mode
 const typeColors: Record<string, { bg: string; color: string }> = {
   sketch:   { bg: 'var(--ryu-tag-sketch-bg)',   color: 'var(--ryu-tag-sketch-fg)' },
   wip:      { bg: 'var(--ryu-tag-wip-bg)',      color: 'var(--ryu-tag-wip-fg)' },
@@ -18,7 +18,6 @@ const typeColors: Record<string, { bg: string; color: string }> = {
 export default function SketchbookPreview({ posts }: { posts: Post[] }) {
   return (
     <section>
-      {/* Section head */}
       <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
       <div style={{ width: 5, height: 26, background: 'var(--ryu-primary)', borderRadius: 2, flexShrink: 0 }} />
       <span className="font-comic" style={{ fontSize: 22, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ryu-text)' }}>
@@ -57,7 +56,6 @@ export default function SketchbookPreview({ posts }: { posts: Post[] }) {
                   transition: 'border-color .15s, transform .15s',
                 }}
               >
-                {/* Image */}
                 <div className="relative w-full" style={{ aspectRatio: '4/3', background: '#1a1a2e' }}>
                   <Image
                     src={post.image_url}
@@ -67,7 +65,6 @@ export default function SketchbookPreview({ posts }: { posts: Post[] }) {
                   />
                 </div>
 
-                {/* Body */}
                 <div style={{ padding: '12px 14px 14px' }}>
                   <div className="flex items-center gap-2" style={{ marginBottom: 6 }}>
                     {typeLabel && (

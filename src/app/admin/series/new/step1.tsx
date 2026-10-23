@@ -50,11 +50,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
     if (f?.type.startsWith('image/')) handleCoverFile(f)
   }
 
-  /**
-   * Validates, then confirms the slug is free so a clash shows up here rather
-   * than at Publish. Nothing is saved on "Next"; "Save as draft" creates the
-   * series row via the wizard.
-   */
+  /** validate -> slug free? -> next (nothing saved yet) */
   async function proceed(destination: 'draft' | 'next') {
     if (!data.title.trim()) { toast.error('Title is required'); return }
     if (!data.slug.trim())  { toast.error('Slug is required');  return }
@@ -67,7 +63,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
     else onNext()
   }
 
-  /** @returns true = free, false = taken, null = couldn't check */
+  /** true free, false taken, null unknown */
   async function checkSlug(): Promise<boolean | null> {
     const slug = data.slug.trim().toLowerCase()
     if (!slug) return null
@@ -92,10 +88,8 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
     <>
       <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
 
-        {/* LEFT — 01 Title & link, 02 Story, 04 Access */}
         <div className="flex-1 space-y-5">
 
-          {/* 01 Title & link */}
           <Card>
             <CardLabel n="01" title="Title & link" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -130,7 +124,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             </div>
           </Card>
 
-          {/* 02 Story */}
           <Card>
             <CardLabel n="02" title="Story" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -165,7 +158,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             </div>
           </Card>
 
-          {/* 04 Access */}
           {process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED === 'true' && (
             <Card>
               <CardLabel n="04" title="Access" />
@@ -187,17 +179,15 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
         </div>
 
-        {/* RIGHT — 03 Artwork (sticky) */}
         <div className="w-80 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <Card>
             <CardLabel n="03" title="Artwork" />
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
 
-            {/* Cover uploader */}
             <label style={{ ...labelStyle, marginBottom: 8 }}>Cover <span style={{ color: 'var(--ryu-primary)' }}>*</span> <span style={{ float: 'right', fontSize: 10.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>460 × 640 px</span></label>
             {data.coverPreview ? (
               <div style={{ borderRadius: 10, border: '2px solid var(--ryu-primary)', overflow: 'hidden', background: 'var(--ryu-primary-soft)' }}>
-                {/* Sized to the viewport so a cover never pushes the page into scrolling */}
+                {/* sized to the viewport -> no page scroll */}
                 <div style={{ position: 'relative', height: 'min(444px, 34dvh)', width: 'calc(min(444px, 34dvh) * 0.71875)', margin: '0 auto' }}>
                   <Image src={data.coverPreview} alt="Cover" fill className="object-cover" />
                 </div>
@@ -215,7 +205,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
               </div>
             )}
 
-            {/* URL preview */}
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-2" style={{ color: 'var(--ryu-text-2)' }}>URL preview</div>
               <div style={{ background: 'var(--ryu-surface-3)', borderRadius: 8, padding: '9px 12px', fontFamily: 'var(--font-jetbrains-mono, monospace)', fontSize: 12, wordBreak: 'break-all', border: '1px solid var(--ryu-border)' }}>
@@ -224,7 +213,6 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
               </div>
             </div>
 
-            {/* Checklist */}
             <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px dashed var(--ryu-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase" style={{ color: 'var(--ryu-text-2)' }}>Checklist</div>

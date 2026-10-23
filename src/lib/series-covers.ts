@@ -1,11 +1,9 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-// Covers used to be keyed cover-{slug} (and cover-undefined whenever series
-// PATCH ran without a slug), so one legacy file can still back several
-// series. Deleting it for one series would break the others' covers.
+// old slug-keyed covers can back several series
 
-/** Object path of a cover URL — ignores origin and the old "?v=" suffix. */
+/** cover URL -> path (no origin, no "?v=") */
 function objectPath(url: string): string {
   try {
     return new URL(url).pathname
@@ -14,15 +12,7 @@ function objectPath(url: string): string {
   }
 }
 
-/**
- * Returns the covers in `coverUrls` that no series row (other than
- * `exceptSeriesId`) still points at — the ones safe to delete from R2.
- *
- * Call it AFTER deleting the owning rows, so rows deleted together don't
- * count as sharing with each other. One query for any number of covers,
- * which keeps bulk deletes under the Workers subrequest cap. If the lookup
- * fails it returns [] — orphaning a file beats breaking a live cover.
- */
+/** covers no other series uses -> safe to delete. call after deleting rows; lookup fails -> [] */
 export async function filterUnsharedCovers(
   coverUrls: string[],
   exceptSeriesId?: string

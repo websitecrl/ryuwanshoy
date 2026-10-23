@@ -1,9 +1,6 @@
-// Rules shared by the feedback form, the crash report button and
-// POST /api/feedback, so the browser and the server can't disagree.
-// The database enforces the same limits again
-// (20261009120000_create_feedback.sql, 20261009140000_feedback_device_drop_email.sql).
+// shared by form, crash report and POST /api/feedback (DB enforces the same limits)
 
-/** Kinds a reader can pick in the form. 'crash' is only sent by the error screen. */
+/** form kinds; 'crash' only from the error screen */
 export const FEEDBACK_FORM_KINDS = ['bug', 'idea', 'other'] as const
 export const FEEDBACK_KINDS = [...FEEDBACK_FORM_KINDS, 'crash'] as const
 
@@ -16,11 +13,7 @@ export const FEEDBACK_LABELS: Record<FeedbackKind, string> = {
   crash: 'Crash report',
 }
 
-/**
- * Where the reader noticed it. The form has two checkboxes (Web, Phone) and
- * at least one is required; ticking both is stored as 'both'. Required for
- * every form kind; crash reports don't ask (the user agent shows it).
- */
+/** Web/Phone checkboxes -> 'web' | 'phone' | 'both'; not asked on crashes */
 export const FEEDBACK_DEVICES = ['web', 'phone', 'both'] as const
 export type FeedbackDevice = (typeof FEEDBACK_DEVICES)[number]
 
@@ -38,10 +31,7 @@ export const FEEDBACK_LIMITS = {
   errorDigest: 100,
 } as const
 
-// A path on THIS site: "/" then not another "/" or "\" (which browsers treat
-// as another site), and no whitespace, control characters or backslashes
-// anywhere (browsers silently drop tabs/newlines, so "/<tab>/evil.com" would
-// otherwise become //evil.com).
+// "/" + not "/" or "\"; no whitespace/control chars ("/<tab>/evil.com" -> //evil.com)
 const SAFE_PATH = /^\/(?![/\\])[^\s\\\u0000-\u001f\u007f]*$/
 
 export function isFeedbackKind(value: unknown): value is FeedbackKind {
@@ -52,7 +42,7 @@ export function isFeedbackDevice(value: unknown): value is FeedbackDevice {
   return typeof value === 'string' && (FEEDBACK_DEVICES as readonly string[]).includes(value)
 }
 
-/** The two form checkboxes → the stored value (null when neither is ticked). */
+/** checkboxes -> stored value (null if none) */
 export function toFeedbackDevice(web: boolean, phone: boolean): FeedbackDevice | null {
   if (web && phone) return 'both'
   if (web) return 'web'
@@ -60,11 +50,7 @@ export function toFeedbackDevice(web: boolean, phone: boolean): FeedbackDevice |
   return null
 }
 
-/**
- * True only for a same-site path like "/comics/x/1?page=2".
- * Two layers: the strict pattern above, then a real URL parse that must stay
- * on the same origin. Used by the form, the API and the admin page.
- */
+/** pattern -> same-origin URL parse -> true */
 export function isSafeSitePath(value: unknown): value is string {
   if (typeof value !== 'string' || value.length > FEEDBACK_LIMITS.pageUrl || !SAFE_PATH.test(value)) {
     return false
@@ -76,12 +62,11 @@ export function isSafeSitePath(value: unknown): value is string {
   }
 }
 
-/** What the browser sends to POST /api/feedback (the user agent is read
- *  from the request header on the server, never from the body). */
+/** POST /api/feedback body (user agent from the header) */
 export type FeedbackPayload = {
   kind: FeedbackKind
   message: string
-  /** Required unless kind is 'crash'. */
+  /** required unless 'crash' */
   device?: FeedbackDevice
   pageUrl?: string
   errorMessage?: string

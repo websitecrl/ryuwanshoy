@@ -17,7 +17,6 @@ interface SeriesCardProps {
 export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
   const [bookmarked, setBookmarked] = useState(false)
 
-  // Read bookmark state from localStorage on mount
   useEffect(() => {
     setBookmarked(getBookmarkMap()[series.id] === true)
   }, [series.id])
@@ -32,9 +31,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
   const statusLabel = series.status === 'ongoing' ? 'Ongoing' : series.status === 'hiatus' ? 'Hiatus' : 'Completed'
   const metaLine = [series.genre, statusLabel, chapterLabel].filter(Boolean).join(' · ')
 
-  // The bookmark button sits NEXT TO the link, not inside it (a button inside
-  // a link is invalid HTML and confuses keyboard and screen reader users).
-  // It's positioned over the cover's top right corner.
+  // bookmark button next to the link, not inside (no button in a link)
   return (
     <div
       className="group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-200"
@@ -44,7 +41,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       }}
     >
     <Link href={`/comics/${series.slug}`} className="flex flex-1 flex-col gap-0">
-      {/* Cover */}
       <div
         className="relative overflow-hidden"
         style={{ aspectRatio: '460/640', backgroundColor: 'var(--ryu-surface-3)' }}
@@ -64,9 +60,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
         )}
       </div>
 
-      {/* Body */}
       <div className="flex flex-col gap-2 p-3">
-        {/* Title */}
         <p
           className="text-sm font-semibold leading-snug line-clamp-2"
           style={{
@@ -77,7 +71,7 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           {series.title}
         </p>
 
-        {/* Age rating badge — kept as a pill since it's a warning signal, not descriptive metadata */}
+        {/* age pill = warning */}
         {series.min_age != null && series.min_age > 0 && (
           <div className="flex items-center">
             <span
@@ -99,7 +93,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
           </div>
         )}
 
-        {/* Genre · status · chapter count — one consistent, plain-text treatment */}
         <p
           className="text-xs font-medium truncate"
           style={{
@@ -112,7 +105,6 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
       </div>
     </Link>
 
-      {/* Bookmark button */}
       <button
         type="button"
         onClick={toggleBookmark}

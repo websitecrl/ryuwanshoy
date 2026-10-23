@@ -10,8 +10,7 @@ export const metadata: Metadata = {
   description: 'Random drawings, WIPs, memes, and everything in between.',
 }
 
-// No ISR here: reading searchParams (?type=) makes the page HTML render per
-// request. The first page of posts is cached instead (getFirstPage), keyed by type.
+// per request (?type=); first page of posts cached
 
 const TYPE_FILTERS = [
   { value: undefined,  label: 'All' },
@@ -21,14 +20,7 @@ const TYPE_FILTERS = [
   { value: 'other',    label: 'Other' },
 ]
 
-/**
- * Cached FIRST page of posts for one filter (POSTS_PAGE_SIZE, newest first).
- * Later pages come from GET /api/posts via the "Load more" button.
- * @param type - from normalizePostType: a known type, or null for all. It is
- *   part of the cache key, so raw ?type= input would let anyone create
- *   unlimited cache entries.
- * @returns the posts plus nextCursor (null when there is nothing more)
- */
+/** cached first page per normalized type (raw ?type= could create unlimited keys) */
 const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string | null) => {
   const supabase = createPublicClient()
 
@@ -36,7 +28,7 @@ const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string
     .from('posts')
     .select(POST_LIST_FIELDS)
     .order('created_at', { ascending: false })
-    .limit(POSTS_PAGE_SIZE + 1) // one extra row tells us whether more exist
+    .limit(POSTS_PAGE_SIZE + 1)
 
   if (type) {
     query = query.eq('post_type', type)
@@ -52,9 +44,7 @@ const queryFirstPage = cachedPublicQuery('posts:first-page', async (type: string
   return { posts, nextCursor: hasMore && last?.created_at ? last.created_at : null }
 })
 
-// Falls back to an empty list on failure so the page still renders its
-// header and filters. Safe: the failure is never cached, and this HTML isn't
-// cached either.
+// failure -> empty list (never cached)
 async function getFirstPage(type: string | null) {
   try {
     return await queryFirstPage(type)
@@ -74,7 +64,6 @@ export default async function PostsPage({
 
   return (
     <main className="flex-1">
-      {/* Page header */}
       <div
         className="border-b"
         style={{
@@ -100,9 +89,7 @@ export default async function PostsPage({
         </div>
       </div>
 
-      {/* Post-type filter — mirrors the genre/status pill pattern on /comics.
-          Plain links (not client state) so the active type stays in the URL
-          and a filtered view is shareable/bookmarkable. */}
+      {/* plain links -> filter stays in the URL */}
       <div
         className="border-b"
         style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
@@ -137,9 +124,7 @@ export default async function PostsPage({
         </div>
       </div>
 
-      {/* Keyed by type: PostsClient seeds its state from initialPosts once, so
-          without a key a pill click changes the URL and the highlighted pill
-          but leaves the previous type's grid on screen. */}
+      {/* keyed by type -> fresh state per filter */}
       <PostsClient
         key={type ?? 'all'}
         initialPosts={posts}

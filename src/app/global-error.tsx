@@ -4,16 +4,10 @@ import { useEffect } from 'react'
 import CrashReport from '@/components/shared/CrashReport'
 import { isChunkLoadError, reloadOnceForChunkError } from '@/lib/chunk-error'
 import { THEME_INIT_SCRIPT } from '@/lib/theme'
-// global-error REPLACES the root layout, so the layout's stylesheet (and the
-// --ryu-* tokens in it) must be imported here, and it must render its own
-// <html> and <body>.
+// replaces the root layout -> own styles, <html> and <body>
 import './globals.css'
 
-/**
- * Last-resort error screen: shown when the root layout itself crashes
- * (error.tsx can't catch that, because it renders inside the layout).
- * Kept dependency-light on purpose: no navbar, no fonts, no toasts, no data.
- */
+/** last-resort screen: no navbar, fonts, toasts or data */
 export default function GlobalError({
   error,
   reset,
@@ -21,8 +15,6 @@ export default function GlobalError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
-  // Old tab after a deploy: reset() would rerun the old build and fail again,
-  // so reload to get the new one (see chunk-error.ts).
   const stale = isChunkLoadError(error)
 
   useEffect(() => {
@@ -31,9 +23,7 @@ export default function GlobalError({
   }, [error, stale])
 
   return (
-    // Same theme bootstrap as the root layout, so dark-mode readers get the
-    // dark tokens here too. suppressHydrationWarning: the script adds `dark`
-    // to <html> before React hydrates (same reason as in layout.tsx).
+    // same theme bootstrap as layout.tsx
     <html lang="en" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

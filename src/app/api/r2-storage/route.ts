@@ -5,7 +5,6 @@ import { requireAdmin } from '@/lib/require-admin'
 
 const BUCKET_MAX_BYTES = 10 * 1024 * 1024 * 1024 // 10 GB
 
-// ─── GET — admin only ─────────────────────────────────────────────────────────
 export async function GET() {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth

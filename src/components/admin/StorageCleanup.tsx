@@ -8,16 +8,12 @@ import { formatBytes } from '@/lib/format'
 type UnusedFile = { key: string; size: number; lastModified: string }
 type Scan = { files: UnusedFile[]; totalBytes: number; scannedCount: number; usedCount: number }
 
-// Fired after a cleanup so the Sidebar storage chip refreshes its number.
+// cleanup done -> Sidebar storage chip refreshes
 export const STORAGE_UPDATED_EVENT = 'storage-updated'
 
 const dateFmt = new Intl.DateTimeFormat(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 
-/**
- * Settings → Storage: finds files in the public R2 bucket that nothing on the
- * site uses (left behind by old deletes) and removes them, so the admin never
- * has to open the R2 dashboard. Read only until the confirm dialog's Delete.
- */
+/** Settings -> Storage: scan unused R2 files -> confirm -> delete (read only until then) */
 export default function StorageCleanup() {
   const [scan, setScan]         = useState<Scan | null>(null)
   const [checking, setChecking] = useState(false)
@@ -40,7 +36,7 @@ export default function StorageCleanup() {
     }
   }
 
-  // Throws on failure so DeleteButton keeps its dialog open with the message.
+  // throw -> dialog stays open with error
   async function deleteAll() {
     if (!scan) return
     const res  = await fetch('/api/storage/unused', {

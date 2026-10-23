@@ -14,7 +14,6 @@ import DeleteButton from '@/components/admin/DeleteButton'
 import type { Tables } from '@/types/database'
 import { compressImage } from '@/lib/image-compress'
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Post     = Tables<'posts'>
 type PostType = 'sketch' | 'drawing' | 'meme' | 'other'
@@ -26,7 +25,6 @@ const POST_TYPES: { value: PostType; label: string; }[] = [
   { value: 'other',   label: 'Other' }
 ]
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--ryu-surface-2)',
@@ -40,7 +38,6 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--ryu-text)', marginBottom: 6,
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -50,12 +47,10 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   const [postId,      setPostId]      = useState<string | null>(null)
   const [error,       setError]       = useState<string | null>(null)
 
-  // Form fields
   const [title,       setTitle]       = useState('')
   const [description, setDescription] = useState('')
   const [postType,    setPostType]    = useState<PostType>('sketch')
 
-  // Image replacement
   const [newImageFile,   setNewImageFile]   = useState<File | null>(null)
   const [newPreview,     setNewPreview]     = useState<string | null>(null)
 
@@ -63,7 +58,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // ── Fetch post on mount ────────────────────────────────────────────────────
   useEffect(() => {
     async function init() {
       const { id } = await params
@@ -84,7 +78,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     init()
   }, [params])
 
-  // ── Image replacement ──────────────────────────────────────────────────────
   function pickFile(file: File) {
     if (!file.type.startsWith('image/')) { toast.error('Please select an image file'); return }
     setNewImageFile(file)
@@ -99,7 +92,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
   function clearNewImage() { setNewImageFile(null); setNewPreview(null) }
 
-  // ── Save ───────────────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (!postId) return
     setError(null)
@@ -112,7 +104,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         post_type:   postType,
       }
 
-      // If a new image was selected, convert and send it
       if (newImageFile) {
         body.imageBase64 = await compressImage(newImageFile, { maxDimension: 1600 })
       }
@@ -133,8 +124,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     } finally { setSubmitting(false) }
   }
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error.
+  // throw -> dialog stays open with error
   async function handleDelete() {
     if (!postId) return
     const res = await fetch(`/api/posts/${postId}`, { method: 'DELETE' })
@@ -145,7 +135,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     router.push('/admin/posts')
   }
 
-  // ── Loading / error guards ─────────────────────────────────────────────────
   if (fetching) {
     return (
       <div className="p-8 space-y-4">
@@ -165,14 +154,12 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     )
   }
 
-  // The image shown in the right panel — new preview takes priority over saved URL
+  // new preview -> else saved image
   const displayImage = newPreview ?? post.image_url
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/posts" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>
@@ -182,7 +169,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         <span style={{ color: 'var(--ryu-text)' }}>Edit</span>
       </div>
 
-      {/* Heading */}
       <div className="px-8 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
           style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -194,7 +180,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         </h1>
       </div>
 
-      {/* Error banner */}
       {error && (
         <div className="mx-8 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
           style={{ background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)' }}>
@@ -203,13 +188,10 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         </div>
       )}
 
-      {/* Two-column grid */}
       <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        {/* ── LEFT — Post details ──────────────────────────────────────── */}
         <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* 01 Details card */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
               <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>01</span>
@@ -218,7 +200,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              {/* Type */}
               <div>
                 <label style={labelStyle}>Type <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
                 <Select value={postType} onValueChange={v => setPostType(v as PostType)}>
@@ -237,7 +218,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 </Select>
               </div>
 
-              {/* Title */}
               <div>
                 <label style={labelStyle}>
                   Title{' '}
@@ -251,7 +231,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 />
               </div>
 
-              {/* Description */}
               <div>
                 <label style={labelStyle}>
                   Description{' '}
@@ -269,15 +248,12 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           </div>
 
         </div>
-        {/* ── END LEFT ─────────────────────────────────────────────────── */}
 
-        {/* ── RIGHT — Image ────────────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col gap-4"
           style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
 
-            {/* Panel header */}
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>02</span>
@@ -300,7 +276,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 onChange={handleFileChange}
               />
 
-              {/* Current / new image preview */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 12 }}>
                 <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', border: `1px solid ${newPreview ? 'var(--ryu-primary)' : 'var(--ryu-border)'}` }}>
                   <Image
@@ -310,7 +285,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                     height={400}
                     style={{ width: '100%', height: 'auto', display: 'block', maxHeight: 380, objectFit: 'contain', background: 'var(--ryu-surface-2)' }}
                   />
-                  {/* Clear new image if one is selected */}
                   {newPreview && (
                     <button
                       type="button"
@@ -328,7 +302,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                   )}
                 </div>
 
-                {/* File info row */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <ImageIcon size={12} style={{ color: 'var(--ryu-text-3)' }} />
@@ -353,18 +326,15 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
-        {/* ── END RIGHT ────────────────────────────────────────────────── */}
 
       </div>
 
-      {/* Fixed bottom action bar */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
         background: 'linear-gradient(to top, var(--background) 60%, transparent)',
         padding: '20px 32px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        {/* Left — delete */}
         <DeleteButton
           variant="text"
           label="Delete illustration"
@@ -374,7 +344,6 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           onConfirm={handleDelete}
         />
 
-        {/* Right — cancel + save */}
         <div style={{ display: 'flex', gap: 10 }}>
           <Link href="/admin/posts" style={{ display: 'inline-block',
               padding: '10px 18px', borderRadius: 8,

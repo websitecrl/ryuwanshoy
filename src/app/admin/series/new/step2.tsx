@@ -11,7 +11,6 @@ import { isSpreadPage, keepImageFiles, readImageSize, warnIfOversizedPage } from
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
 
-// ── Sortable page card ─────────────────────────────────────────────────────
 
 function SortablePage({
   page, idx, onRemove,
@@ -44,7 +43,6 @@ function SortablePage({
     >
       <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover" />
 
-      {/* Page number + spread badge */}
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
         <span style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 70%, transparent)', color: 'var(--ryu-on-image)', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
           P{String(idx + 1).padStart(2, '0')}
@@ -56,7 +54,6 @@ function SortablePage({
         )}
       </div>
 
-      {/* Remove button — stops drag from firing */}
       <button
         onPointerDown={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
@@ -65,7 +62,6 @@ function SortablePage({
   <X size={13} />
       </button>
 
-      {/* Drag hint */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', padding: '4px 0', textAlign: 'center', fontSize: 8, fontWeight: 700, color: 'var(--ryu-on-image)', letterSpacing: 0.5, textTransform: 'uppercase', zIndex: 3 }}>
         drag to reorder
       </div>
@@ -73,12 +69,10 @@ function SortablePage({
   )
 }
 
-// ── Step 2 ─────────────────────────────────────────────────────────────────
 
 interface Step2Props {
   chapterTitle: string
   onChapterTitleChange: (title: string) => void
-  // Pages live in the wizard so they (and their upload status) survive going back
   pages: LocalPage[]
   setPages: React.Dispatch<React.SetStateAction<LocalPage[]>>
   saving: SaveState
@@ -94,7 +88,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // dnd-kit sensors — pointer only (works mouse + touch)
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
@@ -109,15 +102,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
     })
   }
 
-  /**
-   * Turns picked/dropped files into local page entries and appends them.
-   *
-   * Keeps the exact order the browser hands over — no filename sort, since
-   * names like "day_two" / "day_three" don't sort into reading order.
-   * Fine-tune afterwards with drag-and-drop or the reverse switch.
-   *
-   * @param files - raw files from the input or drop event; non-images are ignored
-   */
+  /** files -> local pages, browser order (no filename sort) */
   async function handleFiles(files: File[]) {
     const imageFiles = keepImageFiles(files)
     if (!imageFiles.length) return
@@ -126,7 +111,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
       try {
         dim = await readImageSize(file)
       } catch (err) {
-        // Drop just this file; the rest of the batch still gets added.
         toast.error(`"${file.name}": ${err instanceof Error ? err.message : 'could not be read.'}`)
         return null
       }
@@ -150,13 +134,11 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
   }
   function removePage(id: string) { setPages(prev => prev.filter(p => p.id !== id)) }
 
-  /** Flips the whole reading order (first ↔ last). Toggling again restores it. */
   function toggleReversed() {
-    setPages(prev => [...prev].reverse()) // copy first — .reverse() mutates in place
+    setPages(prev => [...prev].reverse())
     setReversed(r => !r)
   }
 
-  /** Nothing is saved on "Next"; "Save as draft" creates the rows via the wizard. */
   function proceed(destination: 'draft' | 'next') {
     if (pages.length === 0) { toast.error('Upload at least one page'); return }
     if (destination === 'draft') onSaveDraft()
@@ -174,7 +156,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
       <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
         <div className="flex-1 space-y-5">
 
-          {/* 01 Chapter details */}
           <Card>
             <CardLabel n="01" title="Chapter details" />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
@@ -188,7 +169,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
             </div>
           </Card>
 
-          {/* 02 Pages */}
           <Card>
             <CardLabel n="02" title="Pages">
               {pages.length > 1 && (
@@ -208,7 +188,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               )}
             </CardLabel>
 
-            {/* Drop zone */}
             <div
               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
               style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 10, border: `1.5px dashed ${dragOver ? 'var(--ryu-primary)' : 'var(--ryu-border)'}`, background: dragOver ? 'var(--ryu-primary-soft)' : 'var(--ryu-surface-2)', marginBottom: 16, transition: 'all 150ms ease' }}
@@ -230,7 +209,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
             </div>
 
-            {/* Sortable grid */}
             {pages.length > 0 && (
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -240,7 +218,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />
                       ))}
-                      {/* Add more cell */}
                       <div
                         onClick={() => fileInputRef.current?.click()}
                         style={{ aspectRatio: '460/640', borderRadius: 8, border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-2)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 4 }}
@@ -257,7 +234,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
           </Card>
         </div>
 
-        {/* Right sidebar */}
         <div className="w-64 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <div className="space-y-4">
             <Card>
@@ -317,7 +293,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div style={BOTTOM_BAR}>
         <button
           onClick={onBack}

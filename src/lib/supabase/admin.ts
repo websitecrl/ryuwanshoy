@@ -9,10 +9,7 @@ export function getsupabaseAdmin() {
     );
 }
 
-// Lazy proxy: every property access (e.g. `supabaseAdmin.from(...)`) builds
-// a fresh client at that moment, inside the request — never at module load.
-// This lets all existing `import { supabaseAdmin }` call sites keep working
-// unchanged, instead of editing 20+ route files individually.
+// proxy -> fresh client per access, inside the request (never at module load)
 export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
     get(_target, prop) {
         const client = getsupabaseAdmin();

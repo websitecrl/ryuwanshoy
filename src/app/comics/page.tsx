@@ -22,23 +22,14 @@ export async function generateMetadata() {
   }
 }
 
-// ISR: see src/lib/cache/public-cache.ts.
 export const revalidate = 60
 
-// Throws on any Supabase error so a failed read is never cached (see
-// cachedPublicQuery). Before caching, errors were ignored and the page
-// rendered empty.
-// v2: the cached shape changed (chapterCounts instead of chapter rows), so a
-// new key guarantees an old entry is never read as the new shape.
+// error -> throw -> not cached. bump version when the shape changes
 const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   const supabase = createPublicClient()
 
   const [seriesRes, pagesRes] = await Promise.all([
-    // chapters(count) asks the database for one number per series instead of
-    // downloading every chapter row. The chapters.* filters apply to what is
-    // counted only (no !inner), so a series with 0 chapters still shows.
-    // Same rule as the reader: published and not a draft (the series itself
-    // is published by the outer filter).
+    // chapters(count) per series; no !inner -> 0-chapter series still show
     supabase
       .from('series')
       .select('*, chapters(count)')
@@ -55,7 +46,6 @@ const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   const error = seriesRes.error ?? pagesRes.error
   if (error) throw error
 
-  // Split the embedded count back out, so SeriesGrid gets plain series rows.
   const chapterCounts: Record<string, number> = {}
   const series = (seriesRes.data ?? []).map(({ chapters, ...row }) => {
     chapterCounts[row.id] = Number(chapters?.[0]?.count ?? 0)
@@ -68,7 +58,6 @@ const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
 export default async function ComicsPage() {
   const { series, chapterCounts, pagesCount } = await getComicsData()
 
-  // Stats for the header strip
   const stats = {
     series: series.length,
     chapters: Object.values(chapterCounts).reduce((sum, n) => sum + n, 0),

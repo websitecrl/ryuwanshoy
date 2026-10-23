@@ -4,15 +4,12 @@ import { Moon, Sun } from 'lucide-react'
 import { useRyuTheme } from '@/hooks/useRyuTheme'
 
 type Props = {
-  // pill: sun + moon side by side, current mode highlighted (navbar, admin)
-  // icon: single glyph for tight toolbars (reader top bar)
+  // pill: sun + moon (navbar, admin); icon: one glyph (reader bar)
   variant?: 'pill' | 'icon'
   className?: string
 }
 
-// Which glyph is highlighted/visible is driven by the `dark:` variant off the
-// <html> class, not by React state, so it is correct on first paint with no
-// icon flash. The hook is only needed for the accessible label.
+// glyph from the `dark:` variant -> right on first paint; hook only for the label
 export default function ThemeToggle({ variant = 'pill', className = '' }: Props) {
   const { theme, toggleTheme } = useRyuTheme()
   const label = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'

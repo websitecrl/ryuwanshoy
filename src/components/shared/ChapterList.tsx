@@ -23,7 +23,6 @@ type ChapterReadState = {
   totalPages?: number
 }
 
-// ─── Tab button ───────────────────────────────────────────────────────────────
 
 function TabButton({
   active,
@@ -54,7 +53,6 @@ function TabButton({
   )
 }
 
-// ─── Chapter row ──────────────────────────────────────────────────────────────
 
 function ChapterRow({
   chapter,
@@ -101,7 +99,6 @@ function ChapterRow({
                  hover:bg-[var(--ryu-surface-2)] transition-colors
                  ${!isLast ? 'border-b border-[var(--ryu-border-soft)]' : ''}`}
     >
-      {/* Chapter number + new dot */}
       <div className="flex-shrink-0 w-6 relative flex items-center justify-center">
         <span className="text-sm text-[var(--ryu-text-3)]">
           {chapter.chapter_number}
@@ -114,7 +111,6 @@ function ChapterRow({
         )}
       </div>
 
-      {/* Title + sub-label */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold text-[var(--ryu-text)] truncate">
           {chapterLabel}
@@ -124,7 +120,6 @@ function ChapterRow({
         </div>
       </div>
 
-      {/* Date + page count — hidden on small screens */}
       <div className="hidden sm:flex flex-col items-end gap-0.5 flex-shrink-0">
         {chapter.published_at && (
           <span className="text-xs text-[var(--ryu-text-3)]">
@@ -138,7 +133,6 @@ function ChapterRow({
         )}
       </div>
 
-      {/* Bookmark star — only on in-progress chapter */}
       {readState.state === 'reading' && (
         <Star
           size={14}
@@ -147,7 +141,6 @@ function ChapterRow({
         />
       )}
 
-      {/* Action button */}
       <Link
         href={href}
         className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs
@@ -160,7 +153,6 @@ function ChapterRow({
   )
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ChapterList({
   chapters,
@@ -173,7 +165,7 @@ export default function ChapterList({
   const [chapterStates, setChapterStates] = useState<Record<string, ChapterReadState>>({})
   const chapterIds = useMemo(() => chapters.map(c => c.id), [chapters])
 
-  // Load per-chapter read states from localStorage on mount
+  // read states from localStorage
   useEffect(() => {
     try {
       const progressRaw = localStorage.getItem(`reading-progress-${seriesId}`)
@@ -201,7 +193,7 @@ export default function ChapterList({
 
       setChapterStates(states)
     } catch {
-      // Silently ignore localStorage errors — defaults to all-unread
+      // unreadable -> all unread
     }
   }, [seriesId, chapters])
 
@@ -221,10 +213,8 @@ export default function ChapterList({
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-5 sm:pb-16">
 
-      {/* Continue reading bar — above tabs, only shown if progress exists */}
       <ContinueReadingBar seriesId={seriesId} seriesSlug={seriesSlug} chapterIds={chapterIds} />
 
-      {/* Tab bar */}
       <div className="flex items-end border-b border-[var(--ryu-border)] mb-5">
         <TabButton
           active={activeTab === 'chapters'}
@@ -239,10 +229,8 @@ export default function ChapterList({
         />
       </div>
 
-      {/* ── CHAPTERS tab ── */}
       {activeTab === 'chapters' && (
         <div>
-          {/* List header: count + sort toggle */}
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-[var(--ryu-text-2)]">
               {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'}
@@ -275,7 +263,6 @@ export default function ChapterList({
             )}
           </div>
 
-          {/* Chapter rows */}
           {chapters.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-[var(--ryu-text-3)] text-sm">No chapters yet.</p>
@@ -301,7 +288,6 @@ export default function ChapterList({
         </div>
       )}
 
-      {/* ── ABOUT tab ── */}
       {activeTab === 'about' && (
         <div className="py-4 max-w-2xl">
           {seriesDescription ? (

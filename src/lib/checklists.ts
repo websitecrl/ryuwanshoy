@@ -1,8 +1,6 @@
 export type ChecklistItem = { label: string; done: boolean }
 
-// Shared with the Drafts list so its row badges can never drift from the
-// checklist shown on the Chapter/Series edit pages — both read off this
-// same source instead of keeping their own hardcoded field checks.
+// shared with the Drafts list -> badges match the edit pages
 
 export function pagesOrderedCorrectly(pages: { page_number: number }[]): boolean {
   return pages.length > 0 &&

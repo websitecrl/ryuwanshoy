@@ -5,21 +5,9 @@ import { COMIC_PAGE_MAX_WIDTH, COMIC_PAGE_MAX_HEIGHT } from './constants'
 import { compressImage, UNREADABLE_IMAGE_MESSAGE } from './image-compress'
 import type { Tables } from '@/types/database'
 
-// Shared by the three comic page uploaders (series wizard, new chapter page,
-// edit chapter PageUploader) so they give the admin the same feedback for the
-// same file.
+// shared by the three page uploaders
 
-/**
- * Keeps the image files and tells the admin about the rest.
- *
- * The file picker already hides non-images (accept="image/*"), but drag and
- * drop doesn't, and a dropped PDF used to vanish without a word. The wording
- * says "supported image" because some real images land here too: Windows
- * often gives .heic files no MIME type at all.
- *
- * @param files - files from an input or a drop event, in the browser's order
- * @returns only the image files, order preserved
- */
+/** images kept, rest -> toast (drag and drop skips accept) */
 export function keepImageFiles(files: File[]): File[] {
   const images  = files.filter(f => f.type.startsWith('image/'))
   const skipped = files.filter(f => !f.type.startsWith('image/'))
@@ -34,13 +22,7 @@ export function keepImageFiles(files: File[]): File[] {
   return images
 }
 
-/**
- * Reads an image's pixel size without uploading it.
- *
- * @throws Error(UNREADABLE_IMAGE_MESSAGE) when the browser can't decode the
- *   file (corrupt, HEIC in Chrome, a renamed non-image). Without onerror the
- *   promise would never settle and the caller would hang.
- */
+/** file -> pixel size; undecodable -> UNREADABLE_IMAGE_MESSAGE */
 export function readImageSize(file: File): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -57,15 +39,7 @@ export function readImageSize(file: File): Promise<{ width: number; height: numb
   })
 }
 
-/**
- * Warns when a page is bigger than the comic page size. Never blocks: every
- * page is shrunk to 1600px by compressImage before it's sent, so this is a
- * heads-up that it will be resized, not an error.
- *
- * Landscape images (spreads) are allowed twice the page width.
- *
- * @returns true when the warning was shown
- */
+/** too big -> warning only (it gets resized) */
 export function warnIfOversizedPage(file: File, width: number, height: number): boolean {
   const maxWidth  = width > height ? COMIC_PAGE_MAX_WIDTH * 2 : COMIC_PAGE_MAX_WIDTH
   if (width <= maxWidth && height <= COMIC_PAGE_MAX_HEIGHT) return false
@@ -77,37 +51,17 @@ export function warnIfOversizedPage(file: File, width: number, height: number): 
   return true
 }
 
-/** Every stored page is this many px tall, single or spread (see uploadComicPage). */
+/** stored page height (single or spread) */
 const PAGE_HEIGHT = 1600
-/** Widest a stored spread may get (very wide panoramas). */
+/** widest stored spread */
 const MAX_SPREAD_WIDTH = 3200
 
-/**
- * The one spread rule for every uploader: a landscape page (wider than
- * tall) is a double page spread. The wizard used to call anything wider
- * than 2550px a spread, which caught tall high resolution portrait scans.
- */
+/** wider than tall -> spread */
 export function isSpreadPage(width: number, height: number): boolean {
   return width > height
 }
 
-/**
- * Compresses one page and appends it to the chapter (POST /api/pages).
- *
- * The API gives each page the next page_number, so callers must upload one
- * at a time, in reading order, and stop or report at the first failure.
- *
- * @param chapterId - the chapter the page belongs to
- * @param file - the original file; shrunk to PAGE_HEIGHT px tall as a JPEG
- *   here (pages are full-bleed art with no transparency, so JPEG is safe).
- *   Spreads get the same height, so each half keeps a single page's detail;
- *   capping the longest side instead squeezed a spread's two pages into
- *   one page's width.
- * @param isSpread - landscape double page
- * @returns the stored page row
- * @throws Error whose message is the reason, ready to show the admin:
- *   unreadable image, network failure, or the API's own error text
- */
+/** file -> JPEG PAGE_HEIGHT tall -> POST /api/pages (one at a time, in order). throws a message for the admin */
 export async function uploadComicPage(
   chapterId: string,
   file: File,
@@ -127,7 +81,6 @@ export async function uploadComicPage(
       body: JSON.stringify({ chapter_id: chapterId, imageBase64, is_spread: isSpread }),
     })
   } catch {
-    // fetch only throws when no response came back at all.
     throw new Error('Network error. Check your connection and retry.')
   }
 
@@ -138,9 +91,9 @@ export async function uploadComicPage(
   return json.data
 }
 
-/** "Page 3 ("IMG_2041.heic"): <reason>" for toasts and per-page errors. */
+/** -> Page 3 ("IMG.heic"): reason */
 export function describePageError(pageNumber: number, file: File, err: unknown): string {
   const reason = err instanceof Error && err.message ? err.message : 'Upload failed.'
-  // API messages don't all end in a period; callers append more sentences.
+  // add a period if missing
   return `Page ${pageNumber} ("${file.name}"): ${/[.!?]$/.test(reason) ? reason : `${reason}.`}`
 }

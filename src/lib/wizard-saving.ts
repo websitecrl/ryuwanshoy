@@ -1,6 +1,4 @@
-// Tiny shared flag: true while the series wizard is publishing. Rows created
-// during Publish stay unpublished until the very end, so the sidebar would
-// count them as drafts for a moment; it reads this flag to skip that.
+// wizard publishing -> sidebar skips the draft count
 
 let saving = false
 const listeners = new Set<(saving: boolean) => void>()

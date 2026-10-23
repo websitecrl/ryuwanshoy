@@ -28,7 +28,6 @@ type SaveMode = 'draft' | 'publish'
 type PageFile = {
   id: string; file: File; preview: string
   uploading: boolean; uploaded: boolean; error: string | null
-  /** True when the image is landscape (wider than tall) — flagged as a two-page spread. */
   isSpread: boolean
 }
 
@@ -44,11 +43,7 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--ryu-text)', marginBottom: 6,
 }
 
-/**
- * A single draggable/sortable comic page thumbnail.
- * Must be its own component (not inlined in a .map callback) because
- * useSortable is a hook and needs one call per item.
- */
+/** sortable thumbnail (useSortable needs its own component) */
 function SortablePageThumbnail({
   page, index, onRemove,
 }: {
@@ -85,8 +80,7 @@ function SortablePageThumbnail({
         {!page.uploading && !page.uploaded && (
           <button
             type="button"
-            // Stop the pointer event from reaching the drag sensor so a click
-            // on the remove button doesn't get swallowed as a drag start.
+            // remove click != drag start
             onPointerDown={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
             style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
@@ -128,8 +122,7 @@ export default function NewChapterPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sensors = useSensors(
-    // Require 8px of movement before a drag starts so ordinary clicks
-    // (remove button, image preview) still register as clicks.
+    // 8px -> drag, less -> click
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   )
 
@@ -152,7 +145,6 @@ export default function NewChapterPage() {
     fetchSeries()
   }, [])
 
-  // ── Auto-detect next chapter number when series is selected ──
   useEffect(() => {
     if (!selectedSeriesId) return
     async function fetchNextChapter() {
@@ -164,7 +156,6 @@ export default function NewChapterPage() {
         setExistingNumbers(numbers)
         setChapterNumber(String(Math.max(...numbers) + 1))
       } else {
-        // No chapters yet — first chapter is #1, not #2.
         setExistingNumbers([])
         setChapterNumber('1')
       }
@@ -183,13 +174,11 @@ export default function NewChapterPage() {
       uploading: false,
       uploaded: false,
       error: null,
-      isSpread: false, // corrected below once the image loads
+      isSpread: false,
     }))
 
     setPages(prev => [...prev, ...newPages])
 
-    // Detect spread (landscape) pages by reading actual pixel dimensions.
-    // Reuses each page's own preview URL instead of allocating a second one.
     newPages.forEach(page => {
       const img = new window.Image()
       img.onload = () => {
@@ -197,7 +186,6 @@ export default function NewChapterPage() {
         warnIfOversizedPage(page.file, img.naturalWidth, img.naturalHeight)
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, isSpread } : p))
       }
-      // Flag it now rather than at publish time; the upload would fail on it.
       img.onerror = () => {
         setPages(prev => prev.map(p => p.id === page.id ? { ...p, error: UNREADABLE_IMAGE_MESSAGE } : p))
         toast.error(`"${page.file.name}": ${UNREADABLE_IMAGE_MESSAGE}`)
@@ -251,9 +239,7 @@ export default function NewChapterPage() {
       if (!chRes.ok || chJson.error) { toast.error(chJson.error ?? 'Failed to create chapter'); setSubmitting(false); return }
       const chapterId = chJson.data.id
 
-      // pages[] reflects the current (possibly reordered) sequence. The server
-      // assigns page_number as max+1, so uploading strictly one at a time, in
-      // order, is what keeps the saved order matching what's shown on screen.
+      // one at a time, in order -> server page_number = max + 1
       const failures: string[] = []
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i]; if (!page) continue
@@ -268,8 +254,7 @@ export default function NewChapterPage() {
         }
       }
 
-      // The page redirects below, so per-page errors would never be seen;
-      // the toast survives the navigation (Toaster lives in the root layout).
+      // redirect next -> errors go in a toast
       if (failures.length) {
         toast.error(
           `${failures.length} page(s) failed to upload. Add them from the chapter's edit page. ${failures.join(' ')}`,
@@ -300,7 +285,6 @@ export default function NewChapterPage() {
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      {/* Breadcrumb */}
       <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/series" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>Series</Link>
         <span style={{ color: 'var(--ryu-text-3)' }}>›</span>
@@ -312,13 +296,10 @@ export default function NewChapterPage() {
         <h1 className="font-heading font-bold" style={{ fontSize: 36, letterSpacing: -0.8, color: 'var(--ryu-text)', margin: 0 }}>New Chapter</h1>
       </div>
 
-      {/* Main grid */}
       <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        {/* ── LEFT COLUMN ──────────────────────────────────────────── */}
         <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-          {/* 01 Chapter details */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
               <span className="font-mono-ryu" style={{ fontSize: 10, color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>01</span>
@@ -365,7 +346,6 @@ export default function NewChapterPage() {
             </div>
           </div>
 
-          {/* 02 Stats + Checklist */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: '16px 18px' }}>
             <div style={{ display: 'flex', gap: 12, marginBottom: 14, paddingBottom: 14, borderBottom: '1px dashed var(--ryu-border)' }}>
               <div style={{ flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: 8, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
@@ -396,12 +376,9 @@ export default function NewChapterPage() {
           </div>
 
         </div>
-        {/* ── END LEFT COLUMN ──────────────────────────────────────── */}
 
-        {/* ── RIGHT COLUMN ─────────────────────────────────────────── */}
         <div className="hidden lg:flex flex-col gap-4" style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
-          {/* 02 Pages */}
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
@@ -450,11 +427,9 @@ export default function NewChapterPage() {
 
 
         </div>
-        {/* ── END RIGHT COLUMN ─────────────────────────────────────── */}
 
       </div>
 
-      {/* Bottom action bar */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'linear-gradient(to top, var(--background) 60%, transparent)', padding: '20px 32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
        <button
           disabled={submitting}

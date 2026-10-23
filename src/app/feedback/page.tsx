@@ -4,13 +4,11 @@ import FeedbackForm from './FeedbackForm'
 export const metadata: Metadata = {
   title: 'Feedback | Ryuwanshoy',
   description: 'Report a bug, share an idea, or tell us anything about the site.',
-  // A form page: nothing for search engines to index.
+  // form page -> not indexed
   robots: { index: false },
 }
 
-// Static page: no data, so it's served straight from the cache. The form
-// posts to /api/feedback; the page the reader came from (?from=) is read in
-// the browser at submit time, so it doesn't make this page dynamic.
+// static -> cached; ?from= read in the browser at submit
 export default function FeedbackPage() {
   return (
     <main className="flex-1 bg-[var(--background)]">

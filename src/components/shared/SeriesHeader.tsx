@@ -15,11 +15,11 @@ type Props = {
   totalPages: number
   lastPublishedAt: string | null
   firstChapterNumber: number
-  /** Published chapter ids — progress pointing anywhere else is stale. */
+  /** published chapter ids; anything else is stale */
   chapterIds: string[]
 }
 
-// Same key/shape as ContinueReadingBar and ChapterList — reading-progress-{seriesId}
+// key reading-progress-{seriesId} (shared with ContinueReadingBar, ChapterList)
 function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProgress | null {
   if (typeof window === 'undefined') return null
   try {
@@ -30,7 +30,7 @@ function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProg
     if (typeof parsed.chapterNumber !== 'number' || typeof parsed.chapterId !== 'string') {
       return null
     }
-    // Chapter deleted or unpublished since it was read: no Continue for it
+    // chapter gone -> no Continue
     if (!chapterIds.includes(parsed.chapterId)) {
       localStorage.removeItem(`reading-progress-${seriesId}`)
       return null
@@ -52,13 +52,11 @@ export default function SeriesHeader({
   const [copied, setCopied] = useState(false)
   const [progress, setProgress] = useState<ReadingProgress | null>(null)
 
-  // Hydrate bookmark state from localStorage (same key as BookmarksNavLink/BookmarksGrid)
   useEffect(() => {
     const map = getBookmarkMap()
     setBookmarked(map[series.id] === true)
   }, [series.id])
 
-  // Hydrate reading progress from localStorage (same key as ContinueReadingBar/ChapterList)
   useEffect(() => {
     setProgress(getReadingProgress(series.id, chapterIds))
   }, [series.id, chapterIds])
@@ -72,7 +70,7 @@ export default function SeriesHeader({
 
   function toggleBookmark() {
     const next = !bookmarked
-    // Also notifies BookmarksNavLink/BookmarksGrid on the same page
+    // also updates BookmarksNavLink/BookmarksGrid
     setSeriesBookmarked(series.id, next)
     setBookmarked(next)
   }
@@ -108,7 +106,6 @@ export default function SeriesHeader({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-8 sm:pb-12">
       <div className="flex gap-6 sm:gap-8">
 
-        {/* Cover image */}
         <div className="flex-shrink-0 w-28 sm:w-40 md:w-48">
           <div
             className="relative w-full aspect-[460/640] rounded-xl overflow-hidden
@@ -133,10 +130,8 @@ export default function SeriesHeader({
           </div>
         </div>
 
-        {/* Series info */}
         <div className="flex-1 min-w-0">
 
-          {/* Badges row */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
             {updatedLabel && (
               <span
@@ -176,7 +171,6 @@ export default function SeriesHeader({
             ))}
           </div>
 
-          {/* Title */}
           <h1
             className="font-comic text-3xl sm:text-4xl md:text-5xl
                        text-[var(--ryu-text)] leading-none mb-3"
@@ -184,7 +178,6 @@ export default function SeriesHeader({
             {series.title}
           </h1>
 
-          {/* Stats row */}
           <div className="flex items-center gap-8 py-4 border-y border-[var(--ryu-border)] mb-5">
             <div className="flex items-center gap-1.5">
               <span className="font-comic text-4xl text-[var(--ryu-text)]">{chapterCount}</span>
@@ -192,9 +185,7 @@ export default function SeriesHeader({
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            {/* START READING / CONTINUE */}
           <Link
             href={ctaHref}
             className="font-comic flex items-center gap-1 px-4
@@ -210,7 +201,6 @@ export default function SeriesHeader({
             {ctaLabel}
           </Link>
 
-          {/* RESTART — only shown when there's progress to restart from */}
           {hasProgress && (
             <Link
               href={startHref}
@@ -229,7 +219,6 @@ export default function SeriesHeader({
             </Link>
           )}
 
-          {/* BOOKMARK */}
           <button
             onClick={toggleBookmark}
             className={`font-comic flex items-center gap-1 px-4
@@ -248,7 +237,6 @@ export default function SeriesHeader({
             BOOKMARK
           </button>
 
-          {/* SHARE */}
           <button
             onClick={handleShare}
             className="font-comic flex items-center gap-1 px-4

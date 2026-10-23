@@ -19,9 +19,7 @@ export async function GET() {
       .eq('is_published', true)
       .order('created_at', { ascending: false })
 
-    // Public chapter_count only counts chapters readers can open (same rule
-    // as the reader pages). The admin lists use this route too and need
-    // every chapter counted.
+    // public count -> readable chapters only; admin -> every chapter
     if (!isAdmin) {
       query = query
         .eq('chapters.is_published', true)
@@ -80,9 +78,6 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: 'Image too large' }, { status: 413 })
         }
 
-        // TEMPORARY STOPGAP: skip resize/webp conversion, upload original
-        // as-is. Both Cloudflare Images binding and @cf-wasm/photon are
-        // currently broken on this deployment. See src/lib/image-processing.ts.
         payload.cover_image = await uploadToR2(body.coverImageBase64, 'covers')
       } catch (err) {
         if (err instanceof InvalidImageError) {
@@ -103,7 +98,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error && payload.cover_image) {
-      // The row was never created, so nothing references the new cover.
+      // row never created -> remove the new cover
       const { failed } = await deleteManyFromR2([payload.cover_image])
       if (failed.length) console.error('POST /api/series: orphaned cover not deleted:', failed)
     }

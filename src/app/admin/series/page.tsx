@@ -11,18 +11,16 @@ import type { Tables } from '@/types/database'
 
 type Series = Tables<'series'>
 
-// ── Helpers ────────────────────────────────────────────────────────────────
 
-// Number of --ryu-cover-N placeholder gradients defined in globals.css.
+// count of --ryu-cover-N in globals.css
 const COVER_COUNT = 8
 
-// A stable placeholder cover picked from the series title (no image = initials on gradient)
+// title -> stable placeholder gradient
 function titleToGradient(title: string): string {
   const idx = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % COVER_COUNT
   return `var(--ryu-cover-${idx + 1})`
 }
 
-// Get initials — up to 2 characters from first letters of words
 function getInitials(title: string): string {
   return title
     .split(' ')
@@ -32,12 +30,10 @@ function getInitials(title: string): string {
     .join('')
 }
 
-// ── Types ──────────────────────────────────────────────────────────────────
 
-// The API may return chapters count — we handle both shapes
+// chapter_count is optional
 type SeriesWithCount = Series & { chapter_count?: number }
 
-// ── Main page ──────────────────────────────────────────────────────────────
 
 export default function AdminSeriesPage() {
   const [series, setSeries]       = useState<SeriesWithCount[]>([])
@@ -45,12 +41,9 @@ export default function AdminSeriesPage() {
   const [search, setSearch]       = useState('')
   const [statusFilter, setStatus] = useState<'all' | 'ongoing' | 'completed' | 'hiatus'>('all')
 
-  // ── Fetch ──────────────────────────────────────────────────────────────
   useEffect(() => {
     async function fetchSeries() {
-      // fetch() and res.json() both throw on a network error or a non-JSON
-      // body (e.g. an HTML error page), so everything goes inside try and
-      // setLoading(false) lives in finally: the skeleton always clears.
+      // try/finally -> skeleton always clears
       try {
         const res  = await fetch('/api/series')
         const json = await res.json()
@@ -66,8 +59,7 @@ export default function AdminSeriesPage() {
     fetchSeries()
   }, [])
 
-  // ── Delete ─────────────────────────────────────────────────────────────
-  // Throws on failure; DeleteButton shows the error and the success toast.
+  // throw -> DeleteButton shows error
   async function handleDelete(id: string) {
     const res  = await fetch(`/api/series/${id}`, { method: 'DELETE' })
     const json = await res.json().catch(() => ({})) as { error?: string }
@@ -75,7 +67,6 @@ export default function AdminSeriesPage() {
     setSeries(prev => prev.filter(s => s.id !== id))
   }
 
-  // ── Filter in memory ───────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return series.filter(s => {
       const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,7 +76,6 @@ export default function AdminSeriesPage() {
     })
   }, [series, search, statusFilter])
 
-  // Counts for filter pills
   const counts = useMemo(() => ({
     all:       series.length,
     ongoing:   series.filter(s => s.status === 'ongoing').length,
@@ -93,23 +83,19 @@ export default function AdminSeriesPage() {
     hiatus:    series.filter(s => s.status === 'hiatus').length,
   }), [series])
 
-  // ── Loading skeleton ───────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="p-8">
-        {/* Header skeleton */}
         <div className="mb-8 space-y-2">
           <div className="h-3 w-24 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
           <div className="h-10 w-32 rounded-lg animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
           <div className="h-4 w-72 rounded animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
         </div>
-        {/* Search + pills skeleton */}
         <div className="flex gap-3 mb-6">
           <div className="h-10 flex-1 rounded-xl animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
           {[1,2,3].map(n => <div key={n} className="h-10 w-24 rounded-full animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />)}
           <div className="h-10 w-32 rounded-lg animate-pulse" style={{ background: 'var(--ryu-surface-3)' }} />
         </div>
-        {/* Cards skeleton */}
         <div className="grid grid-cols-3 gap-5">
           {[1,2,3,4,5,6].map(n => (
             <div key={n} className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
@@ -126,11 +112,9 @@ export default function AdminSeriesPage() {
     )
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────
   return (
     <div className="p-8 animate-page-in">
 
-      {/* ── Page header — title block only, button moved to the search row below ── */}
       <div className="mb-8">
         <div
           className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
@@ -149,7 +133,6 @@ export default function AdminSeriesPage() {
         </p>
       </div>
 
-      {/* ── Search + filter pills + New Series button ─────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
 
         <div className="flex flex-wrap items-center gap-3">
@@ -174,7 +157,6 @@ export default function AdminSeriesPage() {
             />
           </div>
 
-          {/* Filter pills */}
           {(['all', 'ongoing', 'completed', 'hiatus'] as const)
               .filter(s => s === 'all' || counts[s] > 0)
               .map(status => (
@@ -226,7 +208,6 @@ export default function AdminSeriesPage() {
         </Link>
       </div>
 
-      {/* ── Empty state — no series at all ───────────────────────────── */}
       {series.length === 0 ? (
         <div
           className="flex flex-col items-center justify-center rounded-2xl p-16 text-center"
@@ -255,7 +236,6 @@ export default function AdminSeriesPage() {
         </div>
 
       ) : filtered.length === 0 ? (
-        /* ── Empty state — no search results ── */
         <div
           className="flex flex-col items-center justify-center rounded-2xl p-12 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
@@ -275,7 +255,6 @@ export default function AdminSeriesPage() {
         </div>
 
       ) : (
-        /* ── Series card grid ── */
         <div className="grid gap-5" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
           {filtered.map(s => (
             <SeriesCard
@@ -290,7 +269,6 @@ export default function AdminSeriesPage() {
   )
 }
 
-// ── Series Card ────────────────────────────────────────────────────────────
 
 interface SeriesCardProps {
   series: SeriesWithCount
@@ -309,7 +287,6 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         boxShadow: '0 1px 3px color-mix(in srgb, var(--ryu-shadow) 4%, transparent)',
       }}
     >
-      {/* ── Cover area ── */}
       <div className="relative overflow-hidden" style={{ height: 210 }}>
 
         {s.cover_image ? (
@@ -321,7 +298,6 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
             className="object-cover"
           />
         ) : (
-          /* Gradient fallback with initials */
           <div
             className="w-full h-full flex items-end justify-start p-4"
             style={{ background: titleToGradient(s.title) }}
@@ -335,13 +311,10 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
           </div>
         )}
 
-        {/* Status badge — top right */}
         <div className="absolute top-3 right-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
-            // Dark glass in both themes (it sits on cover art); the dot carries
-            // the status color, so white text stays readable in dark mode,
-            // where the status colors are light.
+            // dark glass on cover art
             style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 65%, transparent)', color: 'var(--ryu-on-image)', backdropFilter: 'blur(4px)' }}
           >
             <span
@@ -352,7 +325,6 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
           </span>
         </div>
 
-        {/* Chapter count badge — bottom left */}
         <div className="absolute bottom-3 left-3">
           <span
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold"
@@ -364,10 +336,8 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         </div>
       </div>
 
-      {/* ── Card body ── */}
       <div className="p-4 flex flex-col gap-3 flex-1">
 
-        {/* Title + meta */}
         <div>
           <h2
             className="font-heading font-semibold text-base leading-snug mb-.5"
@@ -380,10 +350,8 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
           </p>
         </div>
 
-        {/* Action row */}
         <div className="flex items-center gap-2 mt-auto">
 
-          {/* Chapters button — primary, takes most space */}
           <Link href={`/admin/chapters/new?series_id=${s.id}`}
               className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80"
               style={{
@@ -396,7 +364,6 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
               Chapters
             </Link>
 
-          {/* Edit */}
           <Link href={`/admin/series/${s.id}`}
               aria-label="Edit series"
               className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
@@ -416,7 +383,6 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
               <Pencil size={14} />
             </Link>
 
-          {/* Delete */}
           <DeleteButton
             size={36}
             label="Delete series"

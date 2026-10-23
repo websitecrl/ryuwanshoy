@@ -23,7 +23,7 @@ type Notification = {
 
 const SEEN_LIKES_KEY = 'ryu.seen_likes'
 
-// Comments live on a series or on a post (illustration); likes only on posts.
+// comments: series or post; likes: posts only
 function notifLabel(n: Notification): string {
   const target =
     n.post_title ? `"${n.post_title}"` :
@@ -44,7 +44,6 @@ function markLikeSeen(id: string) {
   try {
     const seen = getSeenLikes()
     seen.add(id)
-    // FIX: save the trimmed array, not the un-trimmed set
     const trimmed = [...seen].slice(-200)
     localStorage.setItem(SEEN_LIKES_KEY, JSON.stringify(trimmed))
   } catch {}
@@ -54,8 +53,7 @@ export default function NotificationBell() {
   const [open,    setOpen]    = useState(false)
   const [notifs,  setNotifs]  = useState<Notification[]>([])
   const [unread,  setUnread]  = useState(0)
-  // Unread reader feedback. Not cleared by opening the bell (unlike comments):
-  // it's handled on /admin/feedback, so a report is never "read" by accident.
+  // feedback: cleared on /admin/feedback, not by the bell
   const [feedbackUnread, setFeedbackUnread] = useState(0)
   const dropdownRef           = useRef<HTMLDivElement>(null)
   const supabase              = createClient()
@@ -69,7 +67,7 @@ export default function NotificationBell() {
       const raw = json.notifications ?? []
       setFeedbackUnread(json.feedbackUnread ?? 0)
 
-      // FIX: cross-reference localStorage so seen likes aren't counted as unread
+      // seen likes (localStorage) -> not unread
       const seenLikes = getSeenLikes()
       const all = raw.map(n =>
         n.type === 'like' && seenLikes.has(n.id)
@@ -80,13 +78,11 @@ export default function NotificationBell() {
       setNotifs(all)
       setUnread(all.filter(n => n.is_read !== true).length)
     } catch {
-      // silent fail
     }
   }, [])
 
   async function markAllRead() {
     await fetch('/api/notifications', { method: 'POST' })
-    // Mark all current likes as seen in localStorage
     notifs.forEach(n => {
       if (n.type === 'like') markLikeSeen(n.id)
     })
@@ -94,9 +90,7 @@ export default function NotificationBell() {
     setUnread(0)
   }
 
-  // Deletes the real comment or like (not just the notification). Throws on
-  // failure so DeleteButton shows the error; before, a failed delete still
-  // disappeared from the list.
+  // delete the real comment/like; throw -> DeleteButton shows error
   async function deleteNotif(n: Notification) {
     const url = n.type === 'comment' ? `/api/comments/${n.id}` : `/api/likes/${n.id}`
     const res = await fetch(url, { method: 'DELETE' })
@@ -120,8 +114,7 @@ export default function NotificationBell() {
       .channel('notif-bell')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, fetchNotifs)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'likes' },    fetchNotifs)
-      // New reports (and reads/deletes from /admin/feedback) refresh the count.
-      // Needs the admin SELECT policy from 20261009120000_create_feedback.sql.
+      // needs the admin SELECT policy on feedback
       .on('postgres_changes', { event: '*', schema: 'public', table: 'feedback' }, fetchNotifs)
       .subscribe()
 
@@ -130,9 +123,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      // The delete confirm dialog renders in a portal outside the dropdown;
-      // clicks in it must not close the dropdown (that would unmount the
-      // dialog mid-delete).
+      // delete dialog is in a portal -> keep the dropdown open
       if ((e.target as Element | null)?.closest?.('[data-slot^="alert-dialog"]')) return
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setOpen(false)
@@ -313,7 +304,6 @@ export default function NotificationBell() {
                     </span>
                   </div>
 
-                  {/* Shown on hover, or when reached by keyboard. */}
                   <div className="shrink-0 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                     <DeleteButton
                       size={24}

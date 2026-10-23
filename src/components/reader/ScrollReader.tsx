@@ -26,18 +26,18 @@ export default function ScrollReader({
   const pageRefs    = useRef<(HTMLDivElement | null)[]>([])
   const didScrollRef = useRef(false)
 
-  // On mount — scroll to currentPage if coming from flip mode
+  // mount -> scroll to currentPage (from flip mode)
 useEffect(() => {
   if (currentPage <= 1) return
   if (didScrollRef.current) return
 
   let attempts = 0
-  const MAX = 20 // 20 × 100ms = 2s max wait
+  const MAX = 20 // 2s max
 
   const tryScroll = () => {
     const el = pageRefs.current[currentPage - 1]
     if (!el || el.getBoundingClientRect().height === 0) {
-      // Element not rendered yet or has no height — retry
+      // not rendered yet -> retry
       if (++attempts < MAX) setTimeout(tryScroll, 100)
       return
     }
@@ -48,7 +48,7 @@ useEffect(() => {
   tryScroll()
 }, [currentPage])
 
-  // Intersection observer — tracks which page is most visible
+  // most visible page -> currentPage
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -76,7 +76,6 @@ useEffect(() => {
   return (
     <div className="relative">
 
-      {/* Progress bar — fixed at bottom, follows the site-wide theme via tokens */}
       <div
         className={`fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300 ${
           uiVisible ? 'translate-y-0' : 'translate-y-full'
@@ -95,7 +94,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Pages stacked vertically, max 800px, centered */}
       <div className="flex flex-col items-center" onClick={onToggleUI}>
         {pages.map((page, index) => (
           <div
@@ -108,7 +106,6 @@ useEffect(() => {
             <Image
               src={page.image_url}
               alt={`Page ${page.page_number}`}
-              // spread master is ~5100×3300 → at 800px col width, height ≈ 518px
               width={page.is_spread ? 800 : 800}
               height={page.is_spread ? 518 : 1035}
               sizes='(max-width: 800px) 100vw, 800px'
@@ -119,7 +116,6 @@ useEffect(() => {
           </div>
         ))}
 
-        {/* Bottom spacer so last page clears the progress bar */}
         <div className="h-16" />
       </div>
 

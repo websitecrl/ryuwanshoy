@@ -10,19 +10,7 @@ type Status =
   | { state: 'sent' }
   | { state: 'failed'; message: string }
 
-/**
- * "Send report" box for the error screens (error.tsx, global-error.tsx).
- *
- * Nothing is sent until the reader taps Send. The report holds: the page
- * path (no query string), the error message, Next's error digest (also printed in the
- * Cloudflare Workers logs, so a report can be matched to its server log
- * line), the reader's optional note; the server adds the user agent.
- *
- * Status is shown inline rather than as a toast: global-error replaces the
- * root layout, which is where <Toaster /> lives.
- *
- * @param error - the error passed to the error boundary
- */
+/** error screen "Send report": tap -> POST /api/feedback; status inline (no Toaster in global-error) */
 export default function CrashReport({ error }: { error: Error & { digest?: string } }) {
   const [status, setStatus] = useState<Status>({ state: 'idle' })
   const [note, setNote] = useState('')
@@ -32,7 +20,7 @@ export default function CrashReport({ error }: { error: Error & { digest?: strin
     const payload: FeedbackPayload = {
       kind: 'crash',
       message: note.trim(),
-      // Path only: a query string can carry values the reader didn't mean to share.
+      // path only (query may hold private values)
       pageUrl: window.location.pathname,
       errorMessage: error.message,
       errorDigest: error.digest,

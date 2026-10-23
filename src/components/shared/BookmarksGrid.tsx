@@ -17,7 +17,7 @@ type Props = {
   /** Every published series. */
   series: Series[]
   chapterCounts: Record<string, number>
-  /** false when the series query failed, so missing ids can't be trusted. */
+  /** false -> query failed -> don't trust missing ids */
   seriesLoaded: boolean
 }
 
@@ -30,14 +30,13 @@ export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: P
     setMounted(true)
     const map = getBookmarkMap()
 
-    // Drop bookmarks for series that were deleted or unpublished, but only
-    // when the list really loaded — a failed query must never wipe them.
+    // list loaded -> drop deleted/unpublished; failed -> keep all
     if (seriesLoaded) {
       const live = new Set(series.map(s => s.id))
       const stale = Object.keys(map).filter(id => !live.has(id))
       if (stale.length) {
         for (const id of stale) delete map[id]
-        saveBookmarkMap(map) // also keeps BookmarksNavLink in sync
+        saveBookmarkMap(map)
       }
     }
     setBookmarkMap(map)
@@ -45,17 +44,15 @@ export default function BookmarksGrid({ series, chapterCounts, seriesLoaded }: P
     function refresh() {
       setBookmarkMap(getBookmarkMap())
     }
-    // Sync when a SeriesCard elsewhere toggles a bookmark on the same page
+    // same-page bookmark toggles
     window.addEventListener('storage', refresh)
     return () => window.removeEventListener('storage', refresh)
   }, [series, seriesLoaded])
 
-  // Avoid a flash of the empty state before localStorage is read
+  // no empty-state flash before localStorage
   if (!mounted) return null
 
-  // Series above the reader's saved age are hidden, not unbookmarked: they
-  // come back if the reader picks an older age. The stale cleanup above must
-  // keep using the full `series` list, or it would delete them.
+  // above saved age -> hidden, not unbookmarked (cleanup uses the full list)
   const bookmarked = series.filter(s => bookmarkMap[s.id] === true && fitsAge(s.min_age, maxAge))
 
   return (

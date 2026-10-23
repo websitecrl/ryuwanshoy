@@ -9,11 +9,7 @@ type EarlyAccessEntry = {
   id: string; email: string; created_at: string
 }
 
-/**
- * One CSV cell: quoted (commas/quotes can't break columns) and, if it starts
- * with = + - @ (or a tab/CR), prefixed with ' so Excel/Sheets show it as text
- * instead of running it as a formula (CSV injection).
- */
+/** quote cell -> prefix ' if it starts with = + - @ (CSV injection) */
 function csvCell(value: string): string {
   const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value
   return `"${safe.replace(/"/g, '""')}"`
@@ -27,8 +23,6 @@ export default function EarlyAccessPage() {
   async function fetchEntries() {
     try {
       const res  = await fetch('/api/early-access')
-      // The route returns { emails: [...] } (this used to store the whole
-      // object and crash on .filter).
       const json = await res.json() as { emails?: EarlyAccessEntry[]; error?: string }
       if (!res.ok) throw new Error(json.error ?? 'Failed to load signups')
       setEntries(json.emails ?? [])
@@ -42,8 +36,7 @@ export default function EarlyAccessPage() {
 
   const filtered = entries.filter(e => e.email.toLowerCase().includes(search.toLowerCase()))
 
-  // Throws on failure; DeleteButton keeps its dialog open and shows the error
-  // (replaces window.confirm + alert, which the design system forbids).
+  // throw -> dialog stays open with error
   async function handleDelete(id: string) {
     const res = await fetch(`/api/early-access/${id}`, { method: 'DELETE' })
     if (!res.ok) {
@@ -65,7 +58,6 @@ export default function EarlyAccessPage() {
   return (
     <div className="p-8 animate-page-in">
 
-      {/* Header */}
       <div className="flex items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -81,7 +73,6 @@ export default function EarlyAccessPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div style={{ position: 'relative', marginBottom: 24 }}>
         <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--ryu-text-3)', pointerEvents: 'none' }} />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by email..."

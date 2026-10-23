@@ -12,14 +12,9 @@ import SeriesComments from '@/components/reader/SeriesComments'
 import AgeRestricted from '@/components/shared/AgeRestricted'
 import { seriesShareImage } from '@/lib/share-image'
 
-// The HTML is rendered per request, like before caching (see connection() in
-// the page); only the Supabase read is cached. Unknown slugs return a real
-// 404 (notFound() below); that only works because AgeGate renders the page
-// on the server, otherwise the not found signal never fired and Next sent 200.
+// per request; Supabase read cached; unknown slug -> real 404
 
-// Cached across requests. A missing series throws PublicNotFoundError so it
-// is not cached (bots probing random slugs must not fill the cache); a
-// Supabase error throws so a hiccup is never cached either.
+// miss/error -> throw -> not cached
 const querySeriesBySlug = cachedPublicQuery('comics:series', async (slug: string): Promise<{
   series: Tables<'series'>
   chapters: ChapterWithPageCount[]
@@ -53,17 +48,14 @@ chapters (
   if (error) throw error
   if (!data) throw new PublicNotFoundError(`series "${slug}"`)
 
-  // Supabase types the embedded rows from the select string, so no cast is
-  // needed. Split chapters off: the series prop goes to the client, and it
-  // would otherwise carry the whole chapter list a second time.
+  // split chapters off -> client prop not doubled
   const { chapters: rawChapters, ...series } = data
 
-  // Filter drafts server-side — only pass published chapters to the client
   const chapters: ChapterWithPageCount[] = (rawChapters ?? [])
     .filter(ch => ch.is_published === true && ch.is_draft === false)
     .map(({ pages, ...ch }) => ({
       ...ch,
-      // Number(): kept from before, in case PostgREST sends the count as a string
+      // count may come as a string
       page_count: Number(pages?.[0]?.count ?? 0),
     }))
 
@@ -86,8 +78,7 @@ chapters (
   }
 })
 
-// cache() dedupes the call between generateMetadata and the page render.
-// Returns null when the series doesn't exist (or isn't published).
+// cache() -> one call for metadata + page
 const getSeriesBySlug = cache((slug: string) => nullIfNotFound(querySeriesBySlug(slug)))
 
 export async function generateMetadata({
@@ -126,9 +117,7 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  // Render per request (as before caching); the data underneath is cached.
-  // Not `dynamic = 'force-dynamic'`: that also disables unstable_cache,
-  // which would send every view back to Supabase.
+  // per request; force-dynamic would also disable the data cache
   await connection()
 
   const { slug } = await params

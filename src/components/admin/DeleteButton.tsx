@@ -18,44 +18,24 @@ import {
 type Variant = 'icon' | 'text' | 'pill'
 
 type Props = {
-  /** Does the delete. Throw (e.g. `throw new Error(json.error)`) on failure:
-   *  the dialog then stays open and shows the message. */
+  /** throw -> dialog stays open with the message */
   onConfirm: () => Promise<void>
-  /** Dialog title, e.g. `Delete "My Series"?` */
   title: string
-  /** Dialog body. Defaults to "This permanently deletes it. This cannot be undone." */
   description?: ReactNode
-  /** Extra dialog content under the description (e.g. a list of what goes). */
   children?: ReactNode
-  /** Red button text. Default "Delete". */
   confirmLabel?: string
-  /** Toast shown after a successful delete. Omit for no toast. */
   successMessage?: string
-  /** 'icon': square trash button (lists). 'text': red text link (edit pages).
-   *  'pill': red pill with icon + label (bulk actions). Default 'icon'. */
+  /** 'icon' lists, 'text' edit pages, 'pill' bulk actions */
   variant?: Variant
-  /** Visible text for 'text'/'pill'; accessible name (and tooltip) for 'icon'. */
+  /** text for 'text'/'pill'; label + tooltip for 'icon' */
   label?: string
-  /** Square size in px for 'icon'. Default 32. */
   size?: number
   disabled?: boolean
-  /** Disables only the red confirm button (e.g. until a preview has loaded). */
   confirmDisabled?: boolean
-  /** Called when the dialog opens/closes (e.g. to load a preview on open). */
   onOpenChange?: (open: boolean) => void
 }
 
-/**
- * The one delete control for the admin: a trigger that opens a confirm
- * dialog (Cancel / red Delete). Every delete looks and behaves the same:
- * - spinner + disabled buttons while deleting,
- * - success closes the dialog (and toasts if `successMessage` is set),
- * - failure keeps the dialog open with the error, so it can't go unnoticed.
- *
- * Colors only from tokens (--ryu-danger / --ryu-on-danger in globals.css).
- * The trigger is the dialog's own element, never a <button> nested in it
- * (nested buttons cause a hydration error; this project doesn't use asChild).
- */
+/** admin delete: confirm -> spinner -> close, or error keeps the dialog open */
 export default function DeleteButton({
   onConfirm,
   title,
@@ -75,7 +55,7 @@ export default function DeleteButton({
   const [error, setError] = useState<string | null>(null)
 
   function changeOpen(next: boolean) {
-    if (deleting) return // don't close mid-delete
+    if (deleting) return
     setOpen(next)
     if (next) setError(null)
     onOpenChange?.(next)

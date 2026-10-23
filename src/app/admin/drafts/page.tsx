@@ -102,14 +102,12 @@ export default async function DraftsPage() {
 
   const drafts = await getDrafts()
   const chapterDrafts = await getChapterDrafts()
-  // Same rule as the bulk delete, so the button shows exactly when there is
-  // something it would delete (including draft chapters with no draft series).
+  // same rule as the bulk delete
   const { count: deletableCount } = await getDraftPreview()
 
   return (
     <div className="p-8 space-y-6 animate-page-in" style={{ minHeight: '100vh' }}>
 
-      {/* Header */}
       <div>
         <div
           className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
@@ -133,7 +131,6 @@ export default async function DraftsPage() {
       </div>
       </div>
 
-      {/* Empty state */}
       {drafts.length === 0 && chapterDrafts.length === 0 ? (
         <div
           className="rounded-xl p-12 text-center"
@@ -164,7 +161,6 @@ export default async function DraftsPage() {
               className="rounded-xl overflow-hidden"
               style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
             >
-              {/* Series header */}
               <div
                 className="flex items-center gap-4 px-5 py-4"
                 style={{ borderBottom: '1px solid var(--ryu-border-soft)' }}
@@ -197,8 +193,7 @@ export default async function DraftsPage() {
                     })}
                   </div>
                 </div>
-                {/* Badge is derived from the same series checklist shown on
-                    the Series edit page, so the two can never disagree. */}
+                {/* same checklist as the series edit page */}
                 {missingCount > 0 && (
                   <span
                     className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
@@ -231,7 +226,6 @@ export default async function DraftsPage() {
         </div>
       )}
 
-    {/* Chapter drafts section */}
       {chapterDrafts.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-semibold font-mono-ryu tracking-widest uppercase" style={{ color: 'var(--ryu-text-3)' }}>
@@ -267,8 +261,7 @@ export default async function DraftsPage() {
                       {ch.series.title}
                     </p>
                   </div>
-                  {/* Badge is derived from the same checklist shown on the
-                      Chapter edit page, so the two can never disagree. */}
+                  {/* same checklist as the chapter edit page */}
                   {missingCount > 0 && (
                     <span
                       className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"

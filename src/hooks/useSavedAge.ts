@@ -3,12 +3,10 @@
 import { useSyncExternalStore } from 'react'
 import { AGE_CONFIRMED_ATTR, AGE_KEY, ALL_AGES, READER_AGE_ATTR } from '@/lib/age'
 
-// Fallback when localStorage is blocked (private mode), so picking an age
-// still closes the gate for this visit.
+// localStorage blocked -> keep the age in memory
 let memoryAge: number | null = null
 const listeners = new Set<() => void>()
 
-/** @returns the saved age band, or null when the reader hasn't picked one (or it is unreadable) */
 function readSavedAge(): number | null {
   try {
     const stored = localStorage.getItem(AGE_KEY)
@@ -29,7 +27,7 @@ function subscribe(onChange: () => void) {
   }
 }
 
-/** Saves the reader's age band and tells every useSavedAge() reader. */
+/** save -> update <html> attrs -> notify readers */
 export function saveAge(age: number) {
   memoryAge = age
   try { localStorage.setItem(AGE_KEY, String(age)) } catch {}
@@ -38,22 +36,12 @@ export function saveAge(age: number) {
   listeners.forEach(listener => listener())
 }
 
-/**
- * The reader's saved age band.
- * @returns undefined while unknown (server HTML and the hydration render, so
- *   both match), null when no age is saved, otherwise the age band
- */
+/** undefined unknown (server/hydration), null none saved, else age */
 export function useSavedAge(): number | null | undefined {
   return useSyncExternalStore(subscribe, readSavedAge, () => undefined)
 }
 
-/**
- * For effects that SAVE reader state (progress, continue reading). Reads
- * storage directly instead of useSavedAge: on first load React mounts the
- * page once before it knows the age (to match the shared HTML), and effects
- * run in that moment, before AgeRestricted unmounts a blocked page.
- * @returns true when nothing is restricted or the saved age reaches minAge
- */
+/** for save effects: reads storage directly (blocked page mounts once before the age is known) */
 export function savedAgeAllows(minAge: number | null): boolean {
   const required = minAge ?? ALL_AGES
   if (required <= ALL_AGES) return true
@@ -61,7 +49,7 @@ export function savedAgeAllows(minAge: number | null): boolean {
   return age !== null && age >= required
 }
 
-/** Highest min_age a list may show: the saved age, or all ages until one is known. */
+/** saved age, else all ages */
 export function useMaxAge(): number {
   return useSavedAge() ?? ALL_AGES
 }

@@ -8,7 +8,7 @@ import type { ReadingProgress } from '@/types/reader'
 type Props = {
   seriesId: string
   seriesSlug: string
-  /** Published chapter ids — progress pointing anywhere else is stale. */
+  /** published chapter ids; anything else is stale */
   chapterIds: string[]
 }
 
@@ -22,7 +22,7 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
 
       const parsed = JSON.parse(raw) as ReadingProgress
 
-      // Validate minimum shape, and drop progress for a deleted/unpublished chapter
+      // bad shape or unpublished chapter -> drop
       if (
         typeof parsed.chapterNumber !== 'number' ||
         typeof parsed.chapterId !== 'string' ||
@@ -67,7 +67,6 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
     >
       <div className="flex items-center gap-4 px-4 py-4">
 
-        {/* Thumbnail */}
         <div
           className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden
                      bg-[var(--ryu-surface-2)] border border-[var(--ryu-border-soft)]"
@@ -87,7 +86,6 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
           )}
         </div>
 
-        {/* Info + progress bar */}
         <div className="flex-1 min-w-0">
           <p className="text-xs text-[var(--ryu-text-3)] leading-none mb-0.5">
             Last read

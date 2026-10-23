@@ -53,7 +53,6 @@ async function addToMailchimp(email: string): Promise<void> {
   }
 }
 
-// ─── POST — public, anyone can sign up ───────────────────────────────────────
 export async function POST(req: NextRequest) {
     if (process.env.NEXT_PUBLIC_EARLY_ACCESS_ENABLED !== "true") {
     return NextResponse.json(
@@ -62,7 +61,7 @@ export async function POST(req: NextRequest) {
     );
   }
   
-  // Before any DB write, reCAPTCHA call, or Mailchimp call
+  // rate limit -> before DB, reCAPTCHA, Mailchimp
   const limited = await rateLimit(req, "EARLY_ACCESS_LIMITER");
   if (limited) return limited;
 
@@ -127,7 +126,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ─── GET — admin only ─────────────────────────────────────────────────────────
 export async function GET() {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;

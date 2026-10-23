@@ -21,11 +21,7 @@ const PLACEHOLDERS: Record<FormKind, string> = {
   other: 'Anything you want to tell us.',
 }
 
-/**
- * The page the reader came from, passed by the footer link as ?from=/path.
- * Anyone can craft that link, so only strict same-site paths are kept
- * (isSafeSitePath; the API checks again).
- */
+/** ?from= -> kept only if a strict same-site path */
 function sourcePage(): string | undefined {
   const from = new URLSearchParams(window.location.search).get('from')
   return isSafeSitePath(from) ? from : undefined
@@ -34,8 +30,6 @@ function sourcePage(): string | undefined {
 export default function FeedbackForm() {
   const [kind, setKind] = useState<FormKind>('bug')
   const [message, setMessage] = useState('')
-  // Where the reader noticed it; at least one is required, both is allowed
-  // (e.g. they saw it on their phone, then again on a computer).
   const [onWeb, setOnWeb] = useState(false)
   const [onPhone, setOnPhone] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -63,7 +57,7 @@ export default function FeedbackForm() {
       if (res.status === 429) { toastRateLimited(); return }
       const data = (await res.json().catch(() => ({}))) as { error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Could not send. Please try again.')
-      setSent(true) // the thank-you panel below is the confirmation
+      setSent(true)
 
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not send. Please try again.')
@@ -93,8 +87,7 @@ export default function FeedbackForm() {
       onSubmit={handleSubmit}
       className="rounded-xl border border-[var(--ryu-border)] bg-[var(--ryu-surface-1)] p-5 space-y-5"
     >
-      {/* Type: native radios (one tab stop, arrow keys, announced as a group
-          by the fieldset legend), styled as pills via `peer`. */}
+      {/* native radios as pills (keyboard + screen readers) */}
       <fieldset className="space-y-2">
         <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Type
@@ -124,8 +117,7 @@ export default function FeedbackForm() {
         </div>
       </fieldset>
 
-      {/* Device: native checkboxes styled as pills; at least one required,
-          both allowed. Stored as 'web' | 'phone' | 'both'. */}
+      {/* at least one; both -> 'both' */}
       <fieldset className="space-y-2" aria-describedby="feedback-device-note">
         <legend className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Where did it happen?
@@ -161,7 +153,6 @@ export default function FeedbackForm() {
         </p>
       </fieldset>
 
-      {/* Message */}
       <div className="space-y-1">
         <label htmlFor="feedback-message" className="text-xs font-semibold uppercase tracking-wide text-[var(--ryu-text-2)]">
           Message

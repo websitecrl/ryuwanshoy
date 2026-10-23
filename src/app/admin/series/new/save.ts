@@ -1,16 +1,9 @@
 import { compressImage } from '@/lib/image-compress'
 import { type SeriesFormData } from './types'
 
-// Fetch helpers for the wizard's single save point. The wizard writes nothing
-// to the DB until "Save as draft" or "Publish"; rows are always created
-// unpublished and only flipped live once every page has uploaded.
+// rows created unpublished -> all pages uploaded -> published
 
-/**
- * Checks whether a slug is free. GET /api/series/[slug] finds any series for
- * an admin (published or not) and 404s when none matches.
- *
- * @returns true = free, false = taken, null = couldn't check
- */
+/** true = free, false = taken, null = couldn't check. */
 export async function isSlugAvailable(slug: string): Promise<boolean | null> {
   try {
     const res = await fetch(`/api/series/${encodeURIComponent(slug)}`)
@@ -22,12 +15,10 @@ export async function isSlugAvailable(slug: string): Promise<boolean | null> {
   }
 }
 
-/** Creates the series unpublished and returns its id. Throws with the API's message. */
 export async function createSeries(data: SeriesFormData): Promise<string> {
   let coverImageBase64: string | undefined
   try {
-    // Cover cards render at 460x640 — 1280px longest side is plenty of
-    // headroom for retina without shipping a multi-MB original.
+    // covers show at 460x640 -> 1280px is enough
     if (data.coverFile) coverImageBase64 = await compressImage(data.coverFile, { maxDimension: 1280 })
   } catch {
     throw new Error('Failed to process images')
@@ -48,7 +39,6 @@ export async function createSeries(data: SeriesFormData): Promise<string> {
   return json.data.id
 }
 
-/** Creates chapter 1 unpublished and returns its id. Throws with the API's message. */
 export async function createChapter(seriesId: string, title: string): Promise<string> {
   const res = await fetch('/api/chapters', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -66,7 +56,6 @@ export async function createChapter(seriesId: string, title: string): Promise<st
   return json.data.id
 }
 
-/** Sets is_published on a series or chapter. Throws with the API's message. */
 export async function setPublished(kind: 'series' | 'chapters', id: string): Promise<void> {
   const res = await fetch(`/api/${kind}/${id}`, {
     method: 'PATCH', headers: { 'Content-Type': 'application/json' },

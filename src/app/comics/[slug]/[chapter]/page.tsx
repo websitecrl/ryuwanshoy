@@ -8,24 +8,14 @@ import ReaderShell from '@/components/reader/ReaderShell'
 import AgeRestricted from '@/components/shared/AgeRestricted'
 import { seriesShareImage } from '@/lib/share-image'
 
-// The HTML is rendered per request, like before caching (see connection() in
-// the page); only the Supabase reads are cached. Unknown series and chapters
-// return a real 404 (notFound() below); that only works because AgeGate
-// renders the page on the server, otherwise the not found signal never fired
-// and Next sent 200.
+// per request; Supabase reads cached; unknown -> real 404
 
 type AdjacentChapter = { chapter_number: number } | null
 
-// Cached across requests. A missing series/chapter throws PublicNotFoundError
-// so it is not cached (bots probing random URLs must not fill the cache); a
-// Supabase error throws so a hiccup is never cached either.
-// The name is part of the cache key. ':v2' since the series select gained
-// min_age (spec 0003): an older cached result has no min_age, which would
-// skip the age check. Bump it again whenever the returned shape changes.
+// miss/error -> throw -> not cached. bump version when the shape changes
 const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: string, chapterNumber: number) => {
   const supabase = createPublicClient()
 
-  // 1. Series (published only)
   const { data: series, error: seriesError } = await supabase
     .from('series')
     .select('id, title, slug, cover_image, status, min_age')
@@ -36,7 +26,6 @@ const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: str
   if (seriesError) throw seriesError
   if (!series) throw new PublicNotFoundError(`series "${slug}"`)
 
-  // 2. Chapter, prev, next, and all chapters only depend on the series
   const [
     { data: chapter, error: chapterError },
     { data: prevChapter, error: prevError },
@@ -74,7 +63,6 @@ const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: str
       .limit(1)
       .maybeSingle(),
 
-    // For the chapter picker in the top bar
     supabase
       .from('chapters')
       .select('id, chapter_number, title, is_early_access')
@@ -88,14 +76,12 @@ const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: str
   if (queryError) throw queryError
   if (!chapter) throw new PublicNotFoundError(`chapter ${slug}/${chapterNumber}`)
 
-  // 3. Pages
   const { data: pages, error: pagesError } = await supabase
     .from('pages')
     .select('id, image_url, page_number, chapter_id, is_spread')
     .eq('chapter_id', chapter.id)
     .order('page_number', { ascending: true })
 
-  // Without this, a failed read would cache "This chapter has no pages yet."
   if (pagesError) throw pagesError
 
   return {
@@ -108,18 +94,12 @@ const queryChapterData = cachedPublicQuery('comics:chapter:v2', async (slug: str
   }
 })
 
-/**
- * Only a plain whole number is a chapter URL. parseInt alone would read
- * "1abc" (and Number would read "01") as 1, showing chapter 1 at a second
- * URL (duplicate content).
- * @returns the chapter number, or null when the segment isn't one
- */
+/** whole number only ("1abc", "01" would duplicate chapter 1) */
 function parseChapterNumber(segment: string): number | null {
   return /^(0|[1-9]\d*)$/.test(segment) ? Number(segment) : null
 }
 
-// cache() dedupes the call between generateMetadata and the page render.
-// Returns null when the series or chapter doesn't exist (or isn't published).
+// cache() -> one call for metadata + page
 const getChapterData = cache((slug: string, chapterNumber: number) =>
   nullIfNotFound(queryChapterData(slug, chapterNumber))
 )
@@ -164,9 +144,7 @@ export default async function ChapterReaderPage({
 }: {
   params: Promise<{ slug: string; chapter: string }>
 }) {
-  // Render per request (as before caching); the data underneath is cached.
-  // Not `dynamic = 'force-dynamic'`: that also disables unstable_cache,
-  // which would send every view back to Supabase.
+  // per request; force-dynamic would also disable the data cache
   await connection()
 
   const { slug, chapter } = await params

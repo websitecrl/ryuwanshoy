@@ -1,12 +1,7 @@
 import 'server-only'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-/**
- * Total unread feedback reports (all rows, not one page).
- * Returned after every admin action so the inbox shows the server's number
- * and can't drift from the database or the notification bell.
- * @throws on a database error (callers turn it into a 500)
- */
+/** unread total (all rows) -> returned after every admin action. throws on DB error */
 export async function countUnreadFeedback(): Promise<number> {
   const { count, error } = await supabaseAdmin
     .from('feedback')

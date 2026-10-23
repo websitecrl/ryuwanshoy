@@ -29,7 +29,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
   const [activeFilter, setActiveFilter] = useState('all')
   const [sort, setSort] = useState('recent')
   const [search, setSearch] = useState('')
-  // All ages until the saved age is read (the cached HTML is shared).
+  // all ages -> saved age once read
   const maxAge = useMaxAge()
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
@@ -97,7 +97,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
 
   return (
     <div>
-      {/* ── Search strip ─────────────────────────────────── */}
       <div
         className="border-b"
         style={{ borderColor: 'var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
@@ -126,13 +125,11 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       </div>
 
-      {/* ── Filter pills (desktop) + burger (mobile) + Bookmarks + Sort ──────────────────────────────────── */}
       <div
         className="sticky top-[52px] z-30 border-b"
         style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
       >
         <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-3 flex items-center justify-between gap-2 sm:gap-4">
-          {/* Pills — desktop */}
           <div className="hidden sm:flex items-center gap-2 flex-wrap">
             {pills.map(pill => (
               <button
@@ -161,10 +158,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
             ))}
           </div>
 
-          {/* Burger — mobile only. The button is the 44×44 tap target; the
-              32×32 span inside is what you see. -ml-1.5 pulls the visible edge
-              flush with the search bar's inset, and -my-1.5 keeps the taller
-              hit area from making the sticky row any taller. */}
+          {/* 44x44 tap target, 32x32 visible */}
           <button
             onClick={() => setFilterSheetOpen(true)}
             aria-label="Filter comics"
@@ -179,9 +173,7 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
             </span>
           </button>
 
-          {/* Bookmarks + Sort — on mobile they split whatever width the burger
-              leaves over; the select can shrink toward its min-width but never
-              below what "Sort: Recent" needs. */}
+          {/* share the width left by the burger */}
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 sm:flex-none sm:shrink-0">
             <BookmarksNavLink allSeries={series} className="grow shrink-0 justify-center sm:grow-0" />
             <select
@@ -204,7 +196,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       </div>
 
-      {/* ── Mobile filter bottom sheet ──────────────────────────────────── */}
       {filterSheetOpen && (
         <div
           className="sm:hidden fixed inset-0 z-50 flex items-end"
@@ -263,7 +254,6 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
         </div>
       )}
 
-      {/* ── Grid ─────────────────────────────────────────────────── */}
       <div className="max-w-[1600px] mx-auto px-4 sm:px-12 py-6">
         {filtered.length === 0 ? (
           <div

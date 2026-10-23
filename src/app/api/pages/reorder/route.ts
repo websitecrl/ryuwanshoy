@@ -4,7 +4,6 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 
-// ─── PATCH — admin only ───────────────────────────────────────────────────────
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
@@ -29,9 +28,7 @@ export async function PATCH(req: NextRequest) {
       )
     )
 
-    // Supabase returns errors instead of throwing them, so check each one.
-    // Some updates may have landed; the client sends the full order, so a
-    // retry puts every page right.
+    // Supabase returns errors (no throw); client sends the full order -> retry fixes it
     const failed = results.filter(r => r.error)
     if (failed.length > 0) {
       console.error(`PATCH /api/pages/reorder: ${failed.length} of ${results.length} updates failed:`, failed[0]?.error)

@@ -63,17 +63,13 @@ export default function HomeClient({
   initialPosts,
   settings,
 }: Props) {
-  // No realtime on purpose: one Supabase connection per visitor hit the free
-  // plan's 200 connection cap, and every admin save made each open tab refetch.
-  // The page is cached (ISR) and admin saves purge it, so a reload or the next
-  // visit shows new content. See docs/caching.md.
+  // no realtime -> ISR cache -> admin save purges -> reload shows new content
   const heroSlides = initialHeroSlides;
   const chapters = initialChapters;
   const posts = initialPosts;
-  // All ages until the saved age is read (the cached HTML is shared).
+  // all ages -> saved age once read
   const maxAge = useMaxAge();
-  // Same stale-logo-url guard as Navbar — falls back to the initial-letter
-  // avatar if settings.logo_url doesn't actually resolve.
+  // logo_url broken -> letter avatar
   const [logoFailed, setLogoFailed] = useState(false);
 
   const creatorName = settings?.creator_name ?? "Ryu"
@@ -88,7 +84,6 @@ export default function HomeClient({
         className="flex flex-col gap-10 pb-16"
         style={{ maxWidth: 1600, margin: '0 auto', padding: '0 clamp(20px, 4vw, 48px)', width: '100%' }}
     >
-        {/* Hero — inside container with rounded corners */}
         <section style={{ paddingTop: 16 }}>
         <HeroBanner
             slides={heroSlides}
@@ -100,7 +95,6 @@ export default function HomeClient({
         <LatestReleases chapters={visibleChapters} />
         <SketchbookPreview posts={posts} />
 
-        {/* About section */}
         <section style={{ paddingBottom: 24 }}>
         <div className="flex items-center gap-3" style={{ marginBottom: 16 }}>
             <div style={{ width: 5, height: 26, background: 'var(--ryu-primary)', borderRadius: 2, flexShrink: 0 }} />
@@ -110,7 +104,6 @@ export default function HomeClient({
         </div>
 
         <div className="grid gap-5 grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px]">
-            {/* Creator card */}
             <div
             className="flex gap-4 items-start"
             style={{
@@ -163,7 +156,6 @@ export default function HomeClient({
             </div>
             </div>
 
-            {/* Support card */}
             <div
             style={{
                 border: '0.5px solid var(--ryu-border)',

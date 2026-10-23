@@ -39,18 +39,7 @@ function getLikeToken(): string {
   } catch { return uuidv4() }
 }
 
-/**
- * Sends the request, checks res.ok, and throws a real Error carrying the
- * server's message (from the API's `{ error: string }` shape) on any
- * failure — HTTP error or network error alike. Every call site in this
- * file collapses to one try/catch instead of a hand-written `if (!res.ok)`
- * each time, which is exactly what went missing in submitEdit/submitReply
- * before (no catch at all, so a network failure became an unhandled
- * promise rejection instead of a toast).
- *
- * `status` is attached to the thrown error so callers that need to special-
- * case a status code (429 → isRateLimitError) still can.
- */
+/** fetch -> any HTTP/network failure -> throws Error(server message, status) */
 async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
   const res = await fetch(input, init)
   const data: unknown = await res.json().catch(() => null)
@@ -66,23 +55,13 @@ async function fetchJson<T>(input: string, init?: RequestInit): Promise<T> {
   return data as T
 }
 
-/** True when fetchJson threw because a Workers rate limiter returned 429. */
+/** 429 from a rate limiter? */
 function isRateLimitError(err: unknown): boolean {
   return err instanceof Error && (err as Error & { status?: number }).status === 429
 }
 
-// ─── Single comment row (top-level or reply) ─────────────────────────────────
 
-/**
- * Renders one comment: avatar, name, timestamp, content (or inline edit
- * form), and reply/edit/delete actions.
- *
- * - Reply is only offered at depth 0 — the `comments` table has no depth
- *   column, so replies-to-replies still attach to the same top-level parent
- *   (see repliesFor in PostModal below), matching SeriesComments.tsx.
- * - Edit/Delete only render when `isOwn` is true, i.e. this browser holds
- *   the edit_token for this exact comment.
- */
+/** one comment; reply at depth 0 only; edit/delete only if this browser owns it */
 function CommentRow({
   comment,
   replies,
@@ -335,23 +314,13 @@ interface Props {
   onClose: () => void
 }
 
-/**
- * Explicit states, the same idea as useComments' loading/error/loaded:
- * `liked: false` / `count: 0` as initial
- * values are indistinguishable from "we checked and it's really false/0."
- * Before this, someone who'd already liked the post would see the heart
- * render empty for a frame on reopen. It also closes a real race: without
- * a 'loaded' gate, the heart was clickable before the initial fetch
- * resolved, so a toggle request and the initial-state fetch could land in
- * either order and silently overwrite each other.
- */
+// 'loading' -> heart can't flash empty or toggle early
 type LikeState =
   | { status: 'loading' }
   | { status: 'error' }
   | { status: 'loaded'; liked: boolean; count: number }
 
-// Drag-down distance (px) on the mobile comments-panel handle past which we
-// treat the gesture as "dismiss" rather than an aborted/accidental drag.
+// px of handle drag -> dismiss
 const DRAG_CLOSE_THRESHOLD = 80
 
 export default function PostModal({ post, onClose }: Props) {
@@ -360,8 +329,7 @@ export default function PostModal({ post, onClose }: Props) {
   const [justLiked, setJustLiked] = useState(false)
   const likeRequestInFlightRef = useRef(false)
   const [reduceMotion, setReduceMotion] = useState(false)
-  // Newest 30 top-level comments (with replies); "Show older comments" loads
-  // more. Shown chat-style below: oldest at the top, newest above the input.
+  // newest 30 top-level -> shown oldest first (chat)
   const thread = useComments<Comment>({ postId: post.id })
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -369,19 +337,12 @@ export default function PostModal({ post, onClose }: Props) {
   const [ownIds, setOwnIds] = useState<Set<string>>(new Set())
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const commentsListRef = useRef<HTMLDivElement>(null)
-  // Distance from the bottom of the comment list, saved just before "Show
-  // older" prepends comments above the viewport (see the layout effect below).
+  // saved before "Show older" prepends
   const scrollFromBottomRef = useRef<number | null>(null)
 
-  // Comments start hidden behind the like/comment/share rail on both
-  // desktop (slide-in drawer) and mobile (full-screen swap) — see the
-  // stage/panel layout in the JSX below.
   const [commentsOpen, setCommentsOpen] = useState(false)
 
-  // Drag-to-dismiss for the mobile full-screen comments view. Only the
-  // handle bar at the top of the panel listens for touch — NOT the panel
-  // or the comment list itself — otherwise scrolling the comment list on
-  // mobile would fight with closing the panel on every vertical touch move.
+  // handle only -> list scroll never fights closing
   const [dragOffset, setDragOffset] = useState(0)
   const draggingRef = useRef(false)
   const touchStartYRef = useRef<number | null>(null)
@@ -397,7 +358,7 @@ export default function PostModal({ post, onClose }: Props) {
     const touch = e.touches[0]
     if (!touch) return
     const delta = touch.clientY - touchStartYRef.current
-    if (delta > 0) setDragOffset(delta) // only track downward drags
+    if (delta > 0) setDragOffset(delta)
   }
   function handleTouchEnd() {
     if (dragOffset > DRAG_CLOSE_THRESHOLD) setCommentsOpen(false)
@@ -406,12 +367,10 @@ export default function PostModal({ post, onClose }: Props) {
     touchStartYRef.current = null
   }
 
-  // Which comments (across ALL posts) this browser owns — read once on mount.
   useEffect(() => {
     setOwnIds(new Set(Object.keys(getTokenMap())))
   }, [])
 
-  // Load likes on open (comments are loaded by useComments above).
   useEffect(() => {
     const likeToken = getLikeToken()
     fetch(`/api/likes?post_id=${post.id}&like_token=${likeToken}`)
@@ -425,11 +384,7 @@ export default function PostModal({ post, onClose }: Props) {
       .catch(() => setLikeState({ status: 'error' }))
   }, [post.id])
 
-  // ESC to close — closes the comments panel first if it's open, then the
-  // whole modal, so ESC mirrors what the back-chevron / drag handle does.
-  // (Reads commentsOpen directly rather than via a setState-updater side
-  // effect, which React 18 Strict Mode double-invokes in dev and would
-  // have called onClose() twice.)
+  // ESC -> close comments -> close modal
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== 'Escape') return
@@ -440,15 +395,12 @@ export default function PostModal({ post, onClose }: Props) {
     return () => document.removeEventListener('keydown', onKey)
   }, [onClose, commentsOpen])
 
-  // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  // WCAG 2.3.3 — skip the like button's scale/particle animation for users
-  // who've asked their OS for reduced motion; the heart still toggles state
-  // instantly either way.
+  // reduced motion -> no like animation
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     setReduceMotion(mq.matches)
@@ -457,13 +409,7 @@ export default function PostModal({ post, onClose }: Props) {
     return () => mq.removeEventListener('change', onChange)
   }, [])
 
-  /**
-   * Optimistic like/unlike: flips the visual state immediately (Instagram/
-   * TikTok-style) instead of waiting on the network, then reconciles with
-   * whatever the server actually recorded. A ref (not just `likeLoading`
-   * state) guards re-entrancy so a fast double-tap can't fire two
-   * conflicting toggle requests before the first render commits.
-   */
+  /** optimistic: flip -> request -> reconcile; ref blocks double taps */
   async function handleLike() {
     if (likeState.status !== 'loaded' || likeRequestInFlightRef.current) return
     likeRequestInFlightRef.current = true
@@ -475,8 +421,6 @@ export default function PostModal({ post, onClose }: Props) {
     setLikeState({ status: 'loaded', liked: nextLiked, count: nextCount })
     setLikeLoading(true)
 
-    // Blown-heart pulse only plays on like, never unlike, and never for
-    // reduced-motion users — they still get the instant filled/outline swap.
     if (nextLiked && !reduceMotion) {
       setJustLiked(true)
       setTimeout(() => setJustLiked(false), 320)
@@ -495,12 +439,8 @@ export default function PostModal({ post, onClose }: Props) {
       }
       if (!res.ok) throw new Error('Failed to update like.')
       const { liked: serverLiked, count: serverCount } = await res.json() as { liked: boolean; count: number }
-      // Server is the source of truth — reconcile in case another tab/
-      // request changed things in between.
       setLikeState({ status: 'loaded', liked: serverLiked, count: serverCount })
     } catch {
-      // Never leave the UI showing a like the server doesn't have — revert
-      // and say so, rather than fail silently.
       setLikeState(previous)
       toast.error('Could not update like — please try again.')
     } finally {
@@ -509,12 +449,7 @@ export default function PostModal({ post, onClose }: Props) {
     }
   }
 
-  /**
-   * Native share sheet when available (mobile browsers), clipboard copy
-   * otherwise. There's no per-post deep link in this app yet (posts don't
-   * have their own route), so this shares the current page URL — good
-   * enough for "look what I found," not a permalink to this exact post.
-   */
+  /** share sheet -> else copy page URL */
   async function handleShare() {
     const url = typeof window !== 'undefined' ? window.location.href : ''
     if (!url) return
@@ -529,8 +464,7 @@ export default function PostModal({ post, onClose }: Props) {
         toast.success('Link copied!')
       }
     } catch (err) {
-      // AbortError fires when the user just dismisses the native share
-      // sheet — that's not a failure worth a toast.
+      // AbortError = sheet closed
       if (err instanceof Error && err.name !== 'AbortError') {
         toast.error('Could not share this post.')
       }
@@ -539,7 +473,6 @@ export default function PostModal({ post, onClose }: Props) {
 
   async function handleSubmit() {
     const trimContent = content.trim()
-    // Wait for the list: thread.add only works once comments are loaded.
     if (!trimContent || submitting || thread.status !== 'loaded') return
 
     setSubmitting(true)
@@ -576,8 +509,7 @@ export default function PostModal({ post, onClose }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ edit_token: token }),
       })
-      // Also drops its replies locally; the DB deletes them with it
-      // (ON DELETE CASCADE on parent_id), so no refetch is needed.
+      // DB cascades replies -> no refetch
       thread.remove(id)
       toast.success('Comment deleted.')
     } catch (err) {
@@ -604,11 +536,7 @@ export default function PostModal({ post, onClose }: Props) {
     void thread.loadOlder()
   }
 
-  // Older comments are inserted ABOVE what the reader is looking at. Restore
-  // the same distance from the bottom once loading finishes, so the view
-  // doesn't jump (browsers without scroll anchoring, e.g. Safari, would).
-  // Runs when loadingOlder flips back to false, in the same render as the
-  // new comments; on failure nothing was added, so this is a no-op.
+  // older comments loaded above -> keep distance from bottom
   useLayoutEffect(() => {
     const list = commentsListRef.current
     if (thread.loadingOlder || !list || scrollFromBottomRef.current === null) return
@@ -616,8 +544,6 @@ export default function PostModal({ post, onClose }: Props) {
     scrollFromBottomRef.current = null
   }, [thread.loadingOlder])
 
-  // Chat-style panel: oldest at the top, newest right above the input, so
-  // flip the hook's newest-first order. "Show older" sits at the top.
   const topLevel = [...thread.topLevel].reverse()
   const { repliesFor } = thread
   const commentCount = thread.total
@@ -641,8 +567,6 @@ export default function PostModal({ post, onClose }: Props) {
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Always-visible close button — dismisses the whole modal, from
-            either the image stage or the comments panel. */}
         <button
           type="button"
           onClick={onClose}
@@ -652,7 +576,6 @@ export default function PostModal({ post, onClose }: Props) {
           <X size={16} />
         </button>
 
-        {/* Stage: flat image + floating like/comment/share rail + caption */}
         <div className="post-modal-stage">
           <div className="post-modal-image-wrap">
             <Image
@@ -690,8 +613,6 @@ export default function PostModal({ post, onClose }: Props) {
                   </span>
                 )}
               </span>
-              {/* Visible on desktop/web; hidden only in the compact mobile
-                  icon-rail view (see the max-width: 640px block below). */}
               {likeCount > 0 && <span className="rail-count rail-count-like">{likeCount.toLocaleString()}</span>}
             </button>
 
@@ -715,10 +636,7 @@ export default function PostModal({ post, onClose }: Props) {
           </div>
         </div>
 
-        {/* Comments panel — desktop: drawer sliding in from the right edge,
-            image stays visible behind it. Mobile: full-screen, replaces the
-            image entirely; drag the handle down (or tap it / the back
-            chevron) to return to the image. */}
+        {/* comments: drawer (desktop) / full screen (mobile, drag handle to close) */}
         <div
           className={`post-modal-comments-panel ${commentsOpen ? 'open' : ''}`}
           style={dragOffset ? { transform: `translateY(${dragOffset}px)`, transition: 'none' } : undefined}
@@ -1016,8 +934,6 @@ export default function PostModal({ post, onClose }: Props) {
           }
           .post-modal-caption { right: 68px; }
           .rail-icon-bg { width: 40px; height: 40px; }
-          /* Compact icon-rail view on mobile only — count stays visible on
-             desktop/web. */
           .rail-count-like { display: none; }
           .post-modal-rail { right: 10px; gap: 16px; }
           .post-modal-close { width: 40px !important; height: 40px !important; }
@@ -1027,18 +943,12 @@ export default function PostModal({ post, onClose }: Props) {
             right: 0;
             width: 100%;
             max-width: 100%;
-            /* Leaves the top ~20% of the screen as a peek of the image
-               (rail included) behind the sheet, instead of covering the
-               whole viewport — same idea as Instagram's comment sheet:
-               comments never fully orphan you from what you're commenting
-               on. */
+            /* top 20% of the image stays visible */
             top: 20dvh;
             border-left: none;
             border-top: none;
             border-radius: 20px 20px 0 0;
-            /* Without this the comments list's own scroll container still
-               has square corners and pokes past the sheet's rounded ones
-               at the top. */
+            /* list corners stay inside the rounded sheet */
             overflow: hidden;
             box-shadow: 0 -8px 24px rgba(0,0,0,0.35);
             transform: translateY(100%);
