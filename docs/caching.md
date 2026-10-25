@@ -6,8 +6,8 @@ How public pages are cached on Cloudflare, and how to see what the cache is doin
 
 | Route | HTML | Supabase data | Refresh |
 |---|---|---|---|
-| `/`, `/comics`, `/donate`, `/early-access` | cached (ISR) | cached | 60 s, or right away on admin save |
-| `/comics/[slug]`, `/comics/[slug]/[chapter]` | rendered per request | cached | 60 s, or right away on admin save |
+| `/donate`, `/early-access` | cached (ISR) | cached | 60 s, or right away on admin save |
+| `/`, `/comics`, `/comics/[slug]`, `/comics/[slug]/[chapter]` | rendered per request | cached | 60 s, or right away on admin save |
 | `/posts` (and `?type=`) | rendered per request | cached per type | 60 s, or right away on admin save |
 | `/sitemap.xml` | cached | (read inside the route) | 1 h, or right away on admin save |
 | `/admin/*`, `/api/*`, `/bookmarks` | not cached | not cached | |

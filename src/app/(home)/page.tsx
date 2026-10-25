@@ -1,12 +1,9 @@
+import { connection } from 'next/server'
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import HomeClient from '@/app/(components)/HomeClient'
 import { getSettingsOrThrow } from '@/lib/settings'
 
-// ISR -> refresh every 60s -> admin write purges
-export const revalidate = 60
-
-// no try/catch: throw -> ISR keeps last good copy
 export async function generateMetadata() {
   const data = await getSettingsOrThrow()
 
@@ -35,7 +32,7 @@ export async function generateMetadata() {
   }
 }
 
-// throw on error -> not cached -> ISR keeps last good page
+// throw on error -> not cached
 const getHeroSlides = cachedPublicQuery('home:hero-slides', async () => {
   const supabase = createPublicClient()
   const { data, error } = await supabase
@@ -104,7 +101,10 @@ const getRecentPosts = cachedPublicQuery('home:recent-posts', async () => {
   return data ?? []
 })
 
+// per request (no saved page copy -> never stale after an admin save); data stays cached
 export default async function HomePage() {
+  await connection()
+
   const [heroSlides, latestChapters, recentPosts, settings] = await Promise.all([
     getHeroSlides(),
     getLatestChapters(),
