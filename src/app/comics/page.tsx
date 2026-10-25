@@ -54,7 +54,7 @@ const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   return { series, chapterCounts, pagesCount: pagesRes.count ?? 0 }
 })
 
-// per request (no saved page copy -> never stale after an admin save); data stays cached
+// per request -> no-store (browsers can't reuse an old copy after an admin save); data stays cached
 export default async function ComicsPage() {
   await connection()
 

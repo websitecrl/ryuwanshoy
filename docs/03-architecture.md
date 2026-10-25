@@ -61,7 +61,7 @@ Full details, including how to watch hits and misses: [caching.md](./caching.md)
 | Route | Strategy | Why |
 |-------|----------|-----|
 | `/donate`, `/early-access` | ISR, purged on every admin write | Served from cache; no client refetch |
-| `/`, `/comics` | Per request (`connection()`), data cached | A saved page copy was served stale once after an admin save (and prefetched by links) |
+| `/`, `/comics` | Per request (`connection()`), data cached | As ISR, browsers reused their stored copy (stale-while-revalidate) after an admin save; per request pages are no-store |
 | `/posts` | Per request (`?type=`), data cached per type | Filter lives in the URL |
 | `/comics/[slug]`, `/comics/[slug]/[chapter]` | Per request (`connection()`), data cached | Data cached; HTML per request |
 | `/bookmarks` | `force-dynamic` | Per visitor |
