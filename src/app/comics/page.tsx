@@ -1,3 +1,4 @@
+import { connection } from 'next/server'
 import { createPublicClient } from '@/lib/supabase/public'
 import { cachedPublicQuery } from '@/lib/cache/public-cache'
 import SeriesGrid from '@/components/reader/SeriesGrid'
@@ -21,8 +22,6 @@ export async function generateMetadata() {
     },
   }
 }
-
-export const revalidate = 60
 
 // error -> throw -> not cached. bump version when the shape changes
 const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
@@ -55,7 +54,10 @@ const getComicsData = cachedPublicQuery('comics:index:v2', async () => {
   return { series, chapterCounts, pagesCount: pagesRes.count ?? 0 }
 })
 
+// per request -> no-store (browsers can't reuse an old copy after an admin save); data stays cached
 export default async function ComicsPage() {
+  await connection()
+
   const { series, chapterCounts, pagesCount } = await getComicsData()
 
   const stats = {

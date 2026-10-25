@@ -63,7 +63,7 @@ export default function HomeClient({
   initialPosts,
   settings,
 }: Props) {
-  // no realtime -> ISR cache -> admin save purges -> reload shows new content
+  // no realtime -> cached data -> admin save purges -> reload shows new content
   const heroSlides = initialHeroSlides;
   const chapters = initialChapters;
   const posts = initialPosts;
