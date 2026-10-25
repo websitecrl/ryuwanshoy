@@ -195,12 +195,11 @@ export default function AdminSeriesPage() {
 
         <Link
           href="/admin/series/new"
-          className="flex items-center gap-2 px-4 h-10 rounded-lg text-sm font-semibold shrink-0 transition-opacity hover:opacity-90"
+          className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
           style={{
-            background: 'var(--ryu-accent)',
-            color: 'var(--ryu-on-accent)',
-            border: '1px solid var(--ryu-accent-deep)',
-            boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
+            background: 'var(--ryu-primary-soft)',
+            color: 'var(--ryu-primary-deep)',
+            border: '1.5px solid var(--ryu-border)',
           }}
         >
           <Plus size={16} strokeWidth={2.5} />
@@ -361,7 +360,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
               }}
             >
               <BookMarked size={13} />
-              Chapters
+              Add Chapter
             </Link>
 
           <Link href={`/admin/series/${s.id}`}
