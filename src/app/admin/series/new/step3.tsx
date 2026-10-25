@@ -255,11 +255,11 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 10, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
                 <button onClick={() => setMode('scroll')}
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
-                  ⊞ Scroll mode
+                  Scroll
                 </button>
                 <button onClick={() => setMode('flip')}
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'flip' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'flip' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
-                  ⊡ Flip 
+                  Flip
                 </button>
               </div>
             </div>

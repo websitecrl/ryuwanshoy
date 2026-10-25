@@ -72,11 +72,11 @@ export default function AdminPostsPage() {
           </p>
         </div>
         <Link href="/admin/posts/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
+            className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
-              background: 'var(--ryu-accent)', color: 'var(--ryu-on-accent)',
-              border: '1px solid var(--ryu-accent-deep)', cursor: 'pointer',
-              boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent), inset 0 1px 0 color-mix(in srgb, var(--ryu-on-image) 15%, transparent)',
+              background: 'var(--ryu-primary-soft)',
+              color: 'var(--ryu-primary-deep)',
+              border: '1.5px solid var(--ryu-border)',
             }}>
             <Plus size={16} strokeWidth={2.5} /> New Illustration
           </Link>
