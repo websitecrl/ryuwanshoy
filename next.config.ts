@@ -11,7 +11,6 @@ const R2_HOST        = 'img.ryuwanshoy.com';
 const LEGACY_R2_HOST = 'pub-5657faa0f50f468797255fb5df45f6ae.r2.dev';
 
 const nextConfig: NextConfig = {
-  serverExternalPackages:["sharp", "@img/sharp-wasm32"],
   images: {
     // TEMPORARY STOPGAP: unoptimized in all environments, not just dev.
     // Next's built-in optimizer on Cloudflare Workers (via OpenNext) routes
