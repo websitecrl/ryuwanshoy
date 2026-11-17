@@ -65,10 +65,11 @@ export async function PATCH(
       .single()
 
     if (error) {
+      // unique (series_id, chapter_number) -> 409 Conflict, same as POST /api/chapters
       if (error.code === '23505') {
         return NextResponse.json(
           { data: null, error: 'A chapter with this number already exists in this series' },
-          { status: 400 }
+          { status: 409 }
         )
       }
       throw error
