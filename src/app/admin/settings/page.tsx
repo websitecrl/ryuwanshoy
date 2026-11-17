@@ -63,6 +63,7 @@ function SaveRow({
       <button
         onClick={onClick}
         disabled={saving}
+        className="max-md:min-h-11"
         style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: bg, color, border, fontSize: 13.5, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}
       >
         <Save size={14} />
@@ -241,7 +242,7 @@ export default function SettingsPage() {
             const active = section === s.key
             return (
               <button key={s.key} onClick={() => setSection(s.key)}
-                className="max-md:w-auto! max-md:mb-0!"
+                className="max-md:w-auto! max-md:mb-0! max-md:min-h-11"
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: 'none', marginBottom: 2, fontSize: 13.5, fontWeight: active ? 600 : 500, textAlign: 'left', cursor: 'pointer', position: 'relative',
                   background: active ? (s.danger ? 'var(--ryu-danger-soft)' : 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)') : 'transparent',
                   color: active ? (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-primary-deep)') : (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-text)') }}>
@@ -255,7 +256,7 @@ export default function SettingsPage() {
           <div className="max-md:w-full max-md:pt-2!" style={{ padding: '4px 12px', fontSize: 12, color: 'var(--ryu-text-2)' }}>
             <div style={{ fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 4 }}>Need help?</div>
             <div style={{ marginBottom: 10 }}>Settings docs are in the help center.</div>
-            <Link href="/admin/help" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', color: 'var(--ryu-primary-deep)', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
+            <Link href="/admin/help" className="max-md:min-h-11" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', color: 'var(--ryu-primary-deep)', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
               <BookOpen size={13} />
               View docs
             </Link>
@@ -283,6 +284,7 @@ export default function SettingsPage() {
                     <input style={{ ...inputStyle, flex: 1 }} value={settings.logo_url ?? ''} onChange={e => setSettings(p => ({ ...p, logo_url: e.target.value }))} placeholder="Paste URL or upload →" />
                     <input type="file" accept="image/*" className="hidden" id="logo-upload" onChange={handleLogoUpload} />
                     <button type="button" disabled={uploadingLogo} onClick={() => document.getElementById('logo-upload')?.click()}
+                      className="max-md:min-h-11"
                       style={{ padding: '10px 16px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: uploadingLogo ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', opacity: uploadingLogo ? 0.6 : 1 }}>
                       {uploadingLogo ? 'Uploading...' : 'Upload'}
                     </button>
@@ -432,6 +434,7 @@ export default function SettingsPage() {
                   <Field label="New Email"><input style={inputStyle} type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="new@email.com" /></Field>
                   <Field label="Confirm New Email"><input style={inputStyle} type="email" value={confirmEmail} onChange={e => setConfirmEmail(e.target.value)} placeholder="new@email.com" /></Field>
                   <button onClick={handleEmailChange} disabled={savingEmail}
+                    className="max-md:min-h-11"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     {savingEmail ? 'Sending confirmation...' : 'Change Email'}
                   </button>
@@ -444,6 +447,7 @@ export default function SettingsPage() {
                   <Field label="New Password"><input style={inputStyle} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" /></Field>
                   <Field label="Confirm New Password"><input style={inputStyle} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Min. 8 characters" /></Field>
                   <button onClick={handlePasswordChange} disabled={savingPassword}
+                    className="max-md:min-h-11"
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 8, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', border: '1px solid var(--ryu-danger-border)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' }}>
                     {savingPassword ? 'Updating...' : 'Change Password'}
                   </button>

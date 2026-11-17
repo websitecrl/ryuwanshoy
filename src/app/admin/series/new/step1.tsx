@@ -117,7 +117,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
                 {data.slug && (
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, background: 'var(--ryu-primary-soft)', border: '1px solid var(--ryu-border)' }}>
                     <span style={{ fontSize: 12, color: 'var(--ryu-text-2)' }}>ryuwanshoy.com/series/<strong style={{ color: 'var(--ryu-primary-deep)' }}>{data.slug}</strong></span>
-                    <button onClick={() => { navigator.clipboard.writeText(`ryuwanshoy.com/series/${data.slug}`); toast.success('Copied!') }} style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ryu-primary-deep)', background: 'none', border: 'none', cursor: 'pointer' }}>Copy</button>
+                    <button onClick={() => { navigator.clipboard.writeText(`ryuwanshoy.com/series/${data.slug}`); toast.success('Copied!') }} className="max-md:min-h-11" style={{ fontSize: 11.5, fontWeight: 600, color: 'var(--ryu-primary-deep)', background: 'none', border: 'none', cursor: 'pointer' }}>Copy</button>
                   </div>
                 )}
               </div>
@@ -192,8 +192,8 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
                   <Image src={data.coverPreview} alt="Cover" fill className="object-cover" />
                 </div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '10px 12px' }}>
-                  <button onClick={() => coverInputRef.current?.click()} style={{ fontSize: 12, fontWeight: 600, padding: '5px 16px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', cursor: 'pointer' }}>Replace</button>
-                  <button onClick={() => onChange({ coverFile: null, coverPreview: null })} style={{ fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--ryu-text-3)', cursor: 'pointer' }}>Remove</button>
+                  <button onClick={() => coverInputRef.current?.click()} className="max-md:min-h-11" style={{ fontSize: 12, fontWeight: 600, padding: '5px 16px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', cursor: 'pointer' }}>Replace</button>
+                  <button onClick={() => onChange({ coverFile: null, coverPreview: null })} className="max-md:min-h-11" style={{ fontSize: 12, fontWeight: 500, padding: '5px 12px', borderRadius: 6, border: 'none', background: 'transparent', color: 'var(--ryu-text-3)', cursor: 'pointer' }}>Remove</button>
                 </div>
               </div>
             ) : (
@@ -233,7 +233,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
       </div>
 
-      <div style={BOTTOM_BAR}>
+      <div className="action-bar" style={BOTTOM_BAR}>
         {!submitting && (
           <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>
             Discard

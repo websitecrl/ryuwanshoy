@@ -67,7 +67,7 @@ export default function EarlyAccessPage() {
           <p className="mt-1.5 text-sm" style={{ color: 'var(--ryu-text-2)' }}>Email list for early chapter access</p>
         </div>
         <button onClick={handleExportCSV} disabled={entries.length === 0}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 max-md:min-h-11 rounded-lg text-sm font-semibold shrink-0"
           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', cursor: 'pointer', opacity: entries.length === 0 ? 0.5 : 1 }}>
           <Download size={15} /> Export CSV
         </button>

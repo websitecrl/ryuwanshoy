@@ -163,7 +163,7 @@ export default function AdminSeriesPage() {
                 <button
                   key={status}
                   onClick={() => setStatus(status)}
-                  className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold transition-colors capitalize"
+                  className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold transition-colors capitalize"
                   style={
                     statusFilter === status
                       ? {
@@ -195,7 +195,7 @@ export default function AdminSeriesPage() {
 
         <Link
           href="/admin/series/new"
-          className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+          className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
           style={{
             background: 'var(--ryu-primary-soft)',
             color: 'var(--ryu-primary-deep)',
@@ -226,7 +226,7 @@ export default function AdminSeriesPage() {
           </p>
           <Link
             href="/admin/series/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
+            className="flex items-center gap-2 px-4 py-2.5 max-md:min-h-11 rounded-lg text-sm font-semibold"
             style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}
           >
             <Plus size={15} strokeWidth={2.5} />
@@ -352,7 +352,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
         <div className="flex items-center gap-2 mt-auto">
 
           <Link href={`/admin/chapters/new?series_id=${s.id}`}
-              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80"
+              className="flex-1 flex items-center justify-center gap-1.5 h-9 max-md:h-11 rounded-lg text-[13px] font-semibold transition-opacity hover:opacity-80"
               style={{
                 background: 'var(--ryu-primary-soft)',
                 color: 'var(--ryu-primary-deep)',
@@ -365,7 +365,7 @@ function SeriesCard({ series: s, onDelete }: SeriesCardProps) {
 
           <Link href={`/admin/series/${s.id}`}
               aria-label="Edit series"
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+              className="w-9 h-9 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center transition-colors"
               title="Edit series"
               style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)' }}
               onMouseEnter={e => {

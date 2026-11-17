@@ -61,6 +61,7 @@ function SortablePage({
         onMouseDown={e => e.stopPropagation()}
         onTouchStart={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
+        className="tap-area"
         style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 80%, transparent)', color: 'var(--ryu-on-image)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
 >
   <X size={13} />
@@ -182,6 +183,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                   aria-checked={reversed}
                   onClick={toggleReversed}
                   disabled={submitting}
+                  className="max-md:min-h-11"
                   style={{ marginLeft: 'auto', alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   Reverse order
@@ -206,6 +208,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} page{pages.length === 1 ? '' : 's'} added</span>}
               <button
                 onClick={() => fileInputRef.current?.click()}
+                className="max-md:min-h-11"
                 style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 + Browse files
@@ -297,7 +300,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         </div>
       </div>
 
-      <div style={BOTTOM_BAR}>
+      <div className="action-bar" style={BOTTOM_BAR}>
         <button
           onClick={onBack}
           disabled={submitting}

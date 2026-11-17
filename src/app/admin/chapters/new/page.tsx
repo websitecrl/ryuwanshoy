@@ -88,7 +88,7 @@ function SortablePageThumbnail({
             onTouchStart={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
             style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
-            className="hover:opacity-100 transition-opacity">
+            className="tap-area max-md:w-7! max-md:h-7! hover:opacity-100 transition-opacity">
             <X size={9} />
           </button>
         )}
@@ -319,7 +319,7 @@ export default function NewChapterPage() {
   }
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
       <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/series" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>Series</Link>
@@ -332,7 +332,7 @@ export default function NewChapterPage() {
         <h1 className="font-heading font-bold" style={{ fontSize: 36, letterSpacing: -0.8, color: 'var(--ryu-text)', margin: 0 }}>New Chapter</h1>
       </div>
 
-      <div className="max-lg:flex-col max-md:px-4!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4! max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))]!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
         <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -477,7 +477,7 @@ export default function NewChapterPage() {
 
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'linear-gradient(to top, var(--background) 60%, transparent)', padding: '20px 32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="action-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'linear-gradient(to top, var(--background) 60%, transparent)', padding: '20px 32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
        <button
           disabled={submitting}
           onClick={() => router.push('/admin/series')}

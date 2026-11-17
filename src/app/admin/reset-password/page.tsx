@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
       `}</style>
 
       <div style={{
-        minHeight: '100vh', width: '100%',
+        minHeight: '100dvh', width: '100%',
         position: 'relative',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '48px 24px',

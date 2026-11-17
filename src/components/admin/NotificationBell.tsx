@@ -147,7 +147,7 @@ export default function NotificationBell() {
 
       <button
         onClick={handleOpen}
-        className="relative flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all duration-150"
+        className="relative flex items-center gap-2 px-3 py-2 max-md:min-h-11 rounded-xl cursor-pointer transition-all duration-150"
         style={{
           background: hasUnread
             ? 'color-mix(in srgb, var(--ryu-primary) 12%, transparent)'

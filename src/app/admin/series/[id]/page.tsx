@@ -132,7 +132,7 @@ export default function EditSeriesPage() {
   }
 
   return (
-    <div className="animate-page-in px-8 max-md:px-4 pb-28 pt-6" style={{ minHeight: '100vh' }}>
+    <div className="animate-page-in px-8 max-md:px-4 pb-28 max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))] pt-6" style={{ minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
       <div className="mb-8">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 flex items-center gap-2" style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -223,10 +223,12 @@ export default function EditSeriesPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center', padding: '10px 12px' }}>
                     <button type="button" onClick={() => coverInputRef.current?.click()}
+                      className="max-md:min-h-11"
                       style={{ fontSize: 12, fontWeight: 600, padding: '5px 16px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', cursor: 'pointer' }}>
                       Replace
                     </button>
                     <button type="button" onClick={() => { setCoverFile(null); setCoverPreview(null); setCurrentCover(null) }}
+                      className="max-md:min-h-11 max-md:min-w-11"
                       style={{ fontSize: 12, fontWeight: 600, padding: '5px 12px', borderRadius: 6, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', cursor: 'pointer' }}>
                       ✕
                     </button>
@@ -267,7 +269,7 @@ export default function EditSeriesPage() {
           </div>
         </div>
 
-        <div style={{
+        <div className="action-bar" style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--ryu-bg, var(--background)) 80%, transparent)',
           padding: '16px 32px',

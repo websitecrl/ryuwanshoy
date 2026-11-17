@@ -81,7 +81,7 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
             justifyContent: 'center', cursor: 'pointer',
             opacity: isDeleting ? 0.6 : 1, transition: 'transform 100ms ease',
           }}
-          className="hover:scale-110 disabled:cursor-not-allowed"
+          className="tap-area max-md:w-7! max-md:h-7! hover:scale-110 disabled:cursor-not-allowed"
         >
           <X size={11} strokeWidth={2.5} />
         </button>

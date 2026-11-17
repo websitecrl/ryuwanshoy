@@ -100,7 +100,7 @@ export default function AdminChaptersPage() {
             </div>
           )}
         </div>
-        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',
@@ -197,7 +197,7 @@ export default function AdminChaptersPage() {
 
                       <Link href={`/admin/chapters/${c.id}`}
                           aria-label="Edit chapter"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                          className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
                           onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-primary)'; el.style.color = 'var(--ryu-primary-deep)' }}
                           onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border)'; el.style.color = 'var(--ryu-text-2)' }}

@@ -86,7 +86,7 @@ export default function DeleteButton({
         disabled={disabled || deleting}
         aria-label={label}
         title={label}
-        className={`${triggerBase} shrink-0 rounded-lg flex items-center justify-center border
+        className={`${triggerBase} shrink-0 max-md:min-w-11 max-md:min-h-11 rounded-lg flex items-center justify-center border
                     border-[var(--ryu-border-soft)] bg-[var(--ryu-surface-1)] text-[var(--ryu-text-3)]
                     hover:border-[var(--ryu-danger)] hover:text-[var(--ryu-danger)]
                     hover:bg-[color-mix(in_srgb,var(--ryu-danger)_8%,transparent)]`}
@@ -97,14 +97,14 @@ export default function DeleteButton({
     ) : variant === 'text' ? (
       <AlertDialogTrigger
         disabled={disabled || deleting}
-        className={`${triggerBase} text-sm font-semibold text-[var(--ryu-danger)] hover:underline`}
+        className={`${triggerBase} max-md:min-h-11 text-sm font-semibold text-[var(--ryu-danger)] hover:underline`}
       >
         {label}
       </AlertDialogTrigger>
     ) : (
       <AlertDialogTrigger
         disabled={disabled || deleting}
-        className={`${triggerBase} inline-flex items-center gap-1.5 rounded-full px-4 h-9 text-sm font-semibold
+        className={`${triggerBase} inline-flex items-center gap-1.5 rounded-full px-4 h-9 max-md:h-11 text-sm font-semibold
                     text-[var(--ryu-danger)] bg-[color-mix(in_srgb,var(--ryu-danger)_12%,transparent)]
                     hover:bg-[color-mix(in_srgb,var(--ryu-danger)_20%,transparent)]`}
       >

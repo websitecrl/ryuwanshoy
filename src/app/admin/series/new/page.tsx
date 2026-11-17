@@ -231,7 +231,7 @@ function SavingOverlay({ saving }: { saving: NonNullable<SaveState> }) {
 export default function NewSeriesPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <Loader2 size={24} className="animate-spin" style={{ color: 'var(--ryu-primary)' }} />
       </div>
     }>

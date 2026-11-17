@@ -386,7 +386,7 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
     top: 0;
     bottom: 0;
     left: 0;
-    z-index: 50;
+    z-index: 60; /* above the series wizard's sticky bar (50) */
     height: 100dvh;
     max-width: 85vw;
     padding-left: env(safe-area-inset-left);
@@ -404,7 +404,7 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   .admin-root .admin-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 40;
+    z-index: 55;
     background: color-mix(in srgb, var(--ryu-shadow) 50%, transparent);
   }
 
@@ -466,6 +466,58 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   }
   .admin-root .stack-table--media td.stack-actions {
     grid-column: 3;
+  }
+
+  /* iPhone Safari zooms the page in when a focused field's text is under 16px.
+     The admin's inputs set 13-14px inline, hence !important. */
+  .admin-root :is(input, textarea, select) {
+    font-size: 16px !important;
+  }
+
+  /* .tap-area: a small control keeps its look and gets a 44px hit area.
+     The control must already be positioned (absolute or relative). */
+  .admin-root .tap-area::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Sticky footers (Save / Publish / Delete): class .action-bar on the bar.
+     Solid background, clear of the iPhone home indicator, 44px controls.
+     The text link on the left (Delete / Discard / Back) keeps its own width.
+     The buttons of the right-hand group each take half the bar, so the bar is
+     never more than two rows:  [link][button] / [button][button]
+                           or:  [link][button] / [button]
+     and the main action ends up on the bottom row, full width when alone. */
+  .admin-root .action-bar {
+    flex-wrap: wrap;
+    gap: 8px !important;
+    padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--ryu-border);
+  }
+  .admin-root .action-bar :is(a, button) {
+    min-height: 44px;
+  }
+  .admin-root .action-bar > :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* the group's box disappears; its buttons become items of the bar */
+  .admin-root .action-bar > div {
+    display: contents !important;
+  }
+  .admin-root .action-bar > div > * {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+  .admin-root .action-bar > div > a {
+    display: inline-flex !important;
+    align-items: center;
   }
 }
 

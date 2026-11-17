@@ -189,6 +189,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
           <button onClick={() => go('prev')} disabled={spread === 0 || flipping}
+            className="max-md:min-h-11"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? 'var(--ryu-surface-2)' : 'var(--ryu-surface-1)', color: spread === 0 ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', border: '1px solid var(--ryu-border)', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             <ChevronLeft size={15} /> Prev
           </button>
@@ -200,6 +201,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
             ))}
           </div>
           <button onClick={() => go('next')} disabled={spread === totalSpreads - 1 || flipping}
+            className="max-md:min-h-11"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? 'var(--ryu-surface-2)' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? 'var(--ryu-text-3)' : 'var(--ryu-on-primary)', border: `1px solid ${spread === totalSpreads - 1 ? 'var(--ryu-border)' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             Next <ChevronRight size={15} />
           </button>
@@ -254,10 +256,12 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               </div>
               <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 10, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
                 <button onClick={() => setMode('scroll')}
+                  className="max-md:min-h-11"
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   Scroll
                 </button>
                 <button onClick={() => setMode('flip')}
+                  className="max-md:min-h-11"
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'flip' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'flip' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   Flip
                 </button>
@@ -344,7 +348,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
         </div>
       </div>
  
-      <div style={BOTTOM_BAR}>
+      <div className="action-bar" style={BOTTOM_BAR}>
         {!publishing && !hasSavedRows && (
           <button onClick={onBack}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: 'pointer' }}>

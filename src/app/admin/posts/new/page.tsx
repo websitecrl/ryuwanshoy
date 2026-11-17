@@ -115,7 +115,7 @@ export default function NewPostPage() {
   }
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
       <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
@@ -137,7 +137,7 @@ export default function NewPostPage() {
         </h1>
       </div>
 
-      <div className="max-lg:flex-col max-md:px-4!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4! max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))]!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
         <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -290,6 +290,7 @@ export default function NewPostPage() {
                     <button
                       type="button"
                       onClick={clearImage}
+                      className="tap-area"
                       style={{
                         position: 'absolute', top: 8, right: 8,
                         width: 28, height: 28, borderRadius: 99,
@@ -312,6 +313,7 @@ export default function NewPostPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
+                      className="max-md:min-h-11"
                       style={{
                         fontSize: 11.5, fontWeight: 600,
                         color: 'var(--ryu-primary-deep)',
@@ -330,7 +332,7 @@ export default function NewPostPage() {
 
       </div>
 
-      <div style={{
+      <div className="action-bar" style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
         background: 'linear-gradient(to top, var(--background) 60%, transparent)',
         padding: '20px 32px 16px',

@@ -146,7 +146,7 @@ export default function AdminFeedbackPage() {
               type="button"
               onClick={() => setFilter(f)}
               aria-pressed={filter === f}
-              className={`rounded-full px-3 py-1 text-xs border transition-colors ${
+              className={`rounded-full px-3 py-1 max-md:min-h-11 max-md:px-4 text-xs border transition-colors ${
                 filter === f
                   ? 'border-[var(--ryu-primary)] text-[var(--ryu-primary-deep)] bg-[var(--ryu-primary-soft)] font-semibold'
                   : 'border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]'
@@ -160,7 +160,7 @@ export default function AdminFeedbackPage() {
             onClick={() => void markAllRead()}
             disabled={loadedUnreadIds.length === 0}
             title="Marks the reports loaded below as read"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 max-md:min-h-11 text-xs font-semibold border
                        border-[var(--ryu-border)] text-[var(--ryu-text)] bg-[var(--ryu-surface-1)]
                        disabled:opacity-40 hover:bg-[var(--ryu-surface-2)] transition-colors"
           >
@@ -277,7 +277,7 @@ export default function AdminFeedbackPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => void setRead(item, !item.is_read)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 max-md:min-h-11 text-xs font-semibold border
                                border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]
                                disabled:opacity-40"
                   >
@@ -312,7 +312,7 @@ export default function AdminFeedbackPage() {
               type="button"
               onClick={() => void loadOlder()}
               disabled={loadingOlder}
-              className="rounded-lg px-4 py-2 text-sm font-semibold border border-[var(--ryu-border)]
+              className="rounded-lg px-4 py-2 max-md:min-h-11 text-sm font-semibold border border-[var(--ryu-border)]
                          text-[var(--ryu-text)] bg-[var(--ryu-surface-1)] hover:bg-[var(--ryu-surface-2)]
                          disabled:opacity-50"
             >

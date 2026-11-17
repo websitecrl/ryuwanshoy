@@ -162,7 +162,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
   const canPublish = !chapter.is_published
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
       <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
@@ -192,7 +192,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      <div className="max-lg:flex-col max-md:px-4!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4! max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))]!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
         <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
@@ -337,7 +337,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
       </div>
 
-        <div style={{
+        <div className="action-bar" style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--background) 60%, transparent)',
           padding: '20px 32px 16px',

@@ -70,7 +70,7 @@ export default function StorageCleanup() {
       <button
         onClick={check}
         disabled={checking}
-        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-[13.5px] font-semibold transition-colors
+        className="inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 max-md:min-h-11 text-[13.5px] font-semibold transition-colors
                    border-[var(--ryu-border)] bg-[var(--ryu-surface-2)] text-[var(--ryu-text)]
                    hover:border-[var(--ryu-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
       >
