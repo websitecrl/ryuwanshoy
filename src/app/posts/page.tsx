@@ -71,7 +71,7 @@ export default async function PostsPage({
           borderColor: 'var(--ryu-border)',
         }}
       >
-        <div className="max-w-400 mx-auto px-12 py-6">
+        <div className="max-w-400 mx-auto px-4 sm:px-12 py-6">
           <h1
             className="text-3xl leading-none mb-1"
             style={{
@@ -94,7 +94,7 @@ export default async function PostsPage({
         className="border-b"
         style={{ background: 'var(--ryu-surface-1)', borderColor: 'var(--ryu-border)' }}
       >
-        <div className="max-w-400 mx-auto px-12 py-3 flex items-center gap-2 flex-wrap">
+        <div className="max-w-400 mx-auto px-4 sm:px-12 py-3 flex items-center gap-2 flex-wrap">
           {TYPE_FILTERS.map(filter => {
             const active = (type ?? undefined) === filter.value
             return (

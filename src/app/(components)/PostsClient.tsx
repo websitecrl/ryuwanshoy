@@ -52,10 +52,19 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
     }
   }
 
+  // Columns follow the screen and the number of posts: one full width column
+  // on a phone (the art is the point, so it gets the whole width), then 2, 3
+  // and 4 as the screen grows. With one or two posts the grid is capped so a
+  // lone image isn't left small in the first of four columns.
+  const columnClasses =
+    posts.length === 1 ? 'columns-1 max-w-xl'
+    : posts.length === 2 ? 'columns-1 sm:columns-2 max-w-4xl'
+    : 'columns-1 sm:columns-2 lg:columns-3 2xl:columns-4'
+
   return (
     <>
       {posts.length === 0 && (
-        <div className="max-w-400 mx-auto px-12 py-24 text-center">
+        <div className="max-w-400 mx-auto px-4 sm:px-12 py-24 text-center">
           <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
             No illustrations yet.
           </p>
@@ -72,17 +81,26 @@ export default function PostsClient({ initialPosts, initialCursor, activeType }:
       )}
 
       {posts.length > 0 && (
-        <div className="max-w-400 mx-auto px-12 py-6">
-          <div className="columns-2 sm:columns-3 lg:columns-4 gap-4 space-y-4">
+        <div className="max-w-400 mx-auto px-4 sm:px-12 py-6">
+          {/* mb-4 on each card, not space-y on the list: a top margin would push down the first card of every column */}
+          <div className={`${columnClasses} gap-4`}>
             {posts.map((post, index) => (
               <div
                 key={post.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${post.title ?? 'illustration'}`}
                 onClick={() => setSelectedPost(post)}
-                className="break-inside-avoid rounded-xl overflow-hidden transition-all duration-200 cursor-pointer"
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedPost(post) }
+                }}
+                className="motion-card motion-rise mb-4 break-inside-avoid rounded-xl overflow-hidden cursor-pointer"
                 style={{
                   border: '0.5px solid var(--ryu-border)',
                   background: 'var(--ryu-surface-1)',
-                }}
+                  // cards rise in one after another; the delay repeats every 8 so "Load more" doesn't wait long
+                  '--rise-i': index % 8,
+                } as React.CSSProperties}
                 onMouseEnter={e => {
                   (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--ryu-border-hover)';
                 }}
