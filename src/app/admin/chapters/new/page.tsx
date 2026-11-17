@@ -21,6 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { UNREADABLE_IMAGE_MESSAGE } from '@/lib/image-compress'
 import { describePageError, isSpreadPage, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
+import { setPublished } from '@/app/admin/series/new/save'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -43,23 +44,24 @@ const labelStyle: React.CSSProperties = {
   color: 'var(--ryu-text)', marginBottom: 6,
 }
 
-/** sortable thumbnail (useSortable needs its own component) */
+/** sortable thumbnail (useSortable needs its own component). locked -> no dragging */
 function SortablePageThumbnail({
-  page, index, onRemove,
+  page, index, onRemove, locked,
 }: {
   page: PageFile
   index: number
   onRemove: (id: string) => void
+  locked: boolean
 }) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
-  } = useSortable({ id: page.id })
+  } = useSortable({ id: page.id, disabled: locked })
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1,
-    cursor: 'grab',
+    cursor: locked ? 'default' : 'grab',
   }
 
   return (
@@ -119,6 +121,10 @@ export default function NewChapterPage() {
   const [pages,            setPages]            = useState<PageFile[]>([])
   const [dragOver,         setDragOver]         = useState(false)
   const [submitting,       setSubmitting]       = useState(false)
+  // row created by an earlier attempt -> a retry reuses it (never a second chapter)
+  const savedChapterId = useRef<string | null>(null)
+  // row exists -> details and page order are locked (the server already has them)
+  const [chapterSaved,     setChapterSaved]     = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const sensors = useSensors(
@@ -202,6 +208,8 @@ export default function NewChapterPage() {
 
   function handlePageDragEnd(event: DragEndEvent) {
     const { active, over } = event
+    // row saved -> uploaded pages already have their numbers on the server
+    if (savedChapterId.current) return
     if (!over || active.id === over.id) return
     setPages(prev => {
       const oldIndex = prev.findIndex(p => p.id === active.id)
@@ -211,64 +219,92 @@ export default function NewChapterPage() {
     })
   }
 
+  /**
+   * Saves the chapter row as a draft and uploads the pages in order.
+   * Same flow as the series wizard: nothing is live until every page is up.
+   * The row is a draft in both modes; publishing it later clears is_draft
+   * (PATCH /api/chapters/[id]).
+   *
+   * @param mode - only picks the wording of the error toast
+   * @returns the chapter id once every page is uploaded; null if a step failed
+   *   (the error is already shown in a toast)
+   *
+   * Stops at the first failed page: the server numbers pages max + 1, so
+   * uploading past a failure would put the later pages in the wrong place.
+   * Safe to call again: the saved row and the uploaded pages are skipped.
+   */
+  async function persist(mode: SaveMode): Promise<string | null> {
+    if (!savedChapterId.current) {
+      const chRes  = await fetch('/api/chapters', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: chapterTitle.trim() || null, is_early_access: isEarlyAccess, is_published: false, is_draft: true, published_at: new Date().toISOString() }),
+      })
+      const chJson = await chRes.json().catch(() => null) as { data?: { id: string }; error?: string } | null
+      if (!chRes.ok || chJson?.error || !chJson?.data) {
+        toast.error(chJson?.error ?? 'Failed to create chapter')
+        return null
+      }
+      savedChapterId.current = chJson.data.id
+      setChapterSaved(true)
+    }
+    const chapterId = savedChapterId.current
+
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i]
+      if (!page || page.uploaded) continue
+      setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true, error: null } : p))
+      try {
+        await uploadComicPage(chapterId, page.file, page.isSpread)
+        setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: true, error: null } : p))
+      } catch (err) {
+        const message = describePageError(i + 1, page.file, err)
+        setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, error: message } : p))
+        toast.error(
+          `${message} ${mode === 'publish' ? 'Nothing was published; the chapter is saved as a draft.' : 'The chapter is saved as a draft.'} ` +
+          'Retry to upload the remaining pages, or remove that page first.',
+          { duration: 15_000 }
+        )
+        return null
+      }
+    }
+    return chapterId
+  }
+
+  /**
+   * Draft: save + upload, then go to Drafts.
+   * Publish: save + upload, then publish the series (if it isn't yet) and the
+   * chapter. Publishing is the last step, so a failed upload or a failed
+   * publish request leaves a draft and never an empty or half-uploaded chapter.
+   */
   async function handleSubmit(mode: SaveMode) {
     if (!selectedSeriesId) { toast.error('Select a series'); return }
     if (!chapterNumber)    { toast.error('Chapter number is required'); return }
     if (!isValidNumber)    { toast.error('Chapter number must be 1 or higher'); return }
-    if (isDuplicateNumber) { toast.error(`Chapter ${chapterNum} already exists in this series`); return }
+    // on a retry the row already holds this number
+    if (isDuplicateNumber && !savedChapterId.current) { toast.error(`Chapter ${chapterNum} already exists in this series`); return }
     setSubmitting(true)
     try {
-      if (mode === 'publish') {
-        const seriesRes  = await fetch(`/api/series/${selectedSeriesId}`, {
-          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ is_published: true }),
-        })
-        const seriesJson = await seriesRes.json()
-        if (!seriesRes.ok || seriesJson.error) {
-          toast.error(seriesJson.error ?? 'Failed to publish series')
-          setSubmitting(false)
-          return
-        }
-      }
-
-      const chRes  = await fetch('/api/chapters', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: chapterTitle.trim() || null, is_early_access: isEarlyAccess, is_published: mode === 'publish',  is_draft: mode === 'draft', published_at: new Date().toISOString() }),
-      })
-      const chJson = await chRes.json()
-      if (!chRes.ok || chJson.error) { toast.error(chJson.error ?? 'Failed to create chapter'); setSubmitting(false); return }
-      const chapterId = chJson.data.id
-
-      // one at a time, in order -> server page_number = max + 1
-      const failures: string[] = []
-      for (let i = 0; i < pages.length; i++) {
-        const page = pages[i]; if (!page) continue
-        setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: true } : p))
-        try {
-          await uploadComicPage(chapterId, page.file, page.isSpread)
-          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, uploaded: true, error: null } : p))
-        } catch (err) {
-          const message = describePageError(i + 1, page.file, err)
-          failures.push(message)
-          setPages(prev => prev.map(p => p.id === page.id ? { ...p, uploading: false, error: message } : p))
-        }
-      }
-
-      // redirect next -> errors go in a toast
-      if (failures.length) {
-        toast.error(
-          `${failures.length} page(s) failed to upload. Add them from the chapter's edit page. ${failures.join(' ')}`,
-          { duration: 15_000 }
-        )
-      }
+      const chapterId = await persist(mode)
+      if (!chapterId) { setSubmitting(false); return }
 
       if (mode === 'draft') {
         toast.success('Chapter saved as draft')
-      } else {
-        toast.success(seriesIsPublished === false ? 'Series published!' : 'Chapter published!')
+        router.push('/admin/drafts')
+        return
       }
-      router.push(mode === 'draft' ? '/admin/drafts' : '/admin/series')
-    } catch { toast.error('Something went wrong'); setSubmitting(false) }
+
+      // every page is up -> go live. series first, then the chapter (same order as the wizard)
+      if (seriesIsPublished !== true) await setPublished('series', selectedSeriesId)
+      await setPublished('chapters', chapterId)
+
+      toast.success(seriesIsPublished === false ? 'Series published!' : 'Chapter published!')
+      router.push('/admin/series')
+    } catch (err) {
+      // persist() reports its own errors; this is a failed publish request or a network error
+      const reason = (err instanceof Error && err.message ? err.message : 'Something went wrong').replace(/[.!?]$/, '')
+      toast.error(savedChapterId.current ? `${reason}. The chapter is saved as a draft; try again.` : `${reason}.`)
+      setSubmitting(false)
+    }
   }
 
   if (!loadingSeries && seriesList.length === 0) {
@@ -311,7 +347,7 @@ export default function NewChapterPage() {
                 {loadingSeries ? (
                   <div style={{ height: 42, borderRadius: 6, background: 'var(--ryu-surface-3)' }} className="animate-pulse" />
                 ) : (
-                <Select value={selectedSeriesId} onValueChange={v => setSelectedSeriesId(v ?? '')}>
+                <Select value={selectedSeriesId} onValueChange={v => setSelectedSeriesId(v ?? '')} disabled={chapterSaved}>
                   <SelectTrigger>
                     <span style={{ color: selectedSeriesId ? 'var(--ryu-text)' : 'var(--ryu-text-3)', fontSize: 14 }}>
                       {selectedSeriesId
@@ -334,15 +370,21 @@ export default function NewChapterPage() {
                     type="number"
                     value={chapterNumber}
                     onChange={e => setChapterNumber(e.target.value)}
+                    disabled={chapterSaved}
                   />
                   {chapterNumber && !isValidNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Must be 1 or higher</p>}
                   {chapterNumber && isValidNumber && isDuplicateNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Chapter {chapterNum} already exists</p>}
                 </div>
                 <div>
                   <label style={labelStyle}>Title <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>(optional)</span></label>
-                  <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="e.g. The Beginning" />
+                  <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="e.g. The Beginning" disabled={chapterSaved} />
                 </div>
               </div>
+              {chapterSaved && (
+                <p style={{ fontSize: 11.5, color: 'var(--ryu-text-2)', margin: 0 }}>
+                  This chapter is saved as a draft, so its details are locked here. Finish the upload, or edit it later from Drafts.
+                </p>
+              )}
             </div>
           </div>
 
@@ -406,7 +448,7 @@ export default function NewChapterPage() {
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 10 }}>
                       {pages.map((page, idx) => (
-                        <SortablePageThumbnail key={page.id} page={page} index={idx} onRemove={removePage} />
+                        <SortablePageThumbnail key={page.id} page={page} index={idx} onRemove={removePage} locked={chapterSaved} />
                       ))}
                       <div onClick={() => fileInputRef.current?.click()}
                         style={{ aspectRatio: '3/4', borderRadius: 6, border: '1.5px dashed var(--ryu-border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 3 }}>
@@ -420,7 +462,7 @@ export default function NewChapterPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--ryu-text-3)' }}>
                 <AlertCircle size={12} style={{ color: 'var(--ryu-primary-deep)', flexShrink: 0 }} />
-                Drag to reorder · upload in reading order
+                {chapterSaved ? 'Page order is locked once saving starts · reorder later from the edit page' : 'Drag to reorder · upload in reading order'}
               </div>
             </div>
           </div>
