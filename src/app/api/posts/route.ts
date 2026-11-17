@@ -60,7 +60,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('POST /api/posts')
 
   try {
     const body = await req.json()
@@ -97,6 +96,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
+    revalidatePublicContent('POST /api/posts')
     return NextResponse.json({ data, error: null }, { status: 201 })
   } catch (error) {
     console.error('POST /api/posts error:', error)

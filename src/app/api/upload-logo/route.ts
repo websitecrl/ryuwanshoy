@@ -12,7 +12,6 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('POST /api/upload-logo')
 
   try {
     const body = await req.json()
@@ -36,6 +35,9 @@ export async function POST(req: NextRequest) {
         .from('settings')
         .update({ logo_url: imageUrl, updated_at: new Date().toISOString() })
         .eq('id', existing.id)
+
+      // row updated -> purge before the R2 cleanup
+      if (!error) revalidatePublicContent('POST /api/upload-logo')
 
       // ok -> delete old logo; failed -> delete new upload
       const orphan = error ? imageUrl : existing.logo_url

@@ -96,7 +96,6 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('PATCH /api/series/[id]')
 
   const { id } = await params
 
@@ -151,6 +150,9 @@ export async function PATCH(
       .select()
       .single()
 
+    // row updated -> purge before the cover cleanup
+    if (!error) revalidatePublicContent('PATCH /api/series/[id]')
+
     // row points at new cover -> delete old (unless shared)
     if (payload.cover_image) {
       const orphans = error
@@ -188,7 +190,6 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/series/[id]')
 
   const { id } = await params
 
@@ -213,6 +214,7 @@ export async function DELETE(
       .eq('id', id)
 
     if (error) throw error
+    revalidatePublicContent('DELETE /api/series/[id]')
 
     // awaited + batched (Workers drop promises, cap subrequests)
     const chapters = existing.chapters ?? []

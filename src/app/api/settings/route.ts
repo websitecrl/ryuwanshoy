@@ -54,7 +54,6 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin();
   if (auth instanceof NextResponse) return auth;
-  revalidatePublicContent('PATCH /api/settings');
 
   try {
   const body = await req.json() as Record<string, unknown>
@@ -105,6 +104,7 @@ export async function PATCH(req: NextRequest) {
     result = data
   }
 
+  revalidatePublicContent('PATCH /api/settings');
   return NextResponse.json({ settings: result });
   } catch (err) {
     console.error("Settings PATCH error:", err);

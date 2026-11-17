@@ -45,7 +45,6 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('PATCH /api/chapters/[id]')
 
   try {
     const { id } = await params
@@ -69,15 +68,17 @@ export async function PATCH(
       .single()
 
     if (error) {
+      // unique (series_id, chapter_number) -> 409 Conflict, same as POST /api/chapters
       if (error.code === '23505') {
         return NextResponse.json(
           { data: null, error: 'A chapter with this number already exists in this series' },
-          { status: 400 }
+          { status: 409 }
         )
       }
       throw error
     }
 
+    revalidatePublicContent('PATCH /api/chapters/[id]')
     return NextResponse.json({ data, error: null })
   } catch (error) {
     console.error('PATCH /api/chapters/[id] error:', error)
@@ -95,7 +96,6 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/chapters/[id]')
 
   try {
     const { id } = await params
@@ -119,6 +119,7 @@ export async function DELETE(
       .eq('id', id)
 
     if (error) throw error
+    revalidatePublicContent('DELETE /api/chapters/[id]')
 
     // DB delete ok -> awaited, batched R2 cleanup (Workers drop pending promises)
     const pages = (chapter as { pages: Array<{ image_url: string }> }).pages ?? []

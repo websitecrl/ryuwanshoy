@@ -31,7 +31,6 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('POST /api/hero-slides')
 
   let body
   try {
@@ -82,5 +81,6 @@ export async function POST(request: NextRequest) {
     return serverError('POST /api/hero-slides', error, 'Failed to create slide.')
   }
 
+  revalidatePublicContent('POST /api/hero-slides')
   return NextResponse.json(data, { status: 201 })
 }

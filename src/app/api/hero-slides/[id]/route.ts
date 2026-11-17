@@ -13,7 +13,6 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('PATCH /api/hero-slides/[id]')
 
   const { id } = await params
 
@@ -46,6 +45,7 @@ export async function PATCH(
     return serverError('PATCH /api/hero-slides/[id]', error, 'Failed to update slide.')
   }
 
+  revalidatePublicContent('PATCH /api/hero-slides/[id]')
   return NextResponse.json(data)
 }
 
@@ -55,7 +55,6 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/hero-slides/[id]')
 
   const { id } = await params
 
@@ -77,6 +76,7 @@ export async function DELETE(
   if (error) {
     return serverError('DELETE /api/hero-slides/[id]', error, 'Failed to delete slide.')
   }
+  revalidatePublicContent('DELETE /api/hero-slides/[id]')
 
   // DB delete ok -> awaited R2 cleanup
   if (slide.banner_image) {

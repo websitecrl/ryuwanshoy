@@ -24,7 +24,6 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/drafts')
 
   let body: unknown
   try {
@@ -45,7 +44,9 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    return NextResponse.json(await deleteConfirmedDrafts({ seriesIds, chapterIds }))
+    const result = await deleteConfirmedDrafts({ seriesIds, chapterIds })
+    revalidatePublicContent('DELETE /api/drafts')
+    return NextResponse.json(result)
   } catch (err) {
     console.error('DELETE /api/drafts error:', err)
     return NextResponse.json({ error: 'Failed to delete drafts' }, { status: 500 })

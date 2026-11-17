@@ -37,7 +37,6 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
 export async function PATCH(req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('PATCH /api/posts/[id]')
 
   try {
     const { id } = await params
@@ -103,6 +102,9 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       .select()
       .single()
 
+    // row updated -> purge before the image cleanup
+    if (!error) revalidatePublicContent('PATCH /api/posts/[id]')
+
     // ok -> delete old image; failed -> delete new upload (awaited)
     const orphan = error ? update.image_url : oldImageUrl
     if (orphan) {
@@ -124,7 +126,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
 export async function DELETE(_req: NextRequest, { params }: RouteContext) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/posts/[id]')
 
   try {
     const { id } = await params
@@ -148,6 +149,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       .eq('id', id)
 
     if (deleteErr) throw deleteErr
+    revalidatePublicContent('DELETE /api/posts/[id]')
 
     // awaited (Workers drop pending promises)
     if (post.image_url) {

@@ -42,7 +42,7 @@ export async function nullIfNotFound<T>(query: Promise<T>): Promise<T | null> {
   }
 }
 
-/** admin write -> call after the admin check -> purge after the response (any status; uncaught throw skips it). never throws */
+/** admin write -> call right after the DB write succeeds, before any R2 cleanup -> Next runs the purge after the response. rejected or failed requests don't purge. never throws */
 export function revalidatePublicContent(reason: string): void {
   try {
     revalidatePath('/', 'layout')
