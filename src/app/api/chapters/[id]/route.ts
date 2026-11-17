@@ -58,6 +58,9 @@ export async function PATCH(
     if (body.is_published    !== undefined) payload.is_published    = body.is_published
     if (body.published_at    !== undefined) payload.published_at    = body.published_at
 
+    // publish -> never still a draft (readers need is_published = true AND is_draft = false)
+    if (body.is_published === true) payload.is_draft = false
+
     const { data, error } = await supabaseAdmin
       .from('chapters')
       .update(payload)

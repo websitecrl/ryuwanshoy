@@ -1,4 +1,9 @@
-export type ChecklistItem = { label: string; done: boolean }
+export type ChecklistItem = {
+  label: string
+  done: boolean
+  /** true -> publishing is blocked until this item is done (the rest are advice) */
+  required?: boolean
+}
 
 // shared with the Drafts list -> badges match the edit pages
 
@@ -19,7 +24,8 @@ export function getChapterChecklist(input: {
 }): ChecklistItem[] {
   return [
     { label: 'Chapter # set',                done: input.chapterNumber > 0 },
-    { label: 'At least 1 page uploaded',      done: input.pagesCount > 0 },
+    // required: a published chapter with no pages shows readers an empty reader
+    { label: 'At least 1 page uploaded',      done: input.pagesCount > 0, required: true },
     { label: 'Pages named/ordered correctly', done: input.pagesOrderedCorrectly },
     { label: 'Publish date set',              done: !!input.publishedAt && input.publishedAt.trim().length > 0 },
     { label: 'Parent series is published',    done: input.seriesPublished },
@@ -39,6 +45,16 @@ export function getSeriesChecklist(input: {
     { label: 'Genre set',      done: !!input.genre && input.genre.trim().length > 0 },
     { label: 'Cover uploaded', done: !!input.coverImage },
   ]
+}
+
+/**
+ * Required checklist items that are still missing.
+ *
+ * @param items - a checklist from getChapterChecklist / getSeriesChecklist
+ * @returns the items that block publishing; empty -> ok to publish
+ */
+export function publishBlockers(items: ChecklistItem[]): ChecklistItem[] {
+  return items.filter(item => item.required === true && !item.done)
 }
 
 export function checklistSummary(items: ChecklistItem[]) {

@@ -3,10 +3,11 @@ import { useState, useEffect } from 'react'
 import DeleteButton from '@/components/admin/DeleteButton'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
 import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
-import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly } from '@/lib/checklists'
+import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly, publishBlockers } from '@/lib/checklists'
 
 type Page    = Tables<'pages'>
 // GET /api/chapters/[id] -> chapter + pages + series(is_published)
@@ -35,7 +36,10 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
   const [title,           setTitle]           = useState('')
   const [isEarlyAccess,   setIsEarlyAccess]   = useState(false)
   const [publishedAt,     setPublishedAt]     = useState('')
-  const [loading,         setLoading]         = useState(false)
+  // date as loaded -> tells "admin picked a date" from "left as it was"
+  const [loadedPublishedAt, setLoadedPublishedAt] = useState('')
+  // which request is running (one at a time)
+  const [busy,            setBusy]            = useState<'save' | 'publish' | null>(null)
   const [fetching,        setFetching]        = useState(true)
   const [error,           setError]           = useState<string | null>(null)
   const [chapterId,       setChapterId]       = useState<string | null>(null)
@@ -55,7 +59,9 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         setChapterNumber(String(c.chapter_number))
         setTitle(c.title ?? '')
         setIsEarlyAccess(c.is_early_access ?? false)
-        setPublishedAt(c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : '')
+        const loadedDate = c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : ''
+        setPublishedAt(loadedDate)
+        setLoadedPublishedAt(loadedDate)
         setPages(c.pages ?? [])
         setSeriesPublished(c.series?.is_published ?? false)
       } catch (err) {
@@ -65,10 +71,39 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     init()
   }, [params])
 
-  async function handleSubmit() {
-    if (!chapterId) return
-    setError(null); setLoading(true)
+  const checklist = getChapterChecklist({
+    chapterNumber: Number(chapterNumber),
+    pagesCount: pages.length,
+    pagesOrderedCorrectly: computePagesOrderedCorrectly(pages),
+    publishedAt,
+    seriesPublished,
+    title,
+  })
+  const checklistDone = checklist.filter(c => c.done).length
+  // required items still missing (pages) -> Publish stays blocked
+  const blockers = publishBlockers(checklist)
+
+  /**
+   * Saves the form with one PATCH. With `publish`, the same request also makes
+   * the chapter live (the route clears is_draft when is_published is true), so
+   * a failed request leaves it fully unpublished, never half published.
+   *
+   * @param publish - false: save the fields only; true: save and publish
+   *
+   * Publish is refused while a required checklist item is missing.
+   * On publish the date becomes "now" unless the admin changed the Publish
+   * Date field in this visit: a draft's stored date is only the day it was
+   * drafted, and the home page sorts chapters by published_at.
+   */
+  async function save(publish: boolean) {
+    if (!chapterId || busy) return
+    if (publish && blockers.length > 0) {
+      setError(`Can't publish yet. Missing: ${blockers.map(b => b.label).join(', ')}.`)
+      return
+    }
+    setError(null); setBusy(publish ? 'publish' : 'save')
     try {
+      const pickedDate = publishedAt !== '' && publishedAt !== loadedPublishedAt
       const res  = await fetch(`/api/chapters/${chapterId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -76,15 +111,21 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           chapter_number: Number(chapterNumber),
           title: title.trim() || null,
           is_early_access: isEarlyAccess,
-          published_at: publishedAt || null,
+          published_at: publish && !pickedDate ? new Date().toISOString() : publishedAt || null,
+          ...(publish ? { is_published: true } : {}),
         }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => ({})) as { error?: string }
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong')
+      if (publish) {
+        toast.success(seriesPublished
+          ? 'Chapter published!'
+          : 'Chapter published. Readers will see it once its series is published.')
+      }
       router.push('/admin/chapters')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally { setLoading(false) }
+    } finally { setBusy(null) }
   }
 
   // throw -> DeleteButton shows error
@@ -117,15 +158,8 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     )
   }
 
-  const checklist = getChapterChecklist({
-    chapterNumber: Number(chapterNumber),
-    pagesCount: pages.length,
-    pagesOrderedCorrectly: computePagesOrderedCorrectly(pages),
-    publishedAt,
-    seriesPublished,
-    title,
-  })
-  const checklistDone = checklist.filter(c => c.done).length
+  // unpublished -> Publish is the main action, Save Changes steps back
+  const canPublish = !chapter.is_published
 
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -312,7 +346,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           <DeleteButton
             variant="text"
             label="Delete chapter"
-            disabled={loading}
+            disabled={busy !== null}
             title={`Delete Chapter ${chapter?.chapter_number ?? ''}?`}
             description="This permanently deletes the chapter and all its pages from R2. This cannot be undone."
             onConfirm={handleDelete}
@@ -332,22 +366,45 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
               </Link>
             <button
               type="button"
-              disabled={loading}
-              onClick={handleSubmit}
+              disabled={busy !== null}
+              onClick={() => save(false)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '10px 20px', borderRadius: 8,
-                border: '1px solid var(--ryu-primary-deep)',
-                background: 'var(--ryu-primary)',
-                color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
-                opacity: loading ? 0.6 : 1,
+                border: `1px solid ${canPublish ? 'var(--ryu-border)' : 'var(--ryu-primary-deep)'}`,
+                background: canPublish ? 'var(--ryu-surface-1)' : 'var(--ryu-primary)',
+                color: canPublish ? 'var(--ryu-text)' : 'var(--ryu-on-primary)',
+                fontSize: 13.5, fontWeight: 600,
+                cursor: busy ? 'not-allowed' : 'pointer',
+                boxShadow: canPublish ? 'none' : '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
+                opacity: busy ? 0.6 : 1,
               }}
             >
-              {loading && <Loader2 size={14} className="animate-spin" />}
-              {loading ? 'Saving…' : 'Save Changes'}
+              {busy === 'save' && <Loader2 size={14} className="animate-spin" />}
+              {busy === 'save' ? 'Saving…' : 'Save Changes'}
             </button>
+            {/* only while unpublished; blocked until the required checklist items are done */}
+            {canPublish && (
+              <button
+                type="button"
+                disabled={busy !== null || blockers.length > 0}
+                onClick={() => save(true)}
+                title={blockers.length > 0 ? `Missing: ${blockers.map(b => b.label).join(', ')}` : undefined}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6,
+                  padding: '10px 20px', borderRadius: 8,
+                  border: '1px solid var(--ryu-primary-deep)',
+                  background: 'var(--ryu-primary)',
+                  color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600,
+                  cursor: busy || blockers.length > 0 ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)',
+                  opacity: busy || blockers.length > 0 ? 0.5 : 1,
+                }}
+              >
+                {busy === 'publish' && <Loader2 size={14} className="animate-spin" />}
+                {busy === 'publish' ? 'Publishing…' : 'Publish chapter'}
+              </button>
+            )}
           </div>
         </div>
 
