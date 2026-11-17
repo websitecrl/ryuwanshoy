@@ -5,18 +5,28 @@ import { requireAdmin } from '@/lib/require-admin'
 import { revalidatePublicContent } from '@/lib/cache/public-cache'
 import { deleteFromR2 } from '@/lib/r2'
 
+/**
+ * admin: delete one page, then close the gap it leaves in the page numbers.
+ *
+ * The renumber is one rpc -> renumber_pages() with an empty list, which keeps
+ * the remaining pages in their order and numbers them 1..N in a single
+ * transaction (1 subrequest for any chapter size).
+ *
+ * 404 -> no such page.
+ * 500 with "Page deleted, but ..." -> the page is gone but the renumber
+ *        failed; any later reorder renumbers the chapter and repairs it.
+ */
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/pages/[id]')
 
   try {
     const { id } = await params
 
-    // 1. page -> 2. R2 image -> 3. row -> 4. renumber
+    // 1. page -> 2. R2 image -> 3. row -> 4. renumber (one rpc)
     const { data: page, error: fetchError } = await supabaseAdmin
       .from('pages')
       .select('*')
@@ -42,32 +52,22 @@ export async function DELETE(
       .eq('id', id)
 
     if (deleteError) throw deleteError
+    // the page is gone -> purge, even if the renumber below fails
+    revalidatePublicContent('DELETE /api/pages/[id]')
 
     if (!page.chapter_id) {
       return NextResponse.json({ data: null, error: null })
     }
 
-    const { data: remaining, error: remainingError } = await supabaseAdmin
-      .from('pages')
-      .select('id')
-      .eq('chapter_id', page.chapter_id)
-      .order('page_number', { ascending: true })
-
-    if (remainingError) throw remainingError
-
-    const results = await Promise.all(
-      remaining.map((p, index) =>
-        supabaseAdmin
-          .from('pages')
-          .update({ page_number: index + 1 })
-          .eq('id', p.id)
-      )
-    )
+    // empty list -> the remaining pages keep their order and become 1..N
+    const { error: renumberError } = await supabaseAdmin.rpc('renumber_pages', {
+      p_chapter_id: page.chapter_id,
+      p_page_ids:   [],
+    })
 
     // Supabase returns errors (no throw); the page is already deleted
-    const failed = results.filter(r => r.error)
-    if (failed.length > 0) {
-      console.error(`DELETE /api/pages/[id]: ${failed.length} of ${results.length} renumber updates failed:`, failed[0]?.error)
+    if (renumberError) {
+      console.error('DELETE /api/pages/[id]: renumber failed:', renumberError)
       return NextResponse.json(
         { data: null, error: 'Page deleted, but the other pages could not be renumbered. Reload, then drag any page to fix the order.' },
         { status: 500 }

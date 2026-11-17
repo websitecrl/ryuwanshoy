@@ -189,7 +189,8 @@ export default function PageUploader({
       const res = await fetch('/api/pages/reorder', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pages: reordered.map(p => ({ id: p.id, page_number: p.page_number })) }),
+        // ids in reading order -> the server numbers them 1..N in one transaction
+        body: JSON.stringify({ chapter_id: chapterId, page_ids: reordered.map(p => p.id) }),
       })
       if (!res.ok) throw new Error(await errorMessage(res, 'Failed to reorder pages'))
     } catch (err) {
