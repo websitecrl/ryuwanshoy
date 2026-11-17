@@ -36,7 +36,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('POST /api/chapters')
 
   const body = await req.json()
   const { series_id, chapter_number, title, is_early_access, published_at, is_published, is_draft } = body
@@ -72,5 +71,6 @@ export async function POST(req: NextRequest) {
     return serverError('POST /api/chapters', error, 'Failed to create chapter.')
   }
 
+  revalidatePublicContent('POST /api/chapters')
   return NextResponse.json({ data }, { status: 201 })
 }

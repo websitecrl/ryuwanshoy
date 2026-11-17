@@ -45,7 +45,6 @@ export async function PATCH(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('PATCH /api/chapters/[id]')
 
   try {
     const { id } = await params
@@ -75,6 +74,7 @@ export async function PATCH(
       throw error
     }
 
+    revalidatePublicContent('PATCH /api/chapters/[id]')
     return NextResponse.json({ data, error: null })
   } catch (error) {
     console.error('PATCH /api/chapters/[id] error:', error)
@@ -92,7 +92,6 @@ export async function DELETE(
 ) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('DELETE /api/chapters/[id]')
 
   try {
     const { id } = await params
@@ -116,6 +115,7 @@ export async function DELETE(
       .eq('id', id)
 
     if (error) throw error
+    revalidatePublicContent('DELETE /api/chapters/[id]')
 
     // DB delete ok -> awaited, batched R2 cleanup (Workers drop pending promises)
     const pages = (chapter as { pages: Array<{ image_url: string }> }).pages ?? []

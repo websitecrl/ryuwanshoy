@@ -16,11 +16,14 @@ All public reads go through `cachedPublicQuery` in `src/lib/cache/public-cache.t
 `createPublicClient()` from `src/lib/supabase/public.ts` (anon role, no cookies). Because it never
 uses the visitor's session, a draft can't end up in a cached page even when an admin triggers the refresh.
 
-Every admin write route calls `revalidatePublicContent()` right after the admin check. It purges all
-cached pages and queries; the next visitor gets a fresh render.
+Every admin write route calls `revalidatePublicContent()` right after its database write succeeds.
+It purges all cached pages and queries; the next visitor gets a fresh render. A request that is
+rejected (400, 404, 409) or whose write fails changes nothing, so it doesn't purge.
 
-**Adding a new admin write route?** Call `revalidatePublicContent('<METHOD> <path>')` after
-`requireAdmin()`. Without it, the change shows up only after the 60 s refresh.
+**Adding a new admin write route?** Call `revalidatePublicContent('<METHOD> <path>')` right after
+the database write succeeds and before any follow-up cleanup (R2 deletes), so a cleanup error can't
+skip the purge. Next queues the purge and runs it after the response, so the position decides
+whether it runs, not when. Without it, the change shows up only after the 60 s refresh.
 
 **Adding a new public read?** Wrap it in `cachedPublicQuery`, use `createPublicClient()`, and throw
 on a Supabase error (never return `[]`/`null` for an error, or the empty result gets cached).
@@ -50,7 +53,8 @@ free-tier project fails the build with a prerender error).
 
 **Known 60 s windows** (no fix needed, just know them): if a settings read fails, pages that only
 read settings through the layout (e.g. `/donate`) can show the default title for up to 60 s; and if
-an admin route throws an uncaught error, its purge is skipped and the change shows up after 60 s.
+an admin route throws an uncaught error after its write, its purge is skipped and the change shows
+up after 60 s.
 
 **Never run an OpenNext build in a git worktree whose `node_modules` is linked to the main
 checkout.** OpenNext patches files inside `next/dist` and that breaks `next dev` for the main

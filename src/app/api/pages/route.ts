@@ -11,7 +11,6 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin()
   if (auth instanceof NextResponse) return auth
-  revalidatePublicContent('POST /api/pages')
 
   try {
     const body = await req.json()
@@ -98,6 +97,7 @@ export async function POST(req: NextRequest) {
       throw error
     }
 
+    revalidatePublicContent('POST /api/pages')
     return NextResponse.json({ data, error: null }, { status: 201 })
   } catch (error) {
     console.error('POST /api/pages error:', error)
