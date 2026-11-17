@@ -10,7 +10,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { isSpreadPage, keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
 import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 import { Card, CardLabel } from './components'
-import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
+import { BOTTOM_BAR, type LocalPage, type SaveState } from './types'
 
 
 function SortablePage({
@@ -77,8 +77,6 @@ function SortablePage({
 
 
 interface Step2Props {
-  chapterTitle: string
-  onChapterTitleChange: (title: string) => void
   pages: LocalPage[]
   setPages: React.Dispatch<React.SetStateAction<LocalPage[]>>
   saving: SaveState
@@ -87,7 +85,7 @@ interface Step2Props {
   onSaveDraft: () => void
 }
 
-export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPages, saving, onBack, onNext, onSaveDraft }: Step2Props) {
+export default function Step2({ pages, setPages, saving, onBack, onNext, onSaveDraft }: Step2Props) {
   const [dragOver,     setDragOver]     = useState(false)
   const [reversed,     setReversed]     = useState(false)
   const submitting = saving !== null
@@ -153,7 +151,6 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
   const quickCheck = [
     { label: 'Chapter 1 ready',                              done: true },
     { label: `At least one page added (${pages.length})`, done: pages.length > 0 },
-    { label: 'Chapter title (optional)',                      done: chapterTitle.trim().length > 0 },
   ]
 
   return (
@@ -162,20 +159,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         <div className="flex-1 space-y-5">
 
           <Card>
-            <CardLabel n="01" title="Chapter details" />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
-              <div>
-                <label style={labelStyle}>
-                  Chapter title
-                  <span style={{ float: 'right', fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional · readers see this on the index</span>
-                </label>
-                <input style={inputStyle} value={chapterTitle} onChange={e => onChapterTitleChange(e.target.value)} placeholder="The Beginning" />
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <CardLabel n="02" title="Pages">
+            <CardLabel n="01" title="Pages">
               {pages.length > 1 && (
                 <button
                   type="button"
@@ -305,9 +289,11 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         <button
           onClick={onBack}
           disabled={submitting}
+          aria-label="Back to series info"
+          className="action-icon"
           style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: submitting ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer' }}
         >
-          <ArrowLeft size={15} /> Back to series info
+          <ArrowLeft size={15} /> <span className="max-md:hidden">Back to series info</span>
         </button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {!submitting && (
@@ -323,7 +309,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
             onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600, cursor: pages.length === 0 ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: pages.length === 0 ? 0.5 : 1, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)' }}
           >
-            Next — Preview →
+            Next: Preview →
           </button>
         </div>
       </div>

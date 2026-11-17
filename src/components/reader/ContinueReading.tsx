@@ -86,8 +86,7 @@ export default function ContinueReading() {
             className="font-comic truncate"
             style={{ fontSize: 14, letterSpacing: '0.04em', color: 'var(--ryu-text)' }}
           >
-            {data.seriesTitle} · Ch. {data.chapterNumber}
-            {data.chapterTitle ? ` — ${data.chapterTitle}` : ''}
+            {data.seriesTitle} · Chapter {data.chapterNumber}
           </p>
         </div>
       </div>

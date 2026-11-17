@@ -37,7 +37,7 @@ export default function LatestReleases({ chapters }: { chapters: Chapter[] }) {
               <Link key={chapter.id} href={href} className="group flex flex-col gap-2">
                 <div
                   className="relative w-full overflow-hidden"
-                  style={{ aspectRatio: '3/4', borderRadius: 8, background: '#1a1a2e',
+                  style={{ aspectRatio: '3/4', borderRadius: 8, background: 'var(--ryu-surface-3)',
                     border: '0.5px solid var(--ryu-border)', transition: 'border-color .15s, transform .15s' }}
                 >
                   {chapter.series.cover_image ? (
@@ -59,7 +59,7 @@ export default function LatestReleases({ chapters }: { chapters: Chapter[] }) {
                     {chapter.series.title}
                   </p>
                   <p className="font-reader" style={{ fontSize: 11, color: 'var(--ryu-text-3)', marginTop: 2 }}>
-                    Ch. {chapter.chapter_number}{chapter.title ? ` — ${chapter.title}` : ''}
+                    Chapter {chapter.chapter_number}
                   </p>
                 </div>
               </Link>

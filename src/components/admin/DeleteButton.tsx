@@ -95,11 +95,14 @@ export default function DeleteButton({
         {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
       </AlertDialogTrigger>
     ) : variant === 'text' ? (
+      // phone: trash icon (it sits in a sticky action bar); 768px and up: the label
       <AlertDialogTrigger
         disabled={disabled || deleting}
-        className={`${triggerBase} max-md:min-h-11 text-sm font-semibold text-[var(--ryu-danger)] hover:underline`}
+        aria-label={label}
+        className={`${triggerBase} max-md:min-h-11 max-md:w-11 max-md:inline-flex max-md:items-center max-md:justify-center text-sm font-semibold text-[var(--ryu-danger)] hover:underline`}
       >
-        {label}
+        <Trash2 size={18} className="md:hidden" aria-hidden="true" />
+        <span className="max-md:hidden">{label}</span>
       </AlertDialogTrigger>
     ) : (
       <AlertDialogTrigger

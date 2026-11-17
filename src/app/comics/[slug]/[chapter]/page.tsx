@@ -116,9 +116,7 @@ export async function generateMetadata({
   const data = await getChapterData(slug, chapterNumber)
   if (!data) return { title: 'Chapter Not Found' }
 
-  const title = `${data.series.title} — Chapter ${chapterNumber}${
-    data.chapter.title ? `: ${data.chapter.title}` : ''
-  }`
+  const title = `${data.series.title} · Chapter ${chapterNumber}`
   const shareImage = seriesShareImage(data.series)
   return {
     title: `${title} | Ryuwanshoy`,

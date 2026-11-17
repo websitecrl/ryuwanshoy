@@ -39,13 +39,14 @@ export async function createSeries(data: SeriesFormData): Promise<string> {
   return json.data.id
 }
 
-export async function createChapter(seriesId: string, title: string): Promise<string> {
+/** chapter 1 of a new series, unpublished. Chapters have no title (readers see "Chapter N"). */
+export async function createChapter(seriesId: string): Promise<string> {
   const res = await fetch('/api/chapters', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       series_id:       seriesId,
       chapter_number:  1,
-      title:           title.trim() || null,
+      title:           null,
       is_early_access: false,
       is_published:    false,
       published_at:    new Date().toISOString(),

@@ -4,7 +4,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { useComments } from '@/hooks/useComments'
 import Image from 'next/image'
 import { X, Heart, Send, MessageCircle, Pencil, Trash2, CornerDownRight, Share2, ChevronLeft } from 'lucide-react'
-import { timeAgo, formatDate } from '@/lib/time'
+import { timeAgo } from '@/lib/time'
 import { v4 as uuidv4 } from 'uuid'
 import { toast } from 'sonner'
 import { toastRateLimited } from '@/lib/rate-limit-toast'
@@ -442,7 +442,7 @@ export default function PostModal({ post, onClose }: Props) {
       setLikeState({ status: 'loaded', liked: serverLiked, count: serverCount })
     } catch {
       setLikeState(previous)
-      toast.error('Could not update like — please try again.')
+      toast.error('Could not update like. Please try again.')
     } finally {
       setLikeLoading(false)
       likeRequestInFlightRef.current = false
@@ -587,13 +587,7 @@ export default function PostModal({ post, onClose }: Props) {
             />
           </div>
 
-          {(post.title || post.description) && (
-            <div className="post-modal-caption">
-              {post.title && <p className="post-modal-caption-title">{post.title}</p>}
-              <p className="post-modal-caption-date">{formatDate(post.created_at)}</p>
-              {post.description && <p className="post-modal-caption-desc">{post.description}</p>}
-            </div>
-          )}
+          {/* no caption over the art: the title and date are on the gallery card */}
 
           <div className="post-modal-rail">
             <button
@@ -686,7 +680,7 @@ export default function PostModal({ post, onClose }: Props) {
               </div>
             ) : topLevel.length === 0 ? (
               <p className="text-xs text-center py-8" style={{ color: 'var(--ryu-text-muted)' }}>
-                No comments yet — be the first!
+                No comments yet. Be the first!
               </p>
             ) : (
               <>
@@ -780,37 +774,6 @@ export default function PostModal({ post, onClose }: Props) {
           position: relative;
           width: 100%;
           height: 100%;
-        }
-        .post-modal-caption {
-          position: absolute;
-          left: 14px;
-          right: 84px;
-          bottom: 14px;
-          z-index: 3;
-          background: linear-gradient(to top, rgba(0,0,0,0.72), rgba(0,0,0,0));
-          padding: 30px 12px 10px;
-          border-radius: 8px;
-          pointer-events: none;
-        }
-        .post-modal-caption-title {
-          color: #fff;
-          font-weight: 600;
-          font-size: 14px;
-          margin: 0 0 2px;
-          font-family: var(--font-fredoka), sans-serif;
-        }
-        .post-modal-caption-date {
-          color: rgba(255,255,255,0.7);
-          font-size: 10px;
-          margin: 0 0 4px;
-        }
-        .post-modal-caption-desc {
-          color: rgba(255,255,255,0.92);
-          font-size: 12px;
-          line-height: 1.5;
-          margin: 0;
-          max-height: 4.5em;
-          overflow: hidden;
         }
         .post-modal-rail {
           position: absolute;
@@ -932,7 +895,6 @@ export default function PostModal({ post, onClose }: Props) {
             max-height: 100dvh !important;
             border-radius: 0 !important;
           }
-          .post-modal-caption { right: 68px; }
           .rail-icon-bg { width: 40px; height: 40px; }
           .rail-count-like { display: none; }
           .post-modal-rail { right: 10px; gap: 16px; }

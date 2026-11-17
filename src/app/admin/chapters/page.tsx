@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, BookOpen, Search } from 'lucide-react'
 import DeleteButton from '@/components/admin/DeleteButton'
+import MobileCreateButton from '@/components/admin/MobileCreateButton'
 import type { Tables } from '@/types/database'
 
 type Chapter = Tables<'chapters'> & { series: { title: string } | null }
@@ -19,7 +20,6 @@ export default function AdminChaptersPage() {
     if (!searchLower) return true
     return (
       `chapter ${c.chapter_number}`.includes(searchLower) ||
-      (c.title?.toLowerCase().includes(searchLower) ?? false) ||
       (c.series?.title?.toLowerCase().includes(searchLower) ?? false)
     )
   })
@@ -51,7 +51,7 @@ export default function AdminChaptersPage() {
     setChapters(prev => prev.filter(c => c.id !== chapter.id))
   }
 
-  const chapterLabel = (c: Chapter) => `Chapter ${c.chapter_number}${c.title ? ` — ${c.title}` : ''}`
+  const chapterLabel = (c: Chapter) => `Chapter ${c.chapter_number}`
 
   if (loading) {
     return (
@@ -65,7 +65,9 @@ export default function AdminChaptersPage() {
   }
 
   return (
-    <div className="p-8 max-md:p-4 animate-page-in">
+    <div className="p-8 max-md:p-4 max-md:pb-24 animate-page-in">
+      {/* chapters are created from a series, so this opens the series list (same as the header button) */}
+      <MobileCreateButton href="/admin/series" label="New chapter" />
 
       <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div className="max-md:w-full">
@@ -86,7 +88,7 @@ export default function AdminChaptersPage() {
                 style={{ color: 'var(--ryu-text-muted)' }} />
               <input
                 type="text"
-                placeholder="Search by chapter, title, or series..."
+                placeholder="Search by chapter or series..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full h-9 pl-8 pr-4 rounded-lg text-sm outline-none"
@@ -100,7 +102,7 @@ export default function AdminChaptersPage() {
             </div>
           )}
         </div>
-        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+        <Link href="/admin/series" className="max-md:hidden flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',
@@ -151,7 +153,7 @@ export default function AdminChaptersPage() {
           <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
-                {['Chapter', 'Series', 'Title', 'Published', 'Actions'].map(h => (
+                {['Chapter', 'Series', 'Published', 'Actions'].map(h => (
                   <th key={h}
                     className={`px-5 py-3 font-semibold font-mono-ryu text-[10.5px] tracking-widest uppercase ${h === 'Actions' ? 'text-right' : 'text-left'}`}
                     style={{ color: 'var(--ryu-text-2)' }}>
@@ -175,13 +177,6 @@ export default function AdminChaptersPage() {
                     {c.series?.title
                       ? <span style={{ color: 'var(--ryu-text-2)', fontSize: 13 }}>{c.series.title}</span>
                       : <span style={{ color: 'var(--ryu-text-3)' }}>—</span>
-                    }
-                  </td>
-
-                  <td className="px-5 py-3">
-                    {c.title
-                      ? <span className="font-mono-ryu text-[11px] tracking-widest uppercase" style={{ color: 'var(--ryu-text)', fontWeight: 600 }}>{c.title}</span>
-                      : <span style={{ color: 'var(--ryu-text-3)', fontStyle: 'italic', fontSize: 12 }}>Untitled</span>
                     }
                   </td>
 

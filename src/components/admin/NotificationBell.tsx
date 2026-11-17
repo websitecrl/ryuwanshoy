@@ -147,7 +147,8 @@ export default function NotificationBell() {
 
       <button
         onClick={handleOpen}
-        className="relative flex items-center gap-2 px-3 py-2 max-md:min-h-11 rounded-xl cursor-pointer transition-all duration-150"
+        aria-label={hasUnread ? `Notifications, ${badge} new` : 'Notifications'}
+        className="relative flex items-center gap-2 px-3 py-2 max-md:min-h-11 max-md:min-w-11 max-md:justify-center rounded-xl cursor-pointer transition-all duration-150"
         style={{
           background: hasUnread
             ? 'color-mix(in srgb, var(--ryu-primary) 12%, transparent)'
@@ -161,7 +162,7 @@ export default function NotificationBell() {
           <Bell size={16} />
         </div>
 
-        <span className="text-xs font-semibold" style={{ fontFamily: "'Quicksand', sans-serif" }}>
+        <span className="text-xs font-semibold max-md:hidden" style={{ fontFamily: "'Quicksand', sans-serif" }}>
           {hasUnread ? `${badge} new` : 'Notifications'}
         </span>
 

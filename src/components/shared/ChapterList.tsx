@@ -68,7 +68,7 @@ function ChapterRow({
   isLast: boolean
 }) {
   const href = `/comics/${seriesSlug}/${chapter.chapter_number}`
-  const chapterLabel = chapter.title ?? `Chapter ${chapter.chapter_number}`
+  const chapterLabel = `Chapter ${chapter.chapter_number}`
 
   function renderSubLabel() {
     if (readState.state === 'reading' && readState.currentPage && readState.totalPages) {
@@ -231,12 +231,9 @@ export default function ChapterList({
 
       {activeTab === 'chapters' && (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-[var(--ryu-text-2)]">
-              {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'}
-            </p>
-
-            {chapters.length > 1 && (
+          {/* the count is on the CHAPTERS tab; only the sort is left here */}
+          {chapters.length > 1 && (
+          <div className="flex items-center justify-end mb-4">
               <div className="flex items-center gap-1 text-sm">
                 <button
                   onClick={() => setSortOrder('desc')}
@@ -260,8 +257,8 @@ export default function ChapterList({
                   Oldest
                 </button>
               </div>
-            )}
           </div>
+          )}
 
           {chapters.length === 0 ? (
             <div className="py-16 text-center">

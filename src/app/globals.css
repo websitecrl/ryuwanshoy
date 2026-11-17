@@ -326,7 +326,11 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   to   { opacity: 1; transform: none; }
 }
 .animate-page-in {
-  animation: pageIn 280ms cubic-bezier(0.2, 0.6, 0.2, 1) both;
+  /* backwards, not both: a transform that stays applied after the animation
+     makes this element the frame for position: fixed children, so the admin
+     action bars and the floating + button scrolled with the page instead of
+     staying on screen. */
+  animation: pageIn 280ms cubic-bezier(0.2, 0.6, 0.2, 1) backwards;
 }
 
 /* ─── Pulsing green dot ─────────────────────────────────────────────────── */
@@ -359,6 +363,114 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   border: 2px solid var(--background);
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--ryu-text-3); }
+
+/* ─── Reader motion ─────────────────────────────────────────────────────── */
+/* Scoped to .reader-root (ConditionalLayout): every page that has the navbar.
+   Not the admin, not the chapter reader.
+
+   Why it is needed: the theme rule above lists only colours and sits outside
+   a layer, so it overrides every Tailwind transition-* utility. Hover and
+   press changes to scale, translate, opacity and shadow therefore snapped.
+   These rules give those properties an easing as well.
+
+   Two curves, used for two different jobs:
+   --ease-bounce  overshoots a little and settles. For things you press.
+   --ease-flow    starts quickly and lands softly. For things that move in or lift.
+
+   `transform` is never transitioned here, so scripted and inline transform
+   animations keep their own timing. Tailwind's scale-* and translate-*
+   utilities set the separate `scale` and `translate` properties, and those
+   are what get eased. Everything is off under prefers-reduced-motion. */
+:root {
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-flow: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes ryu-rise-in {
+  from { opacity: 0; translate: 0 14px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+@keyframes ryu-pop {
+  0%   { scale: 0.9; }
+  55%  { scale: 1.07; }
+  100% { scale: 1; }
+}
+@keyframes ryu-sheet-up {
+  from { translate: 0 100%; }
+  to   { translate: 0 0; }
+}
+@keyframes ryu-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reader-root *,
+  .reader-root *::before,
+  .reader-root *::after {
+    transition:
+      background-color 200ms ease, border-color 200ms ease, color 200ms ease,
+      opacity 200ms ease,
+      box-shadow 280ms var(--ease-flow),
+      translate 280ms var(--ease-flow),
+      rotate 280ms var(--ease-flow),
+      scale 320ms var(--ease-flow);
+  }
+
+  /* Things you press: they give under the finger, then spring back. */
+  .reader-root :is(button, a, [role='button']) {
+    transition:
+      background-color 200ms ease, border-color 200ms ease, color 200ms ease,
+      opacity 200ms ease,
+      box-shadow 280ms var(--ease-flow),
+      translate 280ms var(--ease-flow),
+      rotate 280ms var(--ease-flow),
+      scale 380ms var(--ease-bounce);
+  }
+  /* pressing in is quick (90ms); the release uses the durations above */
+  .reader-root :is(button, [role='button']):not(:disabled):active {
+    scale: 0.94;
+    transition-duration: 90ms;
+  }
+  .reader-root a:active {
+    scale: 0.97;
+    transition-duration: 90ms;
+  }
+
+  /* .motion-card: a whole card that lifts on hover and gives a little when
+     pressed. Its inner link doesn't shrink on its own, and pressing a button
+     inside the card (the bookmark) moves only that button. */
+  @media (hover: hover) {
+    .reader-root .motion-card:hover {
+      translate: 0 -4px;
+      box-shadow: 0 14px 28px -16px color-mix(in srgb, var(--ryu-shadow) 55%, transparent);
+    }
+  }
+  .reader-root .motion-card:active:not(:has(button:active)) {
+    scale: 0.98;
+    transition-duration: 90ms;
+  }
+  .reader-root .motion-card a:active {
+    scale: 1;
+  }
+
+  /* Entrances. fill-mode backwards: hidden only while waiting to start, so the
+     hover lift above still works once the card has arrived.
+     --rise-i staggers a list: each card starts 45ms after the one before. */
+  .reader-root .motion-rise {
+    animation: ryu-rise-in 460ms var(--ease-flow) backwards;
+    animation-delay: calc(var(--rise-i, 0) * 45ms);
+  }
+  .reader-root .motion-pop {
+    animation: ryu-pop 340ms ease-out;
+  }
+  .reader-root .motion-sheet {
+    animation: ryu-sheet-up 380ms var(--ease-flow) backwards;
+  }
+  .reader-root .motion-fade {
+    animation: ryu-fade-in 200ms ease backwards;
+  }
+}
 
 /* ─── Admin on phones ───────────────────────────────────────────────────── */
 /* Every rule is inside one media query (the same breakpoint as Tailwind's md)
@@ -522,6 +634,14 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   .admin-root .action-bar > div > a {
     display: inline-flex !important;
     align-items: center;
+  }
+  /* .action-icon: a control that shows only its icon on a phone (Discard,
+     Cancel, Back, Add chapter). A 44px square that doesn't take half the bar. */
+  .admin-root .action-bar .action-icon {
+    flex: 0 0 44px !important;
+    width: 44px;
+    padding: 0 !important;
+    justify-content: center;
   }
 
   /* Flip preview: two pages and the 8px spine have to fit across the screen.

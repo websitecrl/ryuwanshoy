@@ -6,10 +6,10 @@ import SeriesGrid from '@/components/reader/SeriesGrid'
 export async function generateMetadata() {
   return {
     title: 'Comics | Ryuwanshoy',
-    description: 'Browse all free webcomics by Ryu — Filipino comics, skits, and more.',
+    description: 'Browse all free webcomics by Ryu: Filipino comics, skits, and more.',
     openGraph: {
       title: 'Comics | Ryuwanshoy',
-      description: 'Browse all free webcomics by Ryu — Filipino comics, skits, and more.',
+      description: 'Browse all free webcomics by Ryu: Filipino comics, skits, and more.',
       url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://ryuwanshoy.com'}/comics`,
       images: [{ url: '/og-default.png', width: 1200, height: 630 }],
       type: 'website',
@@ -17,7 +17,7 @@ export async function generateMetadata() {
     twitter: {
       card: 'summary_large_image',
       title: 'Comics | Ryuwanshoy',
-      description: 'Browse all free webcomics by Ryu — Filipino comics, skits, and more.',
+      description: 'Browse all free webcomics by Ryu: Filipino comics, skits, and more.',
       images: ['/og-default.png'],
     },
   }

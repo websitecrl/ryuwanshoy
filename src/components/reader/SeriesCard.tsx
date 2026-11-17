@@ -12,9 +12,11 @@ type Series = Database['public']['Tables']['series']['Row']
 interface SeriesCardProps {
   series: Series
   chapterCount: number
+  /** position in a list -> the card rises in that many steps after the first (globals.css, .motion-rise) */
+  riseIndex?: number
 }
 
-export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
+export default function SeriesCard({ series, chapterCount, riseIndex = 0 }: SeriesCardProps) {
   const [bookmarked, setBookmarked] = useState(false)
 
   useEffect(() => {
@@ -34,11 +36,12 @@ export default function SeriesCard({ series, chapterCount }: SeriesCardProps) {
   // bookmark button next to the link, not inside (no button in a link)
   return (
     <div
-      className="group relative flex flex-col rounded-xl overflow-hidden border transition-all duration-200"
+      className="motion-card motion-rise group relative flex flex-col rounded-xl overflow-hidden border"
       style={{
         borderColor: 'var(--ryu-border)',
         backgroundColor: 'var(--ryu-surface-1)',
-      }}
+        '--rise-i': riseIndex,
+      } as React.CSSProperties}
     >
     <Link href={`/comics/${series.slug}`} className="flex flex-1 flex-col gap-0">
       <div

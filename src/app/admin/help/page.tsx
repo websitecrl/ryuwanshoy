@@ -23,7 +23,7 @@ const SETTINGS_DOCS: SettingsDocSection[] = [
       { term: 'Logo', body: 'Shown in the navbar, footer, and the About card on the homepage. PNG keeps a transparent background from flattening to black.' },
       { term: 'Site Title', body: 'Appears in the browser tab and in link previews when the site is shared.' },
       { term: 'Creator Name', body: 'Shown next to the logo in the About section on the homepage.' },
-      { term: 'SEO Description', body: 'Used by search engines and social link previews (Facebook, Twitter/X) — keep it under ~160 characters.' },
+      { term: 'SEO Description', body: 'Used by search engines and social link previews (Facebook, Twitter/X). Keep it under ~160 characters.' },
     ],
   },
   {
@@ -31,7 +31,7 @@ const SETTINGS_DOCS: SettingsDocSection[] = [
     items: [
       { term: 'Ko-fi / Patreon URL', body: 'Rendered as buttons on the Donate page and in chapter footers. Leave a field blank to hide that button.' },
       { term: 'Donation Message', body: 'A short thank-you note shown to supporters on the Donate page.' },
-      { term: 'Where the money goes', body: 'Directly to you through Ko-fi/Patreon — the site never takes a cut or touches the transaction.' },
+      { term: 'Where the money goes', body: 'Directly to you through Ko-fi/Patreon. The site never takes a cut or touches the transaction.' },
     ],
   },
   {
@@ -43,14 +43,14 @@ const SETTINGS_DOCS: SettingsDocSection[] = [
   ...(isEAEnabled ? [{
     key: 'early', label: 'Early access', Icon: Star,
     items: [
-      { term: 'Headline / Subtext', body: 'The copy shown on the /early-access signup page — this only edits text.' },
-      { term: 'Locking a chapter', body: 'Done per-chapter in the chapter editor, not here — this section only controls the signup page wording.' },
+      { term: 'Headline / Subtext', body: 'The copy shown on the /early-access signup page. This only edits text.' },
+      { term: 'Locking a chapter', body: 'Done per-chapter in the chapter editor, not here. This section only controls the signup page wording.' },
     ],
   }] : []),
   {
     key: 'danger', label: 'Danger zone', Icon: Shield, danger: true,
     items: [
-      { term: 'Change Admin Email', body: 'Sends a confirmation link to the new address — the change only takes effect once that link is clicked.' },
+      { term: 'Change Admin Email', body: 'Sends a confirmation link to the new address. The change only takes effect once that link is clicked.' },
       { term: 'Change Admin Password', body: 'Minimum 8 characters. You\'ll need the new password on your next login, so save it somewhere safe first.' },
     ],
   },
@@ -58,10 +58,10 @@ const SETTINGS_DOCS: SettingsDocSection[] = [
 
 const OTHER_AREAS = [
   { label: 'Dashboard',    href: '/admin/dashboard', icon: LayoutDashboard, body: 'Publish metrics, and the hero banner slides shown at the top of the homepage.' },
-  { label: 'Series',       href: '/admin/series',    icon: BookOpen,        body: 'Create and edit series — title, cover, genre, status.' },
+  { label: 'Series',       href: '/admin/series',    icon: BookOpen,        body: 'Create and edit series: title, cover, genre, status.' },
   { label: 'Chapters',     href: '/admin/chapters',  icon: BookMarked,      body: 'Create chapters and upload/reorder their pages.' },
   { label: 'Illustration', href: '/admin/posts',     icon: ImageIcon,       body: 'Sketches, memes, and other posts outside the chapter structure.' },
-  { label: 'Drafts',       href: '/admin/drafts',    icon: FileEdit,        body: 'Anything not yet published — series or chapters — lives here until it goes live.' },
+  { label: 'Drafts',       href: '/admin/drafts',    icon: FileEdit,        body: 'Anything not yet published (series or chapters) lives here until it goes live.' },
 ]
 
 export default function AdminHelpPage() {

@@ -68,7 +68,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
 
         {series.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm" style={{ color: 'var(--ryu-text-3)' }}>
-            No series yet — create your first one.
+            No series yet. Create your first one.
           </div>
         ) : (
           series.map((s, i) => (
@@ -185,7 +185,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
 
         {totalDrafts === 0 ? (
           <div className="px-5 py-10 text-center text-sm" style={{ color: 'var(--ryu-text-3)' }}>
-            No drafts — all caught up!
+            No drafts. All caught up!
           </div>
         ) : (
           <>
@@ -249,7 +249,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
                   {draft.series?.title ?? 'Unknown'} · Ch. {draft.chapter_number}
                 </div>
                 <div className="text-xs mt-0.5" style={{ color: 'var(--ryu-text-2)' }}>
-                  {draft.title ?? 'Untitled chapter'}
+                  Chapter
                 </div>
               </div>
 

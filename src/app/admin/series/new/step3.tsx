@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { CheckCircle2, Circle, ArrowLeft, Loader2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
+import { CheckCircle2, Circle, ArrowLeft, Loader2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, LocalPage, type SeriesFormData, type SaveState } from './types'
 
@@ -271,8 +271,8 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
  
             <div style={{ marginBottom: 10, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace' }}>
               {mode === 'scroll'
-                ? '↕ Scroll mode — pages stacked vertically, like Webtoon'
-                : '⇆ Flip mode — 2 pages side by side, like an open book'}
+                ? '↕ Scroll mode: pages stacked vertically, like Webtoon'
+                : '⇆ Flip mode: 2 pages side by side, like an open book'}
             </div>
  
             {mode === 'scroll'
@@ -351,9 +351,9 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
  
       <div className="action-bar" style={BOTTOM_BAR}>
         {!publishing && !hasSavedRows && (
-          <button onClick={onBack}
+          <button onClick={onBack} aria-label="Back to chapter" className="action-icon"
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
-            <ArrowLeft size={15} /> Back to chapter
+            <ArrowLeft size={15} /> <span className="max-md:hidden">Back to chapter</span>
           </button>
         )}
 
@@ -366,7 +366,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
           )}
           <button disabled={publishing} onClick={onPublish}
             style={{ padding: '10px 28px', borderRadius: 8, border: '1px solid var(--ryu-success)', background: 'var(--ryu-success)', color: 'var(--ryu-on-success)', fontSize: 13.5, fontWeight: 600, cursor: publishing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 10%, transparent)' }}>
-            {publishing ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+            {publishing && <Loader2 size={14} className="animate-spin" />}
             {publishing ? 'Publishing...' : 'Publish series now'}
           </button>
         </div>

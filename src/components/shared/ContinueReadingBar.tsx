@@ -40,9 +40,8 @@ export default function ContinueReadingBar({ seriesId, seriesSlug, chapterIds }:
 
   if (!progress) return null
 
-  const chapterLabel = progress.title
-    ? `CH. ${String(progress.chapterNumber).padStart(2, '0')} — ${progress.title.toUpperCase()}`
-    : `CHAPTER ${progress.chapterNumber}`
+  // chapters have no titles any more: the number is the label
+  const chapterLabel = `CHAPTER ${progress.chapterNumber}`
 
   const hasPageProgress =
     typeof progress.currentPage === 'number' &&

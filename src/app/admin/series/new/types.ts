@@ -86,14 +86,12 @@ export const BOTTOM_BAR: React.CSSProperties = {
 
 export type ChapterFormData = {
   chapterNumber: number
-  chapterTitle: string
   isEA: boolean
   pages: LocalPage[]
 }
 
 export const DEFAULT_CHAPTER: ChapterFormData = {
   chapterNumber: 1,
-  chapterTitle: '',
   isEA: false,
   pages: [],
 }

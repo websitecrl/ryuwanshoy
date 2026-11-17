@@ -32,7 +32,6 @@ function WizardShell() {
 
   const [formData, setFormData] = useState<SeriesFormData>(DEFAULT_FORM)
 
-  const [chapterTitle, setChapterTitle] = useState('')
   const [pages,        setPages]        = useState<LocalPage[]>([])
 
   // ref -> a running save sees the latest ids
@@ -51,7 +50,7 @@ function WizardShell() {
     setPages(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p))
   }
 
-  const hasWork = formData.title.trim() !== '' || chapterTitle.trim() !== '' || pages.length > 0
+  const hasWork = formData.title.trim() !== '' || pages.length > 0
   useEffect(() => {
     if (!hasWork) return
     function warn(e: BeforeUnloadEvent) {
@@ -95,7 +94,7 @@ function WizardShell() {
       }
       if (!withChapter) return true
 
-      if (!ids.chapterId) ids.chapterId = await createChapter(ids.seriesId, chapterTitle)
+      if (!ids.chapterId) ids.chapterId = await createChapter(ids.seriesId)
 
       for (let i = 0; i < pages.length; i++) {
         const page = pages[i]
@@ -167,8 +166,6 @@ function WizardShell() {
 
       {step === 2 && (
         <Step2
-          chapterTitle={chapterTitle}
-          onChapterTitleChange={setChapterTitle}
           pages={pages}
           setPages={setPages}
           saving={saving}

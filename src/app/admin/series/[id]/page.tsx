@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { ImagePlus, Loader2, Plus, CheckCircle2, Circle } from 'lucide-react'
+import { ImagePlus, Loader2, Plus, CheckCircle2, Circle, X } from 'lucide-react'
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
@@ -275,11 +275,11 @@ export default function EditSeriesPage() {
           padding: '16px 32px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
         }}>
-          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>Cancel</Link>
+          <Link href="/admin/series" aria-label="Cancel" className="action-icon" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}><X size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Cancel</span></Link>
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href={`/admin/chapters/new?series_id=${id}`}
+            <Link href={`/admin/chapters/new?series_id=${id}`} aria-label="Add chapter" className="action-icon"
                 style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 8, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
-                <Plus size={14} /> Add Chapter
+                <Plus size={14} className="max-md:size-[18px]" /> <span className="max-md:hidden">Add Chapter</span>
               </Link>
             <button type="submit" disabled={submitting}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)' }}>

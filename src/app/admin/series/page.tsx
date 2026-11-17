@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { toast } from 'sonner'
 import { Plus, Pencil, BookOpen, Search, BookMarked } from 'lucide-react'
 import DeleteButton from '@/components/admin/DeleteButton'
+import MobileCreateButton from '@/components/admin/MobileCreateButton'
 import { timeAgo } from '@/lib/time'
 import type { Tables } from '@/types/database'
 
@@ -113,7 +114,8 @@ export default function AdminSeriesPage() {
   }
 
   return (
-    <div className="p-8 max-md:p-4 animate-page-in">
+    <div className="p-8 max-md:p-4 max-md:pb-24 animate-page-in">
+      <MobileCreateButton href="/admin/series/new" label="New series" />
 
       <div className="mb-8">
         <div
@@ -195,7 +197,7 @@ export default function AdminSeriesPage() {
 
         <Link
           href="/admin/series/new"
-          className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+          className="max-md:hidden flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
           style={{
             background: 'var(--ryu-primary-soft)',
             color: 'var(--ryu-primary-deep)',

@@ -185,9 +185,7 @@ export default function ReaderTopBar({
 
             {allChapters.map(ch => {
               const isCurrent = ch.chapter_number === currentChapterNumber
-              const label = ch.title
-                ? `Ch. ${ch.chapter_number} — ${ch.title}`
-                : `Chapter ${ch.chapter_number}`
+              const label = `Chapter ${ch.chapter_number}`
 
               return (
                 <Link

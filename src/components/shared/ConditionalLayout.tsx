@@ -34,8 +34,11 @@ export default function ConditionalLayout({
     return <>{children}</>
   }
 
+  // reader-root scopes the motion rules in globals.css ("Reader motion").
+  // `contents`: the wrapper has no box, so <body>'s flex column still lays out
+  // the navbar, page and footer exactly as before.
   return (
-    <>
+    <div className="reader-root contents">
       <Navbar siteTitle={siteTitle} logoUrl={logoUrl} />
       {children}
       <Footer
@@ -45,6 +48,6 @@ export default function ConditionalLayout({
         youtubeUrl={youtubeUrl}
         tiktokUrl={tiktokUrl}
       />
-    </>
+    </div>
   )
 }

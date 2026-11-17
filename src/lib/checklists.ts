@@ -20,7 +20,6 @@ export function getChapterChecklist(input: {
   pagesOrderedCorrectly: boolean
   publishedAt: string | null
   seriesPublished: boolean
-  title: string | null
 }): ChecklistItem[] {
   return [
     { label: 'Chapter # set',                done: input.chapterNumber > 0 },
@@ -29,7 +28,6 @@ export function getChapterChecklist(input: {
     { label: 'Pages named/ordered correctly', done: input.pagesOrderedCorrectly },
     { label: 'Publish date set',              done: !!input.publishedAt && input.publishedAt.trim().length > 0 },
     { label: 'Parent series is published',    done: input.seriesPublished },
-    { label: 'Title set',                     done: !!input.title && input.title.trim().length > 0 },
   ]
 }
 

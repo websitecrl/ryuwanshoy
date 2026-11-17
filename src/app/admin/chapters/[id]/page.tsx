@@ -4,7 +4,7 @@ import DeleteButton from '@/components/admin/DeleteButton'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Circle, X } from 'lucide-react'
 import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
 import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly, publishBlockers } from '@/lib/checklists'
@@ -33,7 +33,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
   const [chapter,         setChapter]         = useState<Chapter | null>(null)
   const [chapterNumber,   setChapterNumber]   = useState('')
-  const [title,           setTitle]           = useState('')
   const [isEarlyAccess,   setIsEarlyAccess]   = useState(false)
   const [publishedAt,     setPublishedAt]     = useState('')
   // date as loaded -> tells "admin picked a date" from "left as it was"
@@ -57,7 +56,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         const c: Chapter = data.data
         setChapter(c)
         setChapterNumber(String(c.chapter_number))
-        setTitle(c.title ?? '')
         setIsEarlyAccess(c.is_early_access ?? false)
         const loadedDate = c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : ''
         setPublishedAt(loadedDate)
@@ -77,7 +75,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     pagesOrderedCorrectly: computePagesOrderedCorrectly(pages),
     publishedAt,
     seriesPublished,
-    title,
   })
   const checklistDone = checklist.filter(c => c.done).length
   // required items still missing (pages) -> Publish stays blocked
@@ -109,7 +106,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chapter_number: Number(chapterNumber),
-          title: title.trim() || null,
           is_early_access: isEarlyAccess,
           published_at: publish && !pickedDate ? new Date().toISOString() : publishedAt || null,
           ...(publish ? { is_published: true } : {}),
@@ -216,20 +212,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                     value={chapterNumber}
                     onChange={e => setChapterNumber(e.target.value)}
                     required
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Title{' '}
-                    <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>
-                      (optional)
-                    </span>
-                  </label>
-                  <input
-                    style={inputStyle}
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    placeholder="e.g. The Beginning"
                   />
                 </div>
               </div>
@@ -353,7 +335,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           />
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href="/admin/chapters"
+            <Link href="/admin/chapters" aria-label="Cancel" className="action-icon"
                 style={{ display: 'inline-block',
                   padding: '10px 18px', borderRadius: 8,
                   border: '1px solid var(--ryu-border)',
@@ -362,7 +344,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                   fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
                 }}
               >
-                Cancel
+                <X size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Cancel</span>
               </Link>
             <button
               type="button"

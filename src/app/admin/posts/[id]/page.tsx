@@ -347,14 +347,14 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         />
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <Link href="/admin/posts" style={{ display: 'inline-block',
+          <Link href="/admin/posts" aria-label="Cancel" className="action-icon" style={{ display: 'inline-block',
               padding: '10px 18px', borderRadius: 8,
               border: '1px solid var(--ryu-border)',
               background: 'var(--ryu-surface-1)',
               color: 'var(--ryu-text)',
               fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
             }}>
-              Cancel
+              <X size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Cancel</span>
             </Link>
           <button
             type="button"

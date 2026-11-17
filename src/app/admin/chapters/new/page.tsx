@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { CloudUpload, X, CheckCircle2, Circle, AlertCircle, Loader2 } from 'lucide-react'
+import { CloudUpload, X, CheckCircle2, Circle, AlertCircle, Loader2, Trash2 } from 'lucide-react'
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger,
@@ -118,7 +118,6 @@ export default function NewChapterPage() {
   const [seriesIsPublished, setSeriesIsPublished] = useState<boolean | null>(null)
   const [chapterNumber,    setChapterNumber]    = useState('')
   const [existingNumbers,  setExistingNumbers]  = useState<number[]>([])
-  const [chapterTitle,     setChapterTitle]     = useState('')
   const [isEarlyAccess]    = useState(false)
   const [pages,            setPages]            = useState<PageFile[]>([])
   const [dragOver,         setDragOver]         = useState(false)
@@ -237,7 +236,7 @@ export default function NewChapterPage() {
     if (!savedChapterId.current) {
       const chRes  = await fetch('/api/chapters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: chapterTitle.trim() || null, is_early_access: isEarlyAccess, is_published: false, is_draft: true, published_at: new Date().toISOString() }),
+        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: null, is_early_access: isEarlyAccess, is_published: false, is_draft: true, published_at: new Date().toISOString() }),
       })
       const chJson = await chRes.json().catch(() => null) as { data?: { id: string }; error?: string } | null
       if (!chRes.ok || chJson?.error || !chJson?.data) {
@@ -375,10 +374,6 @@ export default function NewChapterPage() {
                   {chapterNumber && !isValidNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Must be 1 or higher</p>}
                   {chapterNumber && isValidNumber && isDuplicateNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Chapter {chapterNum} already exists</p>}
                 </div>
-                <div>
-                  <label style={labelStyle}>Title <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>(optional)</span></label>
-                  <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="e.g. The Beginning" disabled={chapterSaved} />
-                </div>
               </div>
               {chapterSaved && (
                 <p style={{ fontSize: 11.5, color: 'var(--ryu-text-2)', margin: 0 }}>
@@ -481,6 +476,8 @@ export default function NewChapterPage() {
        <button
           disabled={submitting}
           onClick={() => router.push('/admin/series')}
+          aria-label="Discard"
+          className="action-icon"
           style={{
             fontSize: 13.5, fontWeight: 600,
             color: submitting ? 'var(--ryu-text-3)' : 'var(--ryu-danger)',
@@ -490,7 +487,7 @@ export default function NewChapterPage() {
             transition: 'color 150ms, opacity 150ms',
           }}
         >
-          Discard
+          <Trash2 size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Discard</span>
         </button>
         <div style={{ display: 'flex', gap: 10 }}>
           <button
