@@ -16,8 +16,9 @@ export async function PATCH(
   const limited = await rateLimit(req, 'COMMENT_EDIT_LIMITER')
   if (limited) return limited
 
-  let content: string | undefined
-  let edit_token: string | undefined
+  // unknown: JSON can carry any type here (a number has no .trim())
+  let content: unknown
+  let edit_token: unknown
   try {
     const body = await req.json()
     content = body?.content
@@ -40,8 +41,8 @@ export async function PATCH(
     return NextResponse.json({ error: 'Not authorized.' }, { status: 403 })
   }
 
-  // then validate
-  if (!content?.trim()) {
+  // then validate (non-string content -> 400, same as POST /api/comments)
+  if (typeof content !== 'string' || !content.trim()) {
     return NextResponse.json({ error: 'Content is required.' }, { status: 400 })
   }
   if (content.length > 300) {
