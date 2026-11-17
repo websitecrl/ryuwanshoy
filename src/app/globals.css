@@ -360,6 +360,59 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--ryu-text-3); }
 
+/* ─── Admin on phones ───────────────────────────────────────────────────── */
+/* Every rule is inside one media query (the same breakpoint as Tailwind's md)
+   and scoped to .admin-root (src/app/admin/layout.tsx), so the desktop admin
+   and the reader side never match any of it.
+   The admin is styled with inline styles, which can't respond to screen size.
+   Where a phone rule has to beat an inline desktop value it uses !important;
+   that is the only reason !important appears here. */
+
+/* height of the phone top bar; 0 on desktop, where there is none */
+.admin-root { --admin-topbar-h: 0px; }
+
+@media (width < 48rem) {
+  .admin-root {
+    --admin-topbar-h: 3.5rem;
+    /* landscape iPhone: keep content out of the notch (viewport-fit=cover) */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Sidebar -> drawer. Closed: off screen and hidden, so its links are out of
+     the tab order. The visibility transition keeps it visible while it slides out. */
+  .admin-root .admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    height: 100dvh;
+    max-width: 85vw;
+    padding-left: env(safe-area-inset-left);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 200ms ease, visibility 200ms,
+      background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  }
+  .admin-root .admin-sidebar[data-open='true'] {
+    transform: none;
+    visibility: visible;
+    box-shadow: 0 0 40px color-mix(in srgb, var(--ryu-shadow) 30%, transparent);
+  }
+  .admin-root .admin-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--ryu-shadow) 50%, transparent);
+  }
+}
+
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .admin-root .admin-sidebar { transition: none; }
+}
+
 /* ─── Layout width ──────────────────────────────────────────────────────── */
 .reader-container {
   max-width: 1600px;

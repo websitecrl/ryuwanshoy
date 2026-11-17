@@ -2,12 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { isWizardSaving, subscribeWizardSaving } from '@/lib/wizard-saving'
 import ThemeToggle from '@/components/shared/ThemeToggle'
 import { STORAGE_UPDATED_EVENT } from '@/components/admin/StorageCleanup'
-import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit, MessageSquare } from 'lucide-react'
+import {LayoutDashboard, BookOpen, BookMarked, Image, Mail, Settings, LogOut, Cloud, FileEdit, MessageSquare, Menu } from 'lucide-react'
 
 const navItems = [
   { label: 'Dashboard',     href: '/admin/dashboard', icon: LayoutDashboard },
@@ -34,6 +34,40 @@ export default function Sidebar() {
   const [siteTitle, setSiteTitle] = useState<string>('')
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [draftCount, setDraftCount] = useState<number>(0)
+
+  // Phone drawer (under 768px; on desktop the sidebar is always visible).
+  // Stores the path the drawer was opened on, so any route change closes it
+  // without an effect: link tap, back button, redirect.
+  const [openedOn, setOpenedOn] = useState<string | null>(null)
+  const drawerOpen = openedOn === pathname
+  const drawerRef = useRef<HTMLElement>(null)
+  const menuButtonRef = useRef<HTMLButtonElement>(null)
+
+  // While the drawer is open: Esc closes it, the page behind doesn't scroll,
+  // and widening the window past the phone breakpoint closes it (the menu
+  // button is hidden there, so nothing else could).
+  useEffect(() => {
+    if (!drawerOpen) return
+    const menuButton = menuButtonRef.current
+    const close = () => setOpenedOn(null)
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const desktop = window.matchMedia('(min-width: 48rem)')
+    const onBreakpoint = () => { if (desktop.matches) close() }
+
+    const pageOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKeyDown)
+    desktop.addEventListener('change', onBreakpoint)
+    drawerRef.current?.focus()
+
+    return () => {
+      document.body.style.overflow = pageOverflow
+      document.removeEventListener('keydown', onKeyDown)
+      desktop.removeEventListener('change', onBreakpoint)
+      // back to where the keyboard user was (no-op when the button is hidden)
+      menuButton?.focus()
+    }
+  }, [drawerOpen])
 
 useEffect(() => {
   // wizard publishing -> skip (its rows look like drafts until the end)
@@ -105,8 +139,55 @@ useEffect(() => {
     
 
   return (
+    <>
+    {/* phones only: top bar with the menu button (the sidebar itself is the drawer) */}
+    <header
+      className="md:hidden sticky top-0 z-30 flex items-center gap-1 h-14 px-1.5 shrink-0"
+      style={{ background: 'var(--ryu-sidebar)', borderBottom: '1px solid var(--ryu-border)' }}
+    >
+      <button
+        ref={menuButtonRef}
+        type="button"
+        onClick={() => setOpenedOn(pathname)}
+        aria-label="Open menu"
+        aria-expanded={drawerOpen}
+        aria-controls="admin-sidebar"
+        className="w-11 h-11 shrink-0 flex items-center justify-center rounded-lg cursor-pointer"
+        style={{ color: 'var(--ryu-text)' }}
+      >
+        <Menu size={22} />
+      </button>
+      <span
+        className="font-heading font-bold text-base tracking-tight truncate"
+        style={{ color: 'var(--ryu-text)' }}
+      >
+        {siteTitle || 'Admin'}
+      </span>
+      {draftCount > 0 && (
+        <Link
+          href="/admin/drafts"
+          className="ml-auto mr-1.5 shrink-0 flex items-center h-11 px-2 text-xs font-semibold"
+          style={{ color: 'var(--ryu-text-2)' }}
+        >
+          {draftCount} draft{draftCount !== 1 ? 's' : ''}
+        </Link>
+      )}
+    </header>
+
+    {drawerOpen && (
+      <div className="admin-backdrop md:hidden" aria-hidden="true" onClick={() => setOpenedOn(null)} />
+    )}
+
+    {/* admin-sidebar: a drawer under 768px (rules in globals.css, "Admin on phones") */}
     <aside
-      className="w-64 shrink-0 flex flex-col sticky top-0 h-screen"
+      id="admin-sidebar"
+      ref={drawerRef}
+      tabIndex={-1}
+      aria-label="Admin navigation"
+      data-open={drawerOpen}
+      // a tap on any link closes the drawer, including the link to the current page
+      onClick={e => { if ((e.target as HTMLElement).closest('a')) setOpenedOn(null) }}
+      className="admin-sidebar w-64 shrink-0 flex flex-col sticky top-0 h-screen outline-none"
       style={{
         background: 'var(--ryu-sidebar)',
         borderRight: '1px solid var(--ryu-border)',
@@ -166,7 +247,7 @@ useEffect(() => {
             <Link
               key={href}
               href={href}
-              className="relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-100"
+              className="relative flex items-center gap-3 px-3 py-2.5 max-md:min-h-11 rounded-lg text-sm font-medium transition-colors duration-100"
               style={{
                 background: active ? 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)' : 'transparent',
                 color:      active ? 'var(--ryu-primary-deep)' : 'var(--ryu-text)',
@@ -268,7 +349,7 @@ useEffect(() => {
       <div className="px-3 pb-4" style={{ borderTop: '1px solid var(--ryu-border)' }}>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 px-3 py-2.5 mt-3 rounded-xl text-left transition-colors duration-100 group cursor-pointer"
+          className="w-full flex items-center justify-center gap-3 px-3 py-2.5 max-md:min-h-11 mt-3 rounded-xl text-left transition-colors duration-100 group cursor-pointer"
           style={{ border: '1px solid transparent' }}
           onMouseEnter={e => {
             const el = e.currentTarget as HTMLElement
@@ -289,5 +370,6 @@ useEffect(() => {
       </div>
 
     </aside>
+    </>
   )
 }
