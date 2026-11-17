@@ -148,7 +148,7 @@ export default function AdminChaptersPage() {
 
       {filteredChapters.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['Chapter', 'Series', 'Title', 'Published', 'Actions'].map(h => (
@@ -192,7 +192,7 @@ export default function AdminChaptersPage() {
                     }
                   </td>
 
-                  <td className="px-5 py-3">
+                  <td className="stack-actions px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
 
                       <Link href={`/admin/chapters/${c.id}`}

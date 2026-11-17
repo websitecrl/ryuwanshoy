@@ -407,6 +407,66 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
     z-index: 40;
     background: color-mix(in srgb, var(--ryu-shadow) 50%, transparent);
   }
+
+  /* Tables -> stacked cards: each row becomes a card with the row's buttons
+     on the right, so Edit and Delete are always on screen.
+     On the <table>:  .stack-table  (+ .stack-table--media if a cell is a thumbnail)
+     On a <td>:       .stack-actions (the buttons), .stack-media (the thumbnail),
+                      .stack-hide (not worth a line on a phone)
+     The other cells stack top to bottom in source order. */
+  .admin-root .stack-table,
+  .admin-root .stack-table tbody {
+    display: block;
+  }
+  /* column headers: kept for screen readers, not drawn */
+  .admin-root .stack-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .admin-root .stack-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+  }
+  .admin-root .stack-table td {
+    display: block;
+    grid-column: 1;
+    min-width: 0;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+  .admin-root .stack-table td + td {
+    margin-top: 2px;
+  }
+  /* spans every text line (span 4 covers the tallest table; unused rows are 0 high) */
+  .admin-root .stack-table td.stack-actions {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+  }
+  .admin-root .stack-table td.stack-hide {
+    display: none;
+  }
+  .admin-root .stack-table--media tr {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .admin-root .stack-table--media td {
+    grid-column: 2;
+  }
+  .admin-root .stack-table--media td.stack-media {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+  }
+  .admin-root .stack-table--media td.stack-actions {
+    grid-column: 3;
+  }
 }
 
 @media (width < 48rem) and (prefers-reduced-motion: reduce) {

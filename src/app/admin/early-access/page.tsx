@@ -95,7 +95,7 @@ export default function EarlyAccessPage() {
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['#', 'Email', 'Date Signed Up', 'Action'].map(h => (
@@ -106,12 +106,12 @@ export default function EarlyAccessPage() {
             <tbody>
               {filtered.map((entry, idx) => (
                 <tr key={entry.id} style={{ background: 'var(--ryu-surface-1)', borderBottom: idx < filtered.length - 1 ? '1px solid var(--ryu-border-soft)' : 'none' }}>
-                  <td className="px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-3)' }}>{idx + 1}</td>
+                  <td className="stack-hide px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-3)' }}>{idx + 1}</td>
                   <td className="px-5 py-3.5 font-semibold" style={{ color: 'var(--ryu-text)' }}>{entry.email}</td>
                   <td className="px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-2)' }}>
                     {new Date(entry.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="stack-actions px-5 py-3.5">
                     <div className="flex justify-end">
                       <DeleteButton
                         label="Remove email"

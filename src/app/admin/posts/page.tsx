@@ -102,7 +102,7 @@ export default function AdminPostsPage() {
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table stack-table--media w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['Image', 'Title', 'Date', 'Actions'].map(h => (
@@ -117,7 +117,7 @@ export default function AdminPostsPage() {
                   background: 'var(--ryu-surface-1)',
                   borderBottom: i < posts.length - 1 ? '1px solid var(--ryu-border-soft)' : 'none',
                 }}>
-                  <td className="px-5 py-3">
+                  <td className="stack-media px-5 py-3">
                     <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 8, overflow: 'hidden', background: 'var(--ryu-surface-3)' }}>
                       <Image src={post.image_url} alt={post.title ?? 'Illustration'} fill className="object-cover" sizes="48px" />
                     </div>
@@ -135,7 +135,7 @@ export default function AdminPostsPage() {
                   <td className="px-5 py-3 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-2)' }}>
                     {formatDate(post.created_at)}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="stack-actions px-5 py-3">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <Link href={`/admin/posts/${post.id}`} aria-label="Edit illustration" className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
