@@ -196,19 +196,20 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
             <div
               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+              className="max-md:flex-wrap"
               style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 10, border: `1.5px dashed ${dragOver ? 'var(--ryu-primary)' : 'var(--ryu-border)'}`, background: dragOver ? 'var(--ryu-primary-soft)' : 'var(--ryu-surface-2)', marginBottom: 16, transition: 'all 150ms ease' }}
             >
               <span style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <CloudUpload size={18} />
               </span>
-              <div style={{ flex: 1 }}>
+              <div className="max-md:basis-[calc(100%-3.5rem)]" style={{ flex: 1 }}>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 2 }}>Select comic pages</p>
                 <p style={{ fontSize: 11.5, color: 'var(--ryu-text-3)' }}>Drop multiple files at once · JPG / PNG / WebP · up to 25 MB per page</p>
               </div>
               {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} page{pages.length === 1 ? '' : 's'} added</span>}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="max-md:min-h-11"
+                className="max-md:min-h-11 max-md:flex-1"
                 style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 + Browse files
@@ -220,7 +221,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
+                    <div className="max-md:max-h-none! max-md:overflow-visible!" style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />

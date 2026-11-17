@@ -371,6 +371,10 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
 /* height of the phone top bar; 0 on desktop, where there is none */
 .admin-root { --admin-topbar-h: 0px; }
 
+/* Wizard step 3, flip preview: height of one page (its width is 0.8108 of it).
+   This is the value the component had inline; phones cap it further below. */
+.flip-book { --flip-page-h: clamp(260px, calc(100dvh - 440px), 518px); }
+
 @media (width < 48rem) {
   .admin-root {
     --admin-topbar-h: 3.5rem;
@@ -518,6 +522,13 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
   .admin-root .action-bar > div > a {
     display: inline-flex !important;
     align-items: center;
+  }
+
+  /* Flip preview: two pages and the 8px spine have to fit across the screen.
+     92px = page padding (32) + card padding (32) + preview padding (16) + spine
+     (8) + 4 spare; 1.6216 = 2 pages x 0.8108 width-to-height. */
+  .admin-root .flip-book {
+    --flip-page-h: min(clamp(260px, calc(100dvh - 440px), 518px), calc((100vw - 92px) / 1.6216));
   }
 }
 

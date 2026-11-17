@@ -82,7 +82,7 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
         })}
       </div>
 
-      <p className="mt-2 text-sm" style={{ color: 'var(--ryu-text-2)' }}>
+      <p className="mt-2 text-sm max-md:hidden" style={{ color: 'var(--ryu-text-2)' }}>
         {step === 2 && seriesTitle
           ? `Adding Chapter 1 to "${seriesTitle}". Upload pages and set the reading order.`
           : SUBTITLES[idx]}

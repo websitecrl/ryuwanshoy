@@ -27,7 +27,7 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: 'var(--ryu-surface-2)', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
+    <div className="max-md:max-h-[60dvh]!" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: 'var(--ryu-surface-2)', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
       {pages.map((page, idx) => (
         <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: page.is_spread ? 700 : 500 }}>
           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
@@ -88,7 +88,8 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
     ? leaves[(spread + 1) * 2 + 1]
     : leaves[(spread - 1) * 2]
 
-  const PAGE_H = 'clamp(260px, calc(100dvh - 440px), 518px)'
+  // --flip-page-h: globals.css (.flip-book). Desktop value: clamp(260px, calc(100dvh - 440px), 518px)
+  const PAGE_H = 'var(--flip-page-h)'
   const PAGE_W = `calc(${PAGE_H} * 0.8108)`
 
   return (
@@ -114,7 +115,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         }
       `}</style>
 
-      <div style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
+      <div className="flip-book max-md:px-2!" style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace', letterSpacing: 1 }}>
           P{String(spread * 2 + 1).padStart(2, '0')}
@@ -246,7 +247,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
           )}
 
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div className="max-md:flex-wrap max-md:gap-3" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--ryu-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>👁</div>
                 <div>
