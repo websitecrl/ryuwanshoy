@@ -230,9 +230,9 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
  
   return (
     <>
-      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
+      <div className="flex max-lg:flex-col max-lg:items-stretch! flex-1 min-h-0 overflow-y-auto gap-6 px-8 max-md:px-4 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
  
-        <div className="flex-1 space-y-5">
+        <div className="flex-1 max-lg:flex-none space-y-5">
 
           {hasSavedRows && !publishing && pendingCount > 0 && (
             <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
@@ -278,7 +278,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
 
         </div>
  
-        <div className="w-72 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="w-72 max-lg:w-full max-lg:self-stretch! max-lg:static! shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <div className="space-y-4">
  
             <Card>
@@ -319,7 +319,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: seriesData.description ? 12 : 0 }}>
+              <div className="grid grid-cols-[1fr_1fr]" style={{ gap: 8, marginBottom: seriesData.description ? 12 : 0 }}>
                 {[
                   { label: 'CHAPTERS', value: '1' },
                   { label: 'PAGES',    value: String(uploadedPages.length) },

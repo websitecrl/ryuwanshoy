@@ -309,7 +309,7 @@ export default function NewChapterPage() {
 
   if (!loadingSeries && seriesList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 animate-page-in">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 max-md:p-4 animate-page-in">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>No series found. Create a series first before adding chapters.</p>
         <Link href="/admin/series/new" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
             Create New Series
@@ -321,20 +321,20 @@ export default function NewChapterPage() {
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
+      <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/series" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>Series</Link>
         <span style={{ color: 'var(--ryu-text-3)' }}>›</span>
         <span style={{ color: 'var(--ryu-text)' }}>New Chapter</span>
       </div>
 
-      <div className="px-8 pb-6">
+      <div className="px-8 max-md:px-4 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>Add chapter</div>
         <h1 className="font-heading font-bold" style={{ fontSize: 36, letterSpacing: -0.8, color: 'var(--ryu-text)', margin: 0 }}>New Chapter</h1>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
@@ -362,7 +362,7 @@ export default function NewChapterPage() {
                 </Select>
                 )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 14 }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr]" style={{ gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Chapter # <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
                   <input
@@ -419,7 +419,7 @@ export default function NewChapterPage() {
 
         </div>
 
-        <div className="hidden lg:flex flex-col gap-4" style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="flex flex-col gap-4 max-lg:flex-none! max-lg:self-stretch! max-lg:static!" style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -446,7 +446,7 @@ export default function NewChapterPage() {
               {pages.length > 0 && (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePageDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 10 }}>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] md:grid-cols-[repeat(5,1fr)]" style={{ gap: 8, marginBottom: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePageThumbnail key={page.id} page={page} index={idx} onRemove={removePage} locked={chapterSaved} />
                       ))}

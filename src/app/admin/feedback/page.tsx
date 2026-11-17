@@ -123,7 +123,7 @@ export default function AdminFeedbackPage() {
   const shown = filter === 'unread' ? items.filter(f => !f.is_read) : items
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 text-[var(--ryu-primary-deep)]">
@@ -176,7 +176,7 @@ export default function AdminFeedbackPage() {
           ))}
         </div>
       ) : failed ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center gap-2
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center gap-2
                         border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <p className="text-sm text-[var(--ryu-text-2)]">Couldn&apos;t load feedback.</p>
           <button type="button" onClick={() => void load()} className="text-sm font-semibold text-[var(--ryu-primary)]">
@@ -184,7 +184,7 @@ export default function AdminFeedbackPage() {
           </button>
         </div>
       ) : shown.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center
                         border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4
                            bg-[var(--ryu-primary-soft)] text-[var(--ryu-primary-deep)]">

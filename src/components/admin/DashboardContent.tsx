@@ -33,7 +33,7 @@ type Props = {
 export default function DashboardContent({ series, drafts, draftSeries }: Props) {
   const totalDrafts = drafts.length + draftSeries.length
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
       <div
         className="rounded-xl overflow-hidden"

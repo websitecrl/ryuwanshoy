@@ -66,7 +66,7 @@ const OTHER_AREAS = [
 
 export default function AdminHelpPage() {
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
       <div className="mb-8">
         <Link
           href="/admin/settings"
@@ -85,7 +85,7 @@ export default function AdminHelpPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 760 }}>
 
         {SETTINGS_DOCS.map(section => (
-          <div key={section.key} style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+          <div key={section.key} className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <span style={{
                 width: 30, height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -99,7 +99,7 @@ export default function AdminHelpPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {section.items.map(item => (
-                <div key={item.term} style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 14 }}>
+                <div key={item.term} className="grid grid-cols-1 md:grid-cols-[180px_1fr] max-md:gap-0.5!" style={{ gap: 14 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ryu-text)' }}>{item.term}</div>
                   <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--ryu-text-2)' }}>{item.body}</div>
                 </div>
@@ -108,7 +108,7 @@ export default function AdminHelpPage() {
           </div>
         ))}
 
-        <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+        <div className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
           <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Quick nav</div>
           <div className="font-heading font-semibold mb-4" style={{ fontSize: 18, letterSpacing: -0.2, color: 'var(--ryu-text)' }}>Elsewhere in admin</div>
 

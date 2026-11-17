@@ -43,7 +43,7 @@ export default function AdminPostsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1,2,3].map(n => (
           <div key={n} className="h-16 rounded-xl animate-pulse"
             style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
@@ -52,12 +52,12 @@ export default function AdminPostsPage() {
     )
   }
 
-  if (error) return <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
+  if (error) return <div className="p-8 max-md:p-4 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
 
-      <div className="flex items-end justify-between mb-8 gap-4">
+      <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
             style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -83,7 +83,7 @@ export default function AdminPostsPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center"
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)' }}>

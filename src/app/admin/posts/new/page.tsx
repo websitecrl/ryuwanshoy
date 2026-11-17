@@ -117,7 +117,7 @@ export default function NewPostPage() {
   return (
     <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 
-      <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu"
+      <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/posts" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>
           Posts
@@ -126,7 +126,7 @@ export default function NewPostPage() {
         <span style={{ color: 'var(--ryu-text)' }}>New Illustration</span>
       </div>
 
-      <div className="px-8 pb-6">
+      <div className="px-8 max-md:px-4 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
           style={{ color: 'var(--ryu-primary-deep)' }}>
           Illustration
@@ -137,9 +137,9 @@ export default function NewPostPage() {
         </h1>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
@@ -221,7 +221,7 @@ export default function NewPostPage() {
 
         </div>
 
-        <div className="hidden lg:flex flex-col gap-4"
+        <div className="flex flex-col gap-4 max-lg:flex-none! max-lg:self-stretch! max-lg:static!"
           style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>

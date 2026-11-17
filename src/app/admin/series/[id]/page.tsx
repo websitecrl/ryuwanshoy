@@ -123,7 +123,7 @@ export default function EditSeriesPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1,2,3,4].map(n => (
           <div key={n} className="h-12 rounded-xl animate-pulse" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
         ))}
@@ -132,7 +132,7 @@ export default function EditSeriesPage() {
   }
 
   return (
-    <div className="animate-page-in px-8 pb-28 pt-6" style={{ minHeight: '100vh' }}>
+    <div className="animate-page-in px-8 max-md:px-4 pb-28 pt-6" style={{ minHeight: '100vh' }}>
 
       <div className="mb-8">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 flex items-center gap-2" style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -146,7 +146,7 @@ export default function EditSeriesPage() {
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className="flex gap-6 max-w-8xl" style={{ alignItems: 'flex-start' }}>
+        <div className="flex max-md:flex-col max-md:items-stretch! gap-6 max-w-8xl" style={{ alignItems: 'flex-start' }}>
 
           <div className="flex-1 space-y-5">
 
@@ -174,7 +174,7 @@ export default function EditSeriesPage() {
                   <label style={labelStyle}>Description <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional</span></label>
                   <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={4} value={description} onChange={e => setDescription(e.target.value)} placeholder="A two-line synopsis..." />
                 </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr]" style={{ gap: 14 }}>
                     <div>
                       <label style={labelStyle}>Genre</label>
                       <select style={inputStyle} value={genre} onChange={e => setGenre(e.target.value)}>
@@ -207,7 +207,7 @@ export default function EditSeriesPage() {
 
           </div>
 
-          <div className="w-80 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+          <div className="w-80 max-md:w-full max-md:self-stretch! max-md:static! shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
             <Card>
               <CardLabel n="03" title="Artwork" />
               <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />

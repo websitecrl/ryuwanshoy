@@ -358,9 +358,9 @@ return (
         {slides.map(slide => (
           <div key={slide.id} className="space-y-2">
 
-            <div className="flex items-center gap-4 rounded-xl p-4"
+            <div className="flex items-center gap-4 rounded-xl p-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2 max-md:p-3"
               style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
-              <GripVertical size={18} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
+              <GripVertical size={18} className="max-md:hidden" style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
 
               <div className="relative shrink-0 rounded-lg overflow-hidden"
                 style={{ width: 112, height: 56, background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
@@ -370,7 +370,7 @@ return (
                 }
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 max-md:basis-[calc(100%-7.75rem)]">
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
                   {slide.headline ?? '(No headline)'}
                 </p>
@@ -386,7 +386,7 @@ return (
                 {slide.is_visible ? 'Visible' : 'Hidden'}
               </span>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0 max-md:ml-auto">
 
                 <button
                   onClick={() => editingId === slide.id ? setEditingId(null) : startEdit(slide)}

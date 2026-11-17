@@ -21,7 +21,7 @@ function StepDot({ number, label, sublabel, state }: {
       >
         {state === 'done' ? <CheckCircle2 size={15} /> : number}
       </div>
-      <div>
+      <div className="max-md:hidden">
         <div
           className="font-mono-ryu text-[9.5px] tracking-widest uppercase"
           style={{ color: state === 'active' ? 'var(--ryu-primary-deep)' : state === 'done' ? 'var(--ryu-success)' : 'var(--ryu-text-3)' }}
@@ -57,7 +57,7 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
   const idx = step - 1
 
   return (
-    <div className="px-8 pt-4 pb-3 max-w-8xl mx-auto w-full shrink-0">
+    <div className="px-8 max-md:px-4 pt-4 pb-3 max-w-8xl mx-auto w-full shrink-0">
 
       <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>
         {EYEBROWS[idx]}

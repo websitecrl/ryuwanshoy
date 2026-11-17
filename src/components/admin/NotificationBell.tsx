@@ -193,7 +193,7 @@ export default function NotificationBell() {
 
       {open && (
         <div
-          className="absolute right-0 top-12 w-80 rounded-xl overflow-hidden z-50"
+          className="absolute right-0 top-12 w-80 max-md:w-[calc(100vw-2rem)] rounded-xl overflow-hidden z-50"
           style={{
             background: 'var(--ryu-surface-1)',
             border:     '1px solid var(--ryu-border)',

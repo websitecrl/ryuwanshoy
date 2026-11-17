@@ -216,7 +216,7 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1,2,3].map(n => (
           <div key={n} className="h-16 rounded-xl animate-pulse" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
         ))}
@@ -225,7 +225,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }`}</style>
 
       <div className="mb-8">
@@ -234,13 +234,14 @@ export default function SettingsPage() {
         <p className="mt-1.5 text-sm" style={{ color: 'var(--ryu-text-2)' }}>Customize the public face of your site, donations, and admin access.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24 }}>
+      <div className="grid grid-cols-1 md:grid-cols-[220px_1fr]" style={{ gap: 24 }}>
 
-        <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 12, alignSelf: 'start', position: 'sticky', top: 24 }}>
+        <div className="max-md:flex max-md:flex-wrap max-md:gap-1.5 max-md:static! max-md:p-2!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 12, alignSelf: 'start', position: 'sticky', top: 24 }}>
           {SECTIONS.filter(s => s.key !== 'early' || isEAEnabled).map(s => {
             const active = section === s.key
             return (
               <button key={s.key} onClick={() => setSection(s.key)}
+                className="max-md:w-auto! max-md:mb-0!"
                 style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: 'none', marginBottom: 2, fontSize: 13.5, fontWeight: active ? 600 : 500, textAlign: 'left', cursor: 'pointer', position: 'relative',
                   background: active ? (s.danger ? 'var(--ryu-danger-soft)' : 'color-mix(in srgb, var(--ryu-primary) 10%, transparent)') : 'transparent',
                   color: active ? (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-primary-deep)') : (s.danger ? 'var(--ryu-danger)' : 'var(--ryu-text)') }}>
@@ -250,8 +251,8 @@ export default function SettingsPage() {
               </button>
             )
           })}
-          <div style={{ height: 1, background: 'var(--ryu-border)', margin: '8px 4px 12px' }} />
-          <div style={{ padding: '4px 12px', fontSize: 12, color: 'var(--ryu-text-2)' }}>
+          <div className="max-md:hidden" style={{ height: 1, background: 'var(--ryu-border)', margin: '8px 4px 12px' }} />
+          <div className="max-md:w-full max-md:pt-2!" style={{ padding: '4px 12px', fontSize: 12, color: 'var(--ryu-text-2)' }}>
             <div style={{ fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 4 }}>Need help?</div>
             <div style={{ marginBottom: 10 }}>Settings docs are in the help center.</div>
             <Link href="/admin/help" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 6, border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-2)', color: 'var(--ryu-primary-deep)', fontSize: 12.5, fontWeight: 600, textDecoration: 'none' }}>
@@ -266,7 +267,7 @@ export default function SettingsPage() {
           {section === 'storage' && <StorageCleanup />}
 
           {section === 'site' && (
-            <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+            <div className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Site info</div>
               <div className="font-heading font-semibold mb-1" style={{ fontSize: 22, letterSpacing: -0.3, color: 'var(--ryu-text)' }}>The basics</div>
               <p style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: 20 }}>What readers see on the homepage, search results, and social shares.</p>
@@ -310,13 +311,13 @@ export default function SettingsPage() {
           )}
 
           {section === 'donations' && (
-            <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+            <div className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Donations</div>
               <div className="font-heading font-semibold mb-1" style={{ fontSize: 22, letterSpacing: -0.3, color: 'var(--ryu-text)' }}>Reader support</div>
               <p style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: 20 }}>Ko-fi and Patreon links appear on the donate page and chapter footers.</p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]" style={{ gap: 16 }}>
                   <Field label="Ko-fi URL">
                     <input style={inputStyle} value={settings.kofi_url ?? ''}
                       onChange={e => setSettings(p => ({ ...p, kofi_url: e.target.value }))}
@@ -352,7 +353,7 @@ export default function SettingsPage() {
           )}
 
           {section === 'social' && (
-            <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+            <div className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Social links</div>
               <div className="font-heading font-semibold mb-1" style={{ fontSize: 22, letterSpacing: -0.3, color: 'var(--ryu-text)' }}>Where to find you</div>
               <p style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: 20 }}>Shown in the footer and on every series page.</p>
@@ -365,7 +366,7 @@ export default function SettingsPage() {
                   { key: 'tiktok_url',    label: 'TikTok',      placeholder: 'https://tiktok.com/@yourhandle' },
                   { key: 'youtube_url',   label: 'YouTube',     placeholder: 'https://youtube.com/@yourchannel' },
                 ] as { key: keyof SettingsData; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
-                  <div key={key} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 14, alignItems: 'center' }}>
+                  <div key={key} className="grid grid-cols-1 md:grid-cols-[120px_1fr] max-md:gap-1.5!" style={{ gap: 14, alignItems: 'center' }}>
                     <div>
                       <label style={{ ...labelStyle, marginBottom: 0 }}>{label}</label>
                       <div style={{ fontSize: 11.5, color: settings[key] ? 'var(--ryu-success)' : 'var(--ryu-text-3)' }}>{settings[key] ? 'Connected' : 'Not set'}</div>
@@ -386,7 +387,7 @@ export default function SettingsPage() {
           )}
 
           {section === 'early' && isEAEnabled && (
-            <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
+            <div className="max-md:p-4!" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 24 }}>
               <div className="font-mono-ryu text-[10.5px] tracking-widest uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>Early access</div>
               <div className="font-heading font-semibold mb-1" style={{ fontSize: 22, letterSpacing: -0.3, color: 'var(--ryu-text)' }}>Reward your supporters</div>
               <p style={{ fontSize: 13, color: 'var(--ryu-text-2)', marginBottom: 20 }}>Customize the early access signup page.</p>
@@ -405,7 +406,7 @@ export default function SettingsPage() {
           )}
 
           {section === 'danger' && (
-            <div style={{ background: 'linear-gradient(180deg, var(--ryu-danger-soft), var(--background))', border: '1.5px solid var(--ryu-danger-border)', borderRadius: 12, padding: 24 }}>
+            <div className="max-md:p-4!" style={{ background: 'linear-gradient(180deg, var(--ryu-danger-soft), var(--background))', border: '1.5px solid var(--ryu-danger-border)', borderRadius: 12, padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
                 <span style={{ width: 38, height: 38, borderRadius: 10, background: 'var(--ryu-danger-soft)', color: 'var(--ryu-danger)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Shield size={18} /></span>
                 <div>

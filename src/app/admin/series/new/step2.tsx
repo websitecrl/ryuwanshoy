@@ -153,7 +153,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   return (
     <>
-      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 max-md:px-4 pb-4 max-w-8xl mx-auto w-full">
         <div className="flex-1 space-y-5">
 
           <Card>

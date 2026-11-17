@@ -86,9 +86,9 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
   return (
     <>
-      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
+      <div className="flex max-md:flex-col flex-1 min-h-0 overflow-y-auto gap-6 px-8 max-md:px-4 pb-4 max-w-8xl mx-auto w-full">
 
-        <div className="flex-1 space-y-5">
+        <div className="flex-1 max-md:flex-none space-y-5">
 
           <Card>
             <CardLabel n="01" title="Title & link" />
@@ -131,7 +131,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
                 <label style={labelStyle}>Description <span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ryu-text-3)' }}>optional · 280 char recommended</span></label>
                 <textarea style={{ ...inputStyle, resize: 'vertical' }} rows={4} value={data.description} onChange={e => onChange({ description: e.target.value })} placeholder="A two-line synopsis that hooks the reader. Avoid spoilers, keep it punchy." />
               </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr]" style={{ gap: 14 }}>
                   <div>
                     <label style={labelStyle}>Genre <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
                     <select style={inputStyle} value={data.genre} onChange={e => onChange({ genre: e.target.value })}>
@@ -179,7 +179,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
         </div>
 
-        <div className="w-80 shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="w-80 max-md:w-full max-md:self-stretch! max-md:static! shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <Card>
             <CardLabel n="03" title="Artwork" />
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
