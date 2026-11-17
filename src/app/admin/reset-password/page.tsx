@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { AtSign, ArrowRight, ArrowLeft, KeyRound, Eye, EyeOff } from 'lucide-react'
+import { AtSign, ArrowRight, ArrowLeft, KeyRound, Eye, EyeOff, MailCheck, CircleCheck } from 'lucide-react'
 
 // 'request' -> email a reset link; 'update' -> set a new password
 
@@ -218,9 +218,9 @@ export default function ResetPasswordPage() {
                 background: 'var(--ryu-success-soft)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 margin: '0 auto 20px',
-                fontSize: 24,
+                color: 'var(--ryu-success)',
               }}>
-                ✉️
+                <MailCheck size={24} strokeWidth={1.75} aria-hidden="true" />
               </div>
               <h2 style={{
                 fontFamily: 'var(--font-heading)', fontWeight: 700,
@@ -407,9 +407,9 @@ export default function ResetPasswordPage() {
                 width: 52, height: 52, borderRadius: 14,
                 background: 'var(--ryu-success-soft)', display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 20px', fontSize: 24,
+                margin: '0 auto 20px', color: 'var(--ryu-success)',
               }}>
-                ✅
+                <CircleCheck size={24} strokeWidth={1.75} aria-hidden="true" />
               </div>
               <h2 style={{
                 fontFamily: 'var(--font-heading)', fontWeight: 700,
