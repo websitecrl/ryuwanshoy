@@ -4,10 +4,11 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { isSpreadPage, keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
+import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
 
@@ -36,12 +37,13 @@ function SortablePage({
         transition,
         opacity: isDragging ? 0.5 : 1,
         cursor: 'grab',
-        touchAction: 'none',
+        ...SORTABLE_TOUCH_STYLE,
       }}
       {...attributes}
       {...listeners}
     >
-      <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover" />
+      {/* long press must land on the draggable div, not the image (Android opens the image menu on an <img>) */}
+      <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover pointer-events-none" draggable={false} />
 
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
         <span style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 70%, transparent)', color: 'var(--ryu-on-image)', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
@@ -55,7 +57,9 @@ function SortablePage({
       </div>
 
       <button
-        onPointerDown={e => e.stopPropagation()}
+        // remove tap != drag start (the sensors listen for mousedown and touchstart)
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
         style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 80%, transparent)', color: 'var(--ryu-on-image)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
 >
@@ -63,7 +67,8 @@ function SortablePage({
       </button>
 
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', padding: '4px 0', textAlign: 'center', fontSize: 8, fontWeight: 700, color: 'var(--ryu-on-image)', letterSpacing: 0.5, textTransform: 'uppercase', zIndex: 3 }}>
-        drag to reorder
+        <span className="max-md:hidden">drag to reorder</span>
+        <span className="md:hidden">hold, then drag</span>
       </div>
     </div>
   )
@@ -88,9 +93,8 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  )
+  // mouse: 5px -> drag (as before); touch: press and hold, a swipe scrolls
+  const sensors = usePageSortSensors(5)
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event

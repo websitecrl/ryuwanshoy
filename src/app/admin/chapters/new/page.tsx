@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/select'
 import type { Tables } from '@/types/database'
 import {
-  DndContext, closestCenter, PointerSensor,
-  useSensor, useSensors, type DragEndEvent,
+  DndContext, closestCenter, type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext, arrayMove, rectSortingStrategy, useSortable,
@@ -22,6 +21,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { UNREADABLE_IMAGE_MESSAGE } from '@/lib/image-compress'
 import { describePageError, isSpreadPage, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 import { setPublished } from '@/app/admin/series/new/save'
+import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -62,12 +62,13 @@ function SortablePageThumbnail({
     transition,
     opacity: isDragging ? 0.4 : 1,
     cursor: locked ? 'default' : 'grab',
+    ...SORTABLE_TOUCH_STYLE,
   }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
       <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', border: `2px solid ${page.error ? 'var(--ryu-danger-border)' : page.uploaded ? 'var(--ryu-success-border)' : 'var(--ryu-border)'}` }}>
-        <Image src={page.preview} alt={`Page ${index + 1}`} fill className="object-cover" draggable={false} />
+        <Image src={page.preview} alt={`Page ${index + 1}`} fill className="object-cover pointer-events-none" draggable={false} />
 
         {page.uploading && (
           <div style={{ position: 'absolute', inset: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -82,8 +83,9 @@ function SortablePageThumbnail({
         {!page.uploading && !page.uploaded && (
           <button
             type="button"
-            // remove click != drag start
-            onPointerDown={e => e.stopPropagation()}
+            // remove tap != drag start (the sensors listen for mousedown and touchstart)
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
             style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
             className="hover:opacity-100 transition-opacity">
@@ -127,10 +129,8 @@ export default function NewChapterPage() {
   const [chapterSaved,     setChapterSaved]     = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sensors = useSensors(
-    // 8px -> drag, less -> click
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  )
+  // mouse: 8px -> drag, less -> click (as before); touch: press and hold, a swipe scrolls
+  const sensors = usePageSortSensors(8)
 
   const hasSeriesSelected = selectedSeriesId.length > 0
   const hasChapterNumber  = chapterNumber.trim().length > 0
@@ -462,7 +462,12 @@ export default function NewChapterPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--ryu-text-3)' }}>
                 <AlertCircle size={12} style={{ color: 'var(--ryu-primary-deep)', flexShrink: 0 }} />
-                {chapterSaved ? 'Page order is locked once saving starts · reorder later from the edit page' : 'Drag to reorder · upload in reading order'}
+                {chapterSaved ? 'Page order is locked once saving starts · reorder later from the edit page' : (
+                  <>
+                    <span className="max-md:hidden">Drag to reorder · upload in reading order</span>
+                    <span className="md:hidden">Press and hold a page, then drag to reorder</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

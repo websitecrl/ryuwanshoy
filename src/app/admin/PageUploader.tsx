@@ -3,11 +3,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { CloudUpload, X, AlertCircle } from 'lucide-react'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Database } from '@/types/database'
 import { isSpreadPage, keepImageFiles, readImageSize, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
+import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 
 
 type Page = Database['public']['Tables']['pages']['Row']
@@ -43,7 +44,7 @@ function SortablePage({ page, onDelete, isDeleting }: SortablePageProps) {
         <div
           {...attributes}
           {...listeners}
-          style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'grab' }}
+          style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'grab', ...SORTABLE_TOUCH_STYLE }}
           className="active:cursor-grabbing"
         />
 
@@ -119,7 +120,8 @@ export default function PageUploader({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pages])
 
-  const sensors = useSensors(useSensor(PointerSensor))
+  // mouse: drag starts at once (as before); touch: press and hold, a swipe scrolls
+  const sensors = usePageSortSensors()
 
   const uploadFiles = useCallback(async (files: File[]) => {
     // browser order, no sort
@@ -297,7 +299,8 @@ export default function PageUploader({
 
       <p style={{ fontSize: 11, color: 'var(--ryu-text-3)', margin: 0 }}>
         Name files <span style={{ fontFamily: 'monospace' }}>001.jpg, 002.jpg</span> — they upload in filename order.
-        Drag thumbnails to reorder.
+        <span className="max-md:hidden">Drag thumbnails to reorder.</span>
+        <span className="md:hidden">Press and hold a thumbnail, then drag to reorder.</span>
       </p>
 
     </div>
