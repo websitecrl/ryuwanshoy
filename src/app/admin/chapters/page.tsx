@@ -55,7 +55,7 @@ export default function AdminChaptersPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1, 2, 3].map(n => (
           <div key={n} className="h-16 rounded-xl animate-pulse"
             style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
@@ -65,10 +65,10 @@ export default function AdminChaptersPage() {
   }
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
 
-      <div className="flex items-end justify-between mb-8 gap-4">
-        <div>
+      <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
+        <div className="max-md:w-full">
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
             style={{ color: 'var(--ryu-primary-deep)' }}>
             Admin · {chapters.length} chapter{chapters.length !== 1 ? 's' : ''}
@@ -100,7 +100,7 @@ export default function AdminChaptersPage() {
             </div>
           )}
         </div>
-        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',
@@ -118,7 +118,7 @@ export default function AdminChaptersPage() {
       )}
 
       {chapters.length === 0 && !error && (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center"
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)' }}>
@@ -134,7 +134,7 @@ export default function AdminChaptersPage() {
       )}
 
       {chapters.length > 0 && filteredChapters.length === 0 && (
-        <div className="rounded-xl p-12 text-center"
+        <div className="rounded-xl p-12 max-md:p-6 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
           <p className="text-sm" style={{ color: 'var(--ryu-text-muted)' }}>
             No chapters match "<strong>{search}</strong>"
@@ -148,7 +148,7 @@ export default function AdminChaptersPage() {
 
       {filteredChapters.length > 0 && (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['Chapter', 'Series', 'Title', 'Published', 'Actions'].map(h => (
@@ -192,12 +192,12 @@ export default function AdminChaptersPage() {
                     }
                   </td>
 
-                  <td className="px-5 py-3">
+                  <td className="stack-actions px-5 py-3">
                     <div className="flex items-center justify-end gap-2">
 
                       <Link href={`/admin/chapters/${c.id}`}
                           aria-label="Edit chapter"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                          className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
                           onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-primary)'; el.style.color = 'var(--ryu-primary-deep)' }}
                           onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border)'; el.style.color = 'var(--ryu-text-2)' }}

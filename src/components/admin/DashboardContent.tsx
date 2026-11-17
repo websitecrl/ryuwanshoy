@@ -33,7 +33,7 @@ type Props = {
 export default function DashboardContent({ series, drafts, draftSeries }: Props) {
   const totalDrafts = drafts.length + draftSeries.length
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
       <div
         className="rounded-xl overflow-hidden"
@@ -59,7 +59,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
           </div>
           <Link
             href="/admin/series"
-            className="text-xs font-semibold"
+            className="tap-area relative text-xs font-semibold"
             style={{ color: 'var(--ryu-primary-deep)' }}
           >
             View all →
@@ -130,7 +130,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
 
               <Link
                 href={`/admin/series/${s.id}`}
-                className="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
+                className="shrink-0 max-md:flex max-md:items-center max-md:min-h-11 max-md:px-3.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: 'var(--ryu-surface-2)',
                   border: '1px solid var(--ryu-border)',
@@ -176,7 +176,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
           </div>
           <Link
             href="/admin/drafts"
-            className="text-xs font-semibold"
+            className="tap-area relative text-xs font-semibold"
             style={{ color: 'var(--ryu-primary-deep)' }}
           >
             View all →
@@ -215,7 +215,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
               </div>
               <Link
                 href={`/admin/series/${s.id}`}
-                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
+                className="shrink-0 flex items-center gap-1.5 max-md:min-h-11 max-md:px-3.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                 style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text-2)' }}
               >
                 <FileEdit size={11} />
@@ -255,7 +255,7 @@ export default function DashboardContent({ series, drafts, draftSeries }: Props)
 
               <Link
                 href={`/admin/chapters/${draft.id}`}
-                className="shrink-0 flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
+                className="shrink-0 flex items-center gap-1.5 max-md:min-h-11 max-md:px-3.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg"
                 style={{
                   background: 'var(--ryu-surface-2)',
                   border: '1px solid var(--ryu-border)',

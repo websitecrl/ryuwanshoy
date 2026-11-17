@@ -152,7 +152,7 @@ function WizardShell() {
   }
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <div className="animate-page-in max-md:h-[calc(100dvh-var(--admin-topbar-h))]!" style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       <WizardHeader step={step} seriesTitle={formData.title} />
 
       {step === 1 && (
@@ -231,7 +231,7 @@ function SavingOverlay({ saving }: { saving: NonNullable<SaveState> }) {
 export default function NewSeriesPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-dvh">
         <Loader2 size={24} className="animate-spin" style={{ color: 'var(--ryu-primary)' }} />
       </div>
     }>

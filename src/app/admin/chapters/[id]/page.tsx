@@ -141,7 +141,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
   if (fetching) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1, 2, 3].map(n => (
           <div key={n} className="h-16 rounded-xl animate-pulse"
             style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
@@ -152,7 +152,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
   if (!chapter) {
     return (
-      <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>
+      <div className="p-8 max-md:p-4 text-sm" style={{ color: 'var(--ryu-danger)' }}>
         Chapter not found.
       </div>
     )
@@ -162,9 +162,9 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
   const canPublish = !chapter.is_published
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
-      <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu"
+      <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu"
         style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/chapters" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>
           Chapters
@@ -173,7 +173,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         <span style={{ color: 'var(--ryu-text)' }}>Edit</span>
       </div>
 
-      <div className="px-8 pb-6">
+      <div className="px-8 max-md:px-4 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
           style={{ color: 'var(--ryu-primary-deep)' }}>
           Edit chapter
@@ -185,16 +185,16 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {error && (
-        <div className="mx-8 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
+        <div className="mx-8 max-md:mx-4 mb-4 flex items-center gap-3 rounded-lg px-4 py-3 text-sm"
           style={{ background: 'var(--ryu-danger-soft)', border: '1px solid var(--ryu-danger-border)', color: 'var(--ryu-danger)' }}>
           <AlertCircle size={15} style={{ flexShrink: 0 }} />
           {error}
         </div>
       )}
 
-      <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4! max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))]!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
@@ -204,7 +204,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 14 }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr]" style={{ gap: 14 }}>
                 <div>
                   <label style={labelStyle}>
                     Chapter # <span style={{ color: 'var(--ryu-primary)' }}>*</span>
@@ -308,7 +308,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           
         </div>
 
-        <div className="hidden lg:flex flex-col gap-4"
+        <div className="flex flex-col gap-4 max-lg:flex-none! max-lg:self-stretch! max-lg:static!"
           style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
@@ -337,7 +337,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
       </div>
 
-        <div style={{
+        <div className="action-bar" style={{
           position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10,
           background: 'linear-gradient(to top, var(--background) 60%, transparent)',
           padding: '20px 32px 16px',

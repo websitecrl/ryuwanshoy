@@ -56,9 +56,9 @@ export default function EarlyAccessPage() {
   }
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
 
-      <div className="flex items-end justify-between mb-8 gap-4">
+      <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>
             Subscribers · {entries.length} {entries.length === 1 ? 'signup' : 'signups'}
@@ -67,7 +67,7 @@ export default function EarlyAccessPage() {
           <p className="mt-1.5 text-sm" style={{ color: 'var(--ryu-text-2)' }}>Email list for early chapter access</p>
         </div>
         <button onClick={handleExportCSV} disabled={entries.length === 0}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold shrink-0"
+          className="flex items-center gap-2 px-4 py-2.5 max-md:min-h-11 rounded-lg text-sm font-semibold shrink-0"
           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text)', cursor: 'pointer', opacity: entries.length === 0 ? 0.5 : 1 }}>
           <Download size={15} /> Export CSV
         </button>
@@ -84,7 +84,7 @@ export default function EarlyAccessPage() {
           {[1,2,3].map(n => <div key={n} className="h-14 rounded-xl animate-pulse" style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center"
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)' }}>
             <Mail size={26} />
@@ -95,7 +95,7 @@ export default function EarlyAccessPage() {
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['#', 'Email', 'Date Signed Up', 'Action'].map(h => (
@@ -106,12 +106,12 @@ export default function EarlyAccessPage() {
             <tbody>
               {filtered.map((entry, idx) => (
                 <tr key={entry.id} style={{ background: 'var(--ryu-surface-1)', borderBottom: idx < filtered.length - 1 ? '1px solid var(--ryu-border-soft)' : 'none' }}>
-                  <td className="px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-3)' }}>{idx + 1}</td>
+                  <td className="stack-hide px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-3)' }}>{idx + 1}</td>
                   <td className="px-5 py-3.5 font-semibold" style={{ color: 'var(--ryu-text)' }}>{entry.email}</td>
                   <td className="px-5 py-3.5 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-2)' }}>
                     {new Date(entry.created_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}
                   </td>
-                  <td className="px-5 py-3.5">
+                  <td className="stack-actions px-5 py-3.5">
                     <div className="flex justify-end">
                       <DeleteButton
                         label="Remove email"

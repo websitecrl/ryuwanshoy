@@ -360,6 +360,182 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--ryu-text-3); }
 
+/* ─── Admin on phones ───────────────────────────────────────────────────── */
+/* Every rule is inside one media query (the same breakpoint as Tailwind's md)
+   and scoped to .admin-root (src/app/admin/layout.tsx), so the desktop admin
+   and the reader side never match any of it.
+   The admin is styled with inline styles, which can't respond to screen size.
+   Where a phone rule has to beat an inline desktop value it uses !important;
+   that is the only reason !important appears here. */
+
+/* height of the phone top bar; 0 on desktop, where there is none */
+.admin-root { --admin-topbar-h: 0px; }
+
+/* Wizard step 3, flip preview: height of one page (its width is 0.8108 of it).
+   This is the value the component had inline; phones cap it further below. */
+.flip-book { --flip-page-h: clamp(260px, calc(100dvh - 440px), 518px); }
+
+@media (width < 48rem) {
+  .admin-root {
+    --admin-topbar-h: 3.5rem;
+    /* landscape iPhone: keep content out of the notch (viewport-fit=cover) */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Sidebar -> drawer. Closed: off screen and hidden, so its links are out of
+     the tab order. The visibility transition keeps it visible while it slides out. */
+  .admin-root .admin-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60; /* above the series wizard's sticky bar (50) */
+    height: 100dvh;
+    max-width: 85vw;
+    padding-left: env(safe-area-inset-left);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    visibility: hidden;
+    transition: transform 200ms ease, visibility 200ms,
+      background-color 200ms ease, border-color 200ms ease, color 200ms ease;
+  }
+  .admin-root .admin-sidebar[data-open='true'] {
+    transform: none;
+    visibility: visible;
+    box-shadow: 0 0 40px color-mix(in srgb, var(--ryu-shadow) 30%, transparent);
+  }
+  .admin-root .admin-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: color-mix(in srgb, var(--ryu-shadow) 50%, transparent);
+  }
+
+  /* Tables -> stacked cards: each row becomes a card with the row's buttons
+     on the right, so Edit and Delete are always on screen.
+     On the <table>:  .stack-table  (+ .stack-table--media if a cell is a thumbnail)
+     On a <td>:       .stack-actions (the buttons), .stack-media (the thumbnail),
+                      .stack-hide (not worth a line on a phone)
+     The other cells stack top to bottom in source order. */
+  .admin-root .stack-table,
+  .admin-root .stack-table tbody {
+    display: block;
+  }
+  /* column headers: kept for screen readers, not drawn */
+  .admin-root .stack-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .admin-root .stack-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+  }
+  .admin-root .stack-table td {
+    display: block;
+    grid-column: 1;
+    min-width: 0;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+  .admin-root .stack-table td + td {
+    margin-top: 2px;
+  }
+  /* spans every text line (span 4 covers the tallest table; unused rows are 0 high) */
+  .admin-root .stack-table td.stack-actions {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+  }
+  .admin-root .stack-table td.stack-hide {
+    display: none;
+  }
+  .admin-root .stack-table--media tr {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .admin-root .stack-table--media td {
+    grid-column: 2;
+  }
+  .admin-root .stack-table--media td.stack-media {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    margin-top: 0;
+  }
+  .admin-root .stack-table--media td.stack-actions {
+    grid-column: 3;
+  }
+
+  /* iPhone Safari zooms the page in when a focused field's text is under 16px.
+     The admin's inputs set 13-14px inline, hence !important. */
+  .admin-root :is(input, textarea, select) {
+    font-size: 16px !important;
+  }
+
+  /* .tap-area: a small control keeps its look and gets a 44px hit area.
+     The control must already be positioned (absolute or relative). */
+  .admin-root .tap-area::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Sticky footers (Save / Publish / Delete): class .action-bar on the bar.
+     Solid background, clear of the iPhone home indicator, 44px controls.
+     The text link on the left (Delete / Discard / Back) keeps its own width.
+     The buttons of the right-hand group each take half the bar, so the bar is
+     never more than two rows:  [link][button] / [button][button]
+                           or:  [link][button] / [button]
+     and the main action ends up on the bottom row, full width when alone. */
+  .admin-root .action-bar {
+    flex-wrap: wrap;
+    gap: 8px !important;
+    padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+    background: var(--background) !important;
+    border-top: 1px solid var(--ryu-border);
+  }
+  .admin-root .action-bar :is(a, button) {
+    min-height: 44px;
+  }
+  .admin-root .action-bar > :is(a, button) {
+    display: inline-flex;
+    align-items: center;
+  }
+  /* the group's box disappears; its buttons become items of the bar */
+  .admin-root .action-bar > div {
+    display: contents !important;
+  }
+  .admin-root .action-bar > div > * {
+    flex: 1 1 calc(50% - 4px);
+    justify-content: center;
+  }
+  .admin-root .action-bar > div > a {
+    display: inline-flex !important;
+    align-items: center;
+  }
+
+  /* Flip preview: two pages and the 8px spine have to fit across the screen.
+     92px = page padding (32) + card padding (32) + preview padding (16) + spine
+     (8) + 4 spare; 1.6216 = 2 pages x 0.8108 width-to-height. */
+  .admin-root .flip-book {
+    --flip-page-h: min(clamp(260px, calc(100dvh - 440px), 518px), calc((100vw - 92px) / 1.6216));
+  }
+}
+
+@media (width < 48rem) and (prefers-reduced-motion: reduce) {
+  .admin-root .admin-sidebar { transition: none; }
+}
+
 /* ─── Layout width ──────────────────────────────────────────────────────── */
 .reader-container {
   max-width: 1600px;

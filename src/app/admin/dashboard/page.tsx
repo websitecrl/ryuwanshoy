@@ -55,7 +55,7 @@ export default async function DashboardPage() {
   const { series, drafts, draftSeries } = await getDashboardData()
 
   return (
-    <div className="p-8 space-y-6 animate-page-in">
+    <div className="p-8 max-md:p-4 space-y-6 animate-page-in">
 <div className="flex items-center justify-between gap-4">
   <div>
     <div
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
   <NotificationBell />
 </div>
 
-      <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 280px' }}>
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-[1fr_280px]">
 
         <div
           className="rounded-xl overflow-hidden"

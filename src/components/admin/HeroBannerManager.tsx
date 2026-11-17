@@ -193,7 +193,7 @@ return (
         {slides.length < 5 && (
           <button
             onClick={() => { setShowForm(p => !p); setCreateError(null) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold cursor-pointer transition-colors duration-100"
+            className="flex items-center gap-1.5 px-3 py-1.5 max-md:min-h-11 rounded-lg text-sm font-semibold cursor-pointer transition-colors duration-100"
             style={{
               background: showForm ? 'var(--ryu-surface-3)' : 'var(--ryu-surface-2)',
               border: '1px solid var(--ryu-border)',
@@ -296,7 +296,7 @@ return (
                 style={{ height: 160, border: '1px solid var(--ryu-border)' }}>
                 <img src={newImagePreview} alt="Banner preview" className="w-full h-full object-cover" />
                 <button onClick={() => { setNewImageFile(null); setNewImagePreview('') }}
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+                  className="tap-area absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
                   style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', border: 'none' }}>
                   <X size={14} />
                 </button>
@@ -338,7 +338,7 @@ return (
           )}
 
           <button onClick={handleCreate} disabled={creating}
-            className="px-4 py-2.5 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+            className="px-4 py-2.5 max-md:min-h-11 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
             style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}>
             {creating ? 'Creating…' : 'Create Slide'}
           </button>
@@ -358,9 +358,9 @@ return (
         {slides.map(slide => (
           <div key={slide.id} className="space-y-2">
 
-            <div className="flex items-center gap-4 rounded-xl p-4"
+            <div className="flex items-center gap-4 rounded-xl p-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2 max-md:p-3"
               style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
-              <GripVertical size={18} style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
+              <GripVertical size={18} className="max-md:hidden" style={{ color: 'var(--ryu-text-3)', flexShrink: 0 }} />
 
               <div className="relative shrink-0 rounded-lg overflow-hidden"
                 style={{ width: 112, height: 56, background: 'var(--ryu-surface-3)', border: '1px solid var(--ryu-border)' }}>
@@ -370,7 +370,7 @@ return (
                 }
               </div>
 
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 max-md:basis-[calc(100%-7.75rem)]">
                 <p className="text-sm font-semibold truncate" style={{ color: 'var(--ryu-text)' }}>
                   {slide.headline ?? '(No headline)'}
                 </p>
@@ -386,11 +386,11 @@ return (
                 {slide.is_visible ? 'Visible' : 'Hidden'}
               </span>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1 shrink-0 max-md:ml-auto">
 
                 <button
                   onClick={() => editingId === slide.id ? setEditingId(null) : startEdit(slide)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
+                  className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
                   style={{
                     background: editingId === slide.id ? 'var(--ryu-primary-soft)' : 'transparent',
                     border: '1px solid transparent',
@@ -403,7 +403,7 @@ return (
 
                 <button
                   onClick={() => setPreviewSlide(previewSlide?.id === slide.id ? null : slide)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
+                  className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100"
                   style={{
                     background: previewSlide?.id === slide.id ? 'var(--ryu-primary-soft)' : 'transparent',
                     border: '1px solid transparent',
@@ -417,7 +417,7 @@ return (
                 <button
                   onClick={() => handleToggleVisible(slide)}
                   disabled={actioningId === slide.id}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
+                  className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center cursor-pointer transition-colors duration-100 disabled:opacity-50"
                   style={{ background: 'transparent', border: '1px solid transparent', color: 'var(--ryu-text-3)' }}
                   title={slide.is_visible ? 'Hide' : 'Show'}
                 >
@@ -513,14 +513,14 @@ return (
                   <button
                     onClick={() => handleSaveEdit(slide.id)}
                     disabled={saving}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60"
+                    className="px-4 py-2 max-md:min-h-11 rounded-lg text-sm font-semibold cursor-pointer disabled:opacity-60"
                     style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)' }}
                   >
                     {saving ? 'Saving…' : 'Save'}
                   </button>
                   <button
                     onClick={() => setEditingId(null)}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer"
+                    className="px-4 py-2 max-md:min-h-11 rounded-lg text-sm font-semibold cursor-pointer"
                     style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text)' }}
                   >
                     Cancel
@@ -546,7 +546,7 @@ return (
                   {previewSlide.series && <div className="text-[color-mix(in_srgb,var(--ryu-on-image)_70%,transparent)] text-sm mt-1">{previewSlide.series.title}</div>}
                 </div>
                 <button onClick={() => setPreviewSlide(null)}
-                  className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
+                  className="tap-area absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center cursor-pointer"
                   style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', color: 'var(--ryu-on-image)', border: 'none' }}>
                   <X size={14} />
                 </button>

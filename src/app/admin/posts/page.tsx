@@ -43,7 +43,7 @@ export default function AdminPostsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 space-y-4">
+      <div className="p-8 max-md:p-4 space-y-4">
         {[1,2,3].map(n => (
           <div key={n} className="h-16 rounded-xl animate-pulse"
             style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }} />
@@ -52,12 +52,12 @@ export default function AdminPostsPage() {
     )
   }
 
-  if (error) return <div className="p-8 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
+  if (error) return <div className="p-8 max-md:p-4 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
 
-      <div className="flex items-end justify-between mb-8 gap-4">
+      <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2"
             style={{ color: 'var(--ryu-primary-deep)' }}>
@@ -72,7 +72,7 @@ export default function AdminPostsPage() {
           </p>
         </div>
         <Link href="/admin/posts/new"
-            className="flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+            className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',
@@ -83,7 +83,7 @@ export default function AdminPostsPage() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center"
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center"
           style={{ border: '1.5px dashed var(--ryu-border)', background: 'var(--ryu-surface-1)' }}>
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)' }}>
@@ -95,14 +95,14 @@ export default function AdminPostsPage() {
           <p className="text-sm mb-6" style={{ color: 'var(--ryu-text-2)' }}>
             Upload your first illustration or artwork.
           </p>
-          <Link href="/admin/posts/new" className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
+          <Link href="/admin/posts/new" className="flex items-center gap-2 px-4 py-2.5 max-md:min-h-11 rounded-lg text-sm font-semibold"
               style={{ background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', cursor: 'pointer' }}>
               <Plus size={15} strokeWidth={2.5} /> Create first illustration
             </Link>
         </div>
       ) : (
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--ryu-border)' }}>
-          <table className="w-full text-sm">
+          <table className="stack-table stack-table--media w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
                 {['Image', 'Title', 'Date', 'Actions'].map(h => (
@@ -117,7 +117,7 @@ export default function AdminPostsPage() {
                   background: 'var(--ryu-surface-1)',
                   borderBottom: i < posts.length - 1 ? '1px solid var(--ryu-border-soft)' : 'none',
                 }}>
-                  <td className="px-5 py-3">
+                  <td className="stack-media px-5 py-3">
                     <div style={{ position: 'relative', width: 48, height: 48, borderRadius: 8, overflow: 'hidden', background: 'var(--ryu-surface-3)' }}>
                       <Image src={post.image_url} alt={post.title ?? 'Illustration'} fill className="object-cover" sizes="48px" />
                     </div>
@@ -135,9 +135,9 @@ export default function AdminPostsPage() {
                   <td className="px-5 py-3 font-mono-ryu text-[11px]" style={{ color: 'var(--ryu-text-2)' }}>
                     {formatDate(post.created_at)}
                   </td>
-                  <td className="px-5 py-3">
+                  <td className="stack-actions px-5 py-3">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Link href={`/admin/posts/${post.id}`} aria-label="Edit illustration" className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                      <Link href={`/admin/posts/${post.id}`} aria-label="Edit illustration" className="w-8 h-8 max-md:w-11 max-md:h-11 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)', color: 'var(--ryu-text-2)', cursor: 'pointer' }}
                           onMouseEnter={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-primary)'; el.style.color = 'var(--ryu-primary-deep)' }}
                           onMouseLeave={e => { const el = e.currentTarget as HTMLElement; el.style.borderColor = 'var(--ryu-border)'; el.style.color = 'var(--ryu-text-2)' }}>

@@ -4,10 +4,11 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import { X, CloudUpload, GripVertical, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { isSpreadPage, keepImageFiles, readImageSize, warnIfOversizedPage } from '@/lib/page-files'
+import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, inputStyle, labelStyle, type LocalPage, type SaveState } from './types'
 
@@ -36,12 +37,13 @@ function SortablePage({
         transition,
         opacity: isDragging ? 0.5 : 1,
         cursor: 'grab',
-        touchAction: 'none',
+        ...SORTABLE_TOUCH_STYLE,
       }}
       {...attributes}
       {...listeners}
     >
-      <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover" />
+      {/* long press must land on the draggable div, not the image (Android opens the image menu on an <img>) */}
+      <Image src={page.preview} alt={`Page ${idx + 1}`} fill className="object-cover pointer-events-none" draggable={false} />
 
       <div style={{ position: 'absolute', top: 5, left: 5, display: 'flex', gap: 4, zIndex: 3 }}>
         <span style={{ background: 'color-mix(in srgb, var(--ryu-shadow) 70%, transparent)', color: 'var(--ryu-on-image)', fontSize: 9, fontWeight: 700, padding: '2px 5px', borderRadius: 4, fontFamily: 'monospace', letterSpacing: 0.5 }}>
@@ -55,15 +57,19 @@ function SortablePage({
       </div>
 
       <button
-        onPointerDown={e => e.stopPropagation()}
+        // remove tap != drag start (the sensors listen for mousedown and touchstart)
+        onMouseDown={e => e.stopPropagation()}
+        onTouchStart={e => e.stopPropagation()}
         onClick={e => { e.stopPropagation(); onRemove(page.id) }}
+        className="tap-area"
         style={{ position: 'absolute', top: 6, right: 6, width: 26, height: 26, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 80%, transparent)', color: 'var(--ryu-on-image)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3 }}
 >
   <X size={13} />
       </button>
 
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 50%, transparent)', padding: '4px 0', textAlign: 'center', fontSize: 8, fontWeight: 700, color: 'var(--ryu-on-image)', letterSpacing: 0.5, textTransform: 'uppercase', zIndex: 3 }}>
-        drag to reorder
+        <span className="max-md:hidden">drag to reorder</span>
+        <span className="md:hidden">hold, then drag</span>
       </div>
     </div>
   )
@@ -88,9 +94,8 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  )
+  // mouse: 5px -> drag (as before); touch: press and hold, a swipe scrolls
+  const sensors = usePageSortSensors(5)
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -153,7 +158,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
   return (
     <>
-      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full">
+      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 max-md:px-4 pb-4 max-w-8xl mx-auto w-full">
         <div className="flex-1 space-y-5">
 
           <Card>
@@ -178,6 +183,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
                   aria-checked={reversed}
                   onClick={toggleReversed}
                   disabled={submitting}
+                  className="max-md:min-h-11"
                   style={{ marginLeft: 'auto', alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--ryu-text)', whiteSpace: 'nowrap', flexShrink: 0 }}
                 >
                   Reverse order
@@ -190,18 +196,20 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
 
             <div
               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
+              className="max-md:flex-wrap"
               style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 10, border: `1.5px dashed ${dragOver ? 'var(--ryu-primary)' : 'var(--ryu-border)'}`, background: dragOver ? 'var(--ryu-primary-soft)' : 'var(--ryu-surface-2)', marginBottom: 16, transition: 'all 150ms ease' }}
             >
               <span style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--ryu-primary-soft)', color: 'var(--ryu-primary-deep)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <CloudUpload size={18} />
               </span>
-              <div style={{ flex: 1 }}>
+              <div className="max-md:basis-[calc(100%-3.5rem)]" style={{ flex: 1 }}>
                 <p style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text)', marginBottom: 2 }}>Select comic pages</p>
                 <p style={{ fontSize: 11.5, color: 'var(--ryu-text-3)' }}>Drop multiple files at once · JPG / PNG / WebP · up to 25 MB per page</p>
               </div>
               {pages.length > 0 && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ryu-text-2)', whiteSpace: 'nowrap' }}>{pages.length} page{pages.length === 1 ? '' : 's'} added</span>}
               <button
                 onClick={() => fileInputRef.current?.click()}
+                className="max-md:min-h-11 max-md:flex-1"
                 style={{ padding: '8px 16px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 + Browse files
@@ -213,7 +221,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
               <>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
+                    <div className="max-md:max-h-none! max-md:overflow-visible!" style={{ maxHeight: 'max(200px, calc(100dvh - 600px))', overflowY: 'auto' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePage key={page.id} page={page} idx={idx} onRemove={removePage} />
@@ -293,7 +301,7 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         </div>
       </div>
 
-      <div style={BOTTOM_BAR}>
+      <div className="action-bar" style={BOTTOM_BAR}>
         <button
           onClick={onBack}
           disabled={submitting}

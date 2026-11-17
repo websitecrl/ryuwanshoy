@@ -123,7 +123,7 @@ export default function AdminFeedbackPage() {
   const shown = filter === 'unread' ? items.filter(f => !f.is_read) : items
 
   return (
-    <div className="p-8 animate-page-in">
+    <div className="p-8 max-md:p-4 animate-page-in">
       <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div>
           <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2 text-[var(--ryu-primary-deep)]">
@@ -146,7 +146,7 @@ export default function AdminFeedbackPage() {
               type="button"
               onClick={() => setFilter(f)}
               aria-pressed={filter === f}
-              className={`rounded-full px-3 py-1 text-xs border transition-colors ${
+              className={`rounded-full px-3 py-1 max-md:min-h-11 max-md:px-4 text-xs border transition-colors ${
                 filter === f
                   ? 'border-[var(--ryu-primary)] text-[var(--ryu-primary-deep)] bg-[var(--ryu-primary-soft)] font-semibold'
                   : 'border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]'
@@ -160,7 +160,7 @@ export default function AdminFeedbackPage() {
             onClick={() => void markAllRead()}
             disabled={loadedUnreadIds.length === 0}
             title="Marks the reports loaded below as read"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 max-md:min-h-11 text-xs font-semibold border
                        border-[var(--ryu-border)] text-[var(--ryu-text)] bg-[var(--ryu-surface-1)]
                        disabled:opacity-40 hover:bg-[var(--ryu-surface-2)] transition-colors"
           >
@@ -176,7 +176,7 @@ export default function AdminFeedbackPage() {
           ))}
         </div>
       ) : failed ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center gap-2
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center gap-2
                         border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <p className="text-sm text-[var(--ryu-text-2)]">Couldn&apos;t load feedback.</p>
           <button type="button" onClick={() => void load()} className="text-sm font-semibold text-[var(--ryu-primary)]">
@@ -184,7 +184,7 @@ export default function AdminFeedbackPage() {
           </button>
         </div>
       ) : shown.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl p-16 text-center
+        <div className="flex flex-col items-center justify-center rounded-xl p-16 max-md:p-8 text-center
                         border-[1.5px] border-dashed border-[var(--ryu-border)] bg-[var(--ryu-surface-1)]">
           <span className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4
                            bg-[var(--ryu-primary-soft)] text-[var(--ryu-primary-deep)]">
@@ -277,7 +277,7 @@ export default function AdminFeedbackPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => void setRead(item, !item.is_read)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold border
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 max-md:min-h-11 text-xs font-semibold border
                                border-[var(--ryu-border)] text-[var(--ryu-text-2)] hover:text-[var(--ryu-text)]
                                disabled:opacity-40"
                   >
@@ -312,7 +312,7 @@ export default function AdminFeedbackPage() {
               type="button"
               onClick={() => void loadOlder()}
               disabled={loadingOlder}
-              className="rounded-lg px-4 py-2 text-sm font-semibold border border-[var(--ryu-border)]
+              className="rounded-lg px-4 py-2 max-md:min-h-11 text-sm font-semibold border border-[var(--ryu-border)]
                          text-[var(--ryu-text)] bg-[var(--ryu-surface-1)] hover:bg-[var(--ryu-surface-2)]
                          disabled:opacity-50"
             >

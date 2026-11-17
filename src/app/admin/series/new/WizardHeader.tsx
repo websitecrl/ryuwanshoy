@@ -21,7 +21,7 @@ function StepDot({ number, label, sublabel, state }: {
       >
         {state === 'done' ? <CheckCircle2 size={15} /> : number}
       </div>
-      <div>
+      <div className="max-md:hidden">
         <div
           className="font-mono-ryu text-[9.5px] tracking-widest uppercase"
           style={{ color: state === 'active' ? 'var(--ryu-primary-deep)' : state === 'done' ? 'var(--ryu-success)' : 'var(--ryu-text-3)' }}
@@ -57,7 +57,7 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
   const idx = step - 1
 
   return (
-    <div className="px-8 pt-4 pb-3 max-w-8xl mx-auto w-full shrink-0">
+    <div className="px-8 max-md:px-4 pt-4 pb-3 max-w-8xl mx-auto w-full shrink-0">
 
       <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-1" style={{ color: 'var(--ryu-primary-deep)' }}>
         {EYEBROWS[idx]}
@@ -82,7 +82,7 @@ export default function WizardHeader({ step, seriesTitle }: { step: number; seri
         })}
       </div>
 
-      <p className="mt-2 text-sm" style={{ color: 'var(--ryu-text-2)' }}>
+      <p className="mt-2 text-sm max-md:hidden" style={{ color: 'var(--ryu-text-2)' }}>
         {step === 2 && seriesTitle
           ? `Adding Chapter 1 to "${seriesTitle}". Upload pages and set the reading order.`
           : SUBTITLES[idx]}

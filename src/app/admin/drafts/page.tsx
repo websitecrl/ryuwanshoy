@@ -106,7 +106,7 @@ export default async function DraftsPage() {
   const { count: deletableCount } = await getDraftPreview()
 
   return (
-    <div className="p-8 space-y-6 animate-page-in" style={{ minHeight: '100vh' }}>
+    <div className="p-8 max-md:p-4 space-y-6 animate-page-in" style={{ minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
       <div>
         <div
@@ -115,7 +115,7 @@ export default async function DraftsPage() {
         >
           Admin · Drafts
         </div>
-       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+       <div className="max-md:flex-wrap max-md:gap-3" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <h1
             className="font-heading font-bold"
@@ -133,7 +133,7 @@ export default async function DraftsPage() {
 
       {drafts.length === 0 && chapterDrafts.length === 0 ? (
         <div
-          className="rounded-xl p-12 text-center"
+          className="rounded-xl p-12 max-md:p-6 text-center"
           style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)' }}
         >
           <FileEdit size={32} className="mx-auto mb-3" style={{ color: 'var(--ryu-text-3)' }} />
@@ -162,7 +162,7 @@ export default async function DraftsPage() {
               style={{ border: '1px solid var(--ryu-border)', background: 'var(--ryu-surface-1)' }}
             >
               <div
-                className="flex items-center gap-4 px-5 py-4"
+                className="flex items-center gap-4 px-5 py-4 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2.5 max-md:px-4"
                 style={{ borderBottom: '1px solid var(--ryu-border-soft)' }}
               >
                 <div
@@ -171,7 +171,7 @@ export default async function DraftsPage() {
                 >
                   <BookOpen size={18} />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 max-md:basis-[calc(100%-3.25rem)]">
                   <div className="flex items-center gap-2">
                     <span
                       className="text-sm font-bold truncate"
@@ -203,17 +203,17 @@ export default async function DraftsPage() {
                     <AlertTriangle size={11} /> {missingCount} missing
                   </span>
                 )}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 max-md:flex-wrap max-md:shrink max-md:w-full">
                   <Link
                     href={`/admin/series/${draft.id}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    className="flex items-center gap-1.5 px-3 py-1.5 max-md:min-h-11 rounded-lg text-xs font-semibold"
                     style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text)' }}
                   >
                     <FileEdit size={13} /> Edit series
                   </Link>
                   <Link
                     href={`/admin/chapters/new?series_id=${draft.id}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                    className="flex items-center gap-1.5 px-3 py-1.5 max-md:min-h-11 rounded-lg text-xs font-semibold"
                     style={{ background: 'var(--ryu-primary)', border: '1px solid var(--ryu-primary-deep)', color: 'var(--ryu-on-primary)' }}
                   >
                     <Plus size={13} /> Add chapter
@@ -245,14 +245,14 @@ export default async function DraftsPage() {
                 const { completedCount, totalCount } = checklistSummary(chapterChecklist)
                 const missingCount = totalCount - completedCount
                 return (
-                <div key={ch.id} className="flex items-center gap-4 px-5 py-3">
+                <div key={ch.id} className="flex items-center gap-4 px-5 py-3 max-md:flex-wrap max-md:gap-x-3 max-md:gap-y-2.5 max-md:px-4">
                   <div
                     className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-bold shrink-0 font-mono-ryu"
                     style={{ background: 'var(--ryu-surface-3)', color: 'var(--ryu-text-2)' }}
                   >
                     {ch.chapter_number}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 max-md:basis-[calc(100%-2.5rem)]">
                     <p className="text-sm font-semibold" style={{ color: 'var(--ryu-text)' }}>
                       Chapter {ch.chapter_number}
                       {ch.title ? ` — ${ch.title}` : ''}
@@ -279,7 +279,7 @@ export default async function DraftsPage() {
                   </span>
                   <Link
                     href={`/admin/chapters/${ch.id}`}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold shrink-0"
+                    className="flex items-center gap-1 px-2.5 py-1 max-md:min-h-11 max-md:px-3.5 rounded-lg text-xs font-semibold shrink-0"
                     style={{ background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)', color: 'var(--ryu-text-2)' }}
                   >
                     <FileEdit size={11} /> Edit

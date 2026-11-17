@@ -12,8 +12,7 @@ import {
 } from '@/components/ui/select'
 import type { Tables } from '@/types/database'
 import {
-  DndContext, closestCenter, PointerSensor,
-  useSensor, useSensors, type DragEndEvent,
+  DndContext, closestCenter, type DragEndEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext, arrayMove, rectSortingStrategy, useSortable,
@@ -22,6 +21,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { UNREADABLE_IMAGE_MESSAGE } from '@/lib/image-compress'
 import { describePageError, isSpreadPage, keepImageFiles, uploadComicPage, warnIfOversizedPage } from '@/lib/page-files'
 import { setPublished } from '@/app/admin/series/new/save'
+import { SORTABLE_TOUCH_STYLE, usePageSortSensors } from '@/lib/dnd-sensors'
 
 type Series   = Tables<'series'>
 type SaveMode = 'draft' | 'publish'
@@ -62,12 +62,13 @@ function SortablePageThumbnail({
     transition,
     opacity: isDragging ? 0.4 : 1,
     cursor: locked ? 'default' : 'grab',
+    ...SORTABLE_TOUCH_STYLE,
   }
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group">
       <div style={{ position: 'relative', aspectRatio: '3/4', borderRadius: 6, overflow: 'hidden', border: `2px solid ${page.error ? 'var(--ryu-danger-border)' : page.uploaded ? 'var(--ryu-success-border)' : 'var(--ryu-border)'}` }}>
-        <Image src={page.preview} alt={`Page ${index + 1}`} fill className="object-cover" draggable={false} />
+        <Image src={page.preview} alt={`Page ${index + 1}`} fill className="object-cover pointer-events-none" draggable={false} />
 
         {page.uploading && (
           <div style={{ position: 'absolute', inset: 0, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -82,11 +83,12 @@ function SortablePageThumbnail({
         {!page.uploading && !page.uploaded && (
           <button
             type="button"
-            // remove click != drag start
-            onPointerDown={e => e.stopPropagation()}
+            // remove tap != drag start (the sensors listen for mousedown and touchstart)
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
             onClick={() => onRemove(page.id)}
             style={{ position: 'absolute', top: 3, right: 3, width: 18, height: 18, borderRadius: 99, background: 'color-mix(in srgb, var(--ryu-shadow) 78%, transparent)', color: 'var(--ryu-bg)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', opacity: 0.85, zIndex: 2 }}
-            className="hover:opacity-100 transition-opacity">
+            className="tap-area max-md:w-7! max-md:h-7! hover:opacity-100 transition-opacity">
             <X size={9} />
           </button>
         )}
@@ -127,10 +129,8 @@ export default function NewChapterPage() {
   const [chapterSaved,     setChapterSaved]     = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const sensors = useSensors(
-    // 8px -> drag, less -> click
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  )
+  // mouse: 8px -> drag, less -> click (as before); touch: press and hold, a swipe scrolls
+  const sensors = usePageSortSensors(8)
 
   const hasSeriesSelected = selectedSeriesId.length > 0
   const hasChapterNumber  = chapterNumber.trim().length > 0
@@ -309,7 +309,7 @@ export default function NewChapterPage() {
 
   if (!loadingSeries && seriesList.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 animate-page-in">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8 max-md:p-4 animate-page-in">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>No series found. Create a series first before adding chapters.</p>
         <Link href="/admin/series/new" style={{ display: 'inline-block', padding: '10px 20px', borderRadius: 8, background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', border: '1px solid var(--ryu-primary-deep)', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}>
             Create New Series
@@ -319,22 +319,22 @@ export default function NewChapterPage() {
   }
 
   return (
-    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="animate-page-in" style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100dvh - var(--admin-topbar-h))' }}>
 
-      <div className="flex items-center gap-2 px-8 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
+      <div className="flex items-center gap-2 px-8 max-md:px-4 pt-6 pb-3 text-sm font-mono-ryu" style={{ color: 'var(--ryu-text-2)' }}>
         <Link href="/admin/series" style={{ color: 'var(--ryu-primary-deep)', fontWeight: 600 }}>Series</Link>
         <span style={{ color: 'var(--ryu-text-3)' }}>›</span>
         <span style={{ color: 'var(--ryu-text)' }}>New Chapter</span>
       </div>
 
-      <div className="px-8 pb-6">
+      <div className="px-8 max-md:px-4 pb-6">
         <div className="font-mono-ryu text-[11px] tracking-[0.14em] uppercase mb-2" style={{ color: 'var(--ryu-primary-deep)' }}>Add chapter</div>
         <h1 className="font-heading font-bold" style={{ fontSize: 36, letterSpacing: -0.8, color: 'var(--ryu-text)', margin: 0 }}>New Chapter</h1>
       </div>
 
-      <div style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
+      <div className="max-lg:flex-col max-md:px-4! max-md:pb-[calc(10.5rem+env(safe-area-inset-bottom))]!" style={{ display: 'flex', flex: 1, gap: 24, padding: '0 32px 112px' }}>
 
-        <div style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="max-lg:flex-none! max-lg:max-w-none!" style={{ flex: 1, maxWidth: 480, display: 'flex', flexDirection: 'column', gap: 20 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, padding: 22 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 18, paddingBottom: 10, borderBottom: '1px dashed var(--ryu-border)' }}>
@@ -362,7 +362,7 @@ export default function NewChapterPage() {
                 </Select>
                 )}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: 14 }}>
+              <div className="grid grid-cols-1 md:grid-cols-[140px_1fr]" style={{ gap: 14 }}>
                 <div>
                   <label style={labelStyle}>Chapter # <span style={{ color: 'var(--ryu-primary)' }}>*</span></label>
                   <input
@@ -419,7 +419,7 @@ export default function NewChapterPage() {
 
         </div>
 
-        <div className="hidden lg:flex flex-col gap-4" style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="flex flex-col gap-4 max-lg:flex-none! max-lg:self-stretch! max-lg:static!" style={{ flex: 1, alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
 
           <div style={{ background: 'var(--ryu-surface-1)', border: '1px solid var(--ryu-border)', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--ryu-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -446,7 +446,7 @@ export default function NewChapterPage() {
               {pages.length > 0 && (
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handlePageDragEnd}>
                   <SortableContext items={pages.map(p => p.id)} strategy={rectSortingStrategy}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 10 }}>
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(88px,1fr))] md:grid-cols-[repeat(5,1fr)]" style={{ gap: 8, marginBottom: 10 }}>
                       {pages.map((page, idx) => (
                         <SortablePageThumbnail key={page.id} page={page} index={idx} onRemove={removePage} locked={chapterSaved} />
                       ))}
@@ -462,7 +462,12 @@ export default function NewChapterPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'var(--ryu-text-3)' }}>
                 <AlertCircle size={12} style={{ color: 'var(--ryu-primary-deep)', flexShrink: 0 }} />
-                {chapterSaved ? 'Page order is locked once saving starts · reorder later from the edit page' : 'Drag to reorder · upload in reading order'}
+                {chapterSaved ? 'Page order is locked once saving starts · reorder later from the edit page' : (
+                  <>
+                    <span className="max-md:hidden">Drag to reorder · upload in reading order</span>
+                    <span className="md:hidden">Press and hold a page, then drag to reorder</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -472,7 +477,7 @@ export default function NewChapterPage() {
 
       </div>
 
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'linear-gradient(to top, var(--background) 60%, transparent)', padding: '20px 32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="action-bar" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: 'linear-gradient(to top, var(--background) 60%, transparent)', padding: '20px 32px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
        <button
           disabled={submitting}
           onClick={() => router.push('/admin/series')}

@@ -27,7 +27,7 @@ function ScrollViewer({ pages }: { pages: LocalPage[] }) {
     )
   }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: 'var(--ryu-surface-2)', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
+    <div className="max-md:max-h-[60dvh]!" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '16px 0', background: 'var(--ryu-surface-2)', borderRadius: 10, overflowY: 'auto', maxHeight: 'max(260px, calc(100dvh - 400px))' }}>
       {pages.map((page, idx) => (
         <div key={page.id} style={{ position: 'relative', width: '100%', maxWidth: page.is_spread ? 700 : 500 }}>
           <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1, background: 'color-mix(in srgb, var(--ryu-shadow) 60%, transparent)', color: 'var(--ryu-on-image)', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>
@@ -88,7 +88,8 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
     ? leaves[(spread + 1) * 2 + 1]
     : leaves[(spread - 1) * 2]
 
-  const PAGE_H = 'clamp(260px, calc(100dvh - 440px), 518px)'
+  // --flip-page-h: globals.css (.flip-book). Desktop value: clamp(260px, calc(100dvh - 440px), 518px)
+  const PAGE_H = 'var(--flip-page-h)'
   const PAGE_W = `calc(${PAGE_H} * 0.8108)`
 
   return (
@@ -114,7 +115,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
         }
       `}</style>
 
-      <div style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
+      <div className="flip-book max-md:px-2!" style={{ background: 'var(--ryu-surface-2)', borderRadius: 10, padding: '20px 16px 20px' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 14, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace', letterSpacing: 1 }}>
           P{String(spread * 2 + 1).padStart(2, '0')}
@@ -189,6 +190,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 18 }}>
           <button onClick={() => go('prev')} disabled={spread === 0 || flipping}
+            className="max-md:min-h-11"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === 0 ? 'var(--ryu-surface-2)' : 'var(--ryu-surface-1)', color: spread === 0 ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', border: '1px solid var(--ryu-border)', fontSize: 13, fontWeight: 600, cursor: spread === 0 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             <ChevronLeft size={15} /> Prev
           </button>
@@ -200,6 +202,7 @@ function FlipViewer({ pages }: { pages: LocalPage[] }) {
             ))}
           </div>
           <button onClick={() => go('next')} disabled={spread === totalSpreads - 1 || flipping}
+            className="max-md:min-h-11"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 20px', borderRadius: 8, background: spread === totalSpreads - 1 ? 'var(--ryu-surface-2)' : 'var(--ryu-primary)', color: spread === totalSpreads - 1 ? 'var(--ryu-text-3)' : 'var(--ryu-on-primary)', border: `1px solid ${spread === totalSpreads - 1 ? 'var(--ryu-border)' : 'var(--ryu-primary-deep)'}`, fontSize: 13, fontWeight: 600, cursor: spread === totalSpreads - 1 || flipping ? 'not-allowed' : 'pointer', transition: 'background 150ms ease' }}>
             Next <ChevronRight size={15} />
           </button>
@@ -230,9 +233,9 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
  
   return (
     <>
-      <div className="flex flex-1 min-h-0 overflow-y-auto gap-6 px-8 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
+      <div className="flex max-lg:flex-col max-lg:items-stretch! flex-1 min-h-0 overflow-y-auto gap-6 px-8 max-md:px-4 pb-4 max-w-8xl mx-auto w-full" style={{ alignItems: 'flex-start' }}>
  
-        <div className="flex-1 space-y-5">
+        <div className="flex-1 max-lg:flex-none space-y-5">
 
           {hasSavedRows && !publishing && pendingCount > 0 && (
             <div role="alert" style={{ padding: '12px 14px', borderRadius: 10, border: '1px solid var(--ryu-danger-border)', background: 'var(--ryu-surface-1)', fontSize: 12.5, color: 'var(--ryu-text)', lineHeight: 1.5 }}>
@@ -244,7 +247,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
           )}
 
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div className="max-md:flex-wrap max-md:gap-3" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 30, height: 30, borderRadius: 6, background: 'var(--ryu-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 }}>👁</div>
                 <div>
@@ -254,10 +257,12 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
               </div>
               <div style={{ display: 'flex', gap: 6, padding: 4, borderRadius: 10, background: 'var(--ryu-surface-2)', border: '1px solid var(--ryu-border)' }}>
                 <button onClick={() => setMode('scroll')}
+                  className="max-md:min-h-11"
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'scroll' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'scroll' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   Scroll
                 </button>
                 <button onClick={() => setMode('flip')}
+                  className="max-md:min-h-11"
                   style={{ padding: '6px 16px', borderRadius: 7, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 150ms ease', background: mode === 'flip' ? 'var(--ryu-primary)' : 'transparent', color: mode === 'flip' ? 'var(--ryu-on-primary)' : 'var(--ryu-text-2)' }}>
                   Flip
                 </button>
@@ -278,7 +283,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
 
         </div>
  
-        <div className="w-72 shrink-0 hidden lg:block" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
+        <div className="w-72 max-lg:w-full max-lg:self-stretch! max-lg:static! shrink-0" style={{ alignSelf: 'flex-start', position: 'sticky', top: 24 }}>
           <div className="space-y-4">
  
             <Card>
@@ -319,7 +324,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: seriesData.description ? 12 : 0 }}>
+              <div className="grid grid-cols-[1fr_1fr]" style={{ gap: 8, marginBottom: seriesData.description ? 12 : 0 }}>
                 {[
                   { label: 'CHAPTERS', value: '1' },
                   { label: 'PAGES',    value: String(uploadedPages.length) },
@@ -344,7 +349,7 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
         </div>
       </div>
  
-      <div style={BOTTOM_BAR}>
+      <div className="action-bar" style={BOTTOM_BAR}>
         {!publishing && !hasSavedRows && (
           <button onClick={onBack}
             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: 'pointer' }}>
