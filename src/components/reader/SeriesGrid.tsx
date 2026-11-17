@@ -407,11 +407,12 @@ export default function SeriesGrid({ series, chapterCounts }: SeriesGridProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-            {filtered.map(s => (
+            {filtered.map((s, i) => (
               <SeriesCard
                 key={s.id}
                 series={s}
                 chapterCount={chapterCounts[s.id] ?? 0}
+                riseIndex={i % 8}
               />
             ))}
           </div>
