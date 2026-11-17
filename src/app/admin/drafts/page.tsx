@@ -240,7 +240,6 @@ export default async function DraftsPage() {
                   pagesOrderedCorrectly: pagesOrderedCorrectly(ch.pages),
                   publishedAt:           ch.published_at,
                   seriesPublished:       ch.series.is_published,
-                  title:                 ch.title,
                 })
                 const { completedCount, totalCount } = checklistSummary(chapterChecklist)
                 const missingCount = totalCount - completedCount
@@ -255,7 +254,6 @@ export default async function DraftsPage() {
                   <div className="flex-1 min-w-0 max-md:basis-[calc(100%-2.5rem)]">
                     <p className="text-sm font-semibold" style={{ color: 'var(--ryu-text)' }}>
                       Chapter {ch.chapter_number}
-                      {ch.title ? ` — ${ch.title}` : ''}
                     </p>
                     <p className="text-xs mt-0.5" style={{ color: 'var(--ryu-text-2)' }}>
                       {ch.series.title}
@@ -287,7 +285,7 @@ export default async function DraftsPage() {
                   <DeleteDraftRowButton
                     kind="chapter"
                     id={ch.id}
-                    label={`Chapter ${ch.chapter_number}${ch.title ? ` — ${ch.title}` : ''}`}
+                    label={`Chapter ${ch.chapter_number}`}
                   />
                 </div>
               )})}

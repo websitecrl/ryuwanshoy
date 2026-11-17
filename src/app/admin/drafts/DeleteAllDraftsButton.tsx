@@ -47,7 +47,7 @@ export default function DeleteAllDraftsButton({ count }: { count: number }) {
     const { deleted, imageCleanupFailed } = json as DeleteDraftsResult
     toast.success(`Deleted ${plural(deleted.series.length, 'series', 'series')} and ${plural(deleted.totalChapters, 'chapter')}`)
     if (imageCleanupFailed > 0) {
-      toast.error(`${plural(imageCleanupFailed, 'image')} couldn't be removed from storage — check the logs`)
+      toast.error(`${plural(imageCleanupFailed, 'image')} couldn't be removed from storage. Check the logs.`)
     }
     router.refresh()
   }
@@ -99,8 +99,7 @@ export default function DeleteAllDraftsButton({ count }: { count: number }) {
               <ul className="pl-4 list-disc text-[var(--ryu-text)]">
                 {preview.chapters.map(c => (
                   <li key={c.id}>
-                    {c.seriesTitle ?? 'No series'} — Ch. {c.chapter_number}
-                    {c.title && <span className="text-[var(--ryu-text-3)]"> · {c.title}</span>}
+                    {c.seriesTitle ?? 'No series'} · Chapter {c.chapter_number}
                   </li>
                 ))}
               </ul>

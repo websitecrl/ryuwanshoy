@@ -116,7 +116,7 @@ function AgeGateDialog({ selected, onSelect: setSelected }: {
           fontFamily: "var(--font-fredoka), sans-serif",
         }}>
           We'll show you comics that fit your age. Pick the band<br />
-          that's true for you — you'll only be asked once.
+          that's true for you. You'll only be asked once.
         </p>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>

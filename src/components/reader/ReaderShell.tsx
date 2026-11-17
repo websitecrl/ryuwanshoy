@@ -130,9 +130,7 @@ export default function ReaderShell({
     ? `/comics/${series.slug}/${nextChapter.chapter_number}`
     : null
 
-  const chapterLabel = chapter.title
-    ? `Ch. ${chapter.chapter_number} — ${chapter.title}`
-    : `Chapter ${chapter.chapter_number}`
+  const chapterLabel = `Chapter ${chapter.chapter_number}`
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

@@ -271,8 +271,8 @@ export default function Step3({ seriesData, uploadedPages, saving, hasSavedRows,
  
             <div style={{ marginBottom: 10, fontSize: 11, color: 'var(--ryu-text-3)', fontFamily: 'monospace' }}>
               {mode === 'scroll'
-                ? '↕ Scroll mode — pages stacked vertically, like Webtoon'
-                : '⇆ Flip mode — 2 pages side by side, like an open book'}
+                ? '↕ Scroll mode: pages stacked vertically, like Webtoon'
+                : '⇆ Flip mode: 2 pages side by side, like an open book'}
             </div>
  
             {mode === 'scroll'

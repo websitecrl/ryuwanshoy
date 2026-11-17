@@ -20,7 +20,6 @@ export default function AdminChaptersPage() {
     if (!searchLower) return true
     return (
       `chapter ${c.chapter_number}`.includes(searchLower) ||
-      (c.title?.toLowerCase().includes(searchLower) ?? false) ||
       (c.series?.title?.toLowerCase().includes(searchLower) ?? false)
     )
   })
@@ -52,7 +51,7 @@ export default function AdminChaptersPage() {
     setChapters(prev => prev.filter(c => c.id !== chapter.id))
   }
 
-  const chapterLabel = (c: Chapter) => `Chapter ${c.chapter_number}${c.title ? ` — ${c.title}` : ''}`
+  const chapterLabel = (c: Chapter) => `Chapter ${c.chapter_number}`
 
   if (loading) {
     return (
@@ -89,7 +88,7 @@ export default function AdminChaptersPage() {
                 style={{ color: 'var(--ryu-text-muted)' }} />
               <input
                 type="text"
-                placeholder="Search by chapter, title, or series..."
+                placeholder="Search by chapter or series..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full h-9 pl-8 pr-4 rounded-lg text-sm outline-none"
@@ -154,7 +153,7 @@ export default function AdminChaptersPage() {
           <table className="stack-table w-full text-sm">
             <thead>
               <tr style={{ background: 'var(--ryu-surface-3)', borderBottom: '1px solid var(--ryu-border)' }}>
-                {['Chapter', 'Series', 'Title', 'Published', 'Actions'].map(h => (
+                {['Chapter', 'Series', 'Published', 'Actions'].map(h => (
                   <th key={h}
                     className={`px-5 py-3 font-semibold font-mono-ryu text-[10.5px] tracking-widest uppercase ${h === 'Actions' ? 'text-right' : 'text-left'}`}
                     style={{ color: 'var(--ryu-text-2)' }}>
@@ -178,13 +177,6 @@ export default function AdminChaptersPage() {
                     {c.series?.title
                       ? <span style={{ color: 'var(--ryu-text-2)', fontSize: 13 }}>{c.series.title}</span>
                       : <span style={{ color: 'var(--ryu-text-3)' }}>—</span>
-                    }
-                  </td>
-
-                  <td className="px-5 py-3">
-                    {c.title
-                      ? <span className="font-mono-ryu text-[11px] tracking-widest uppercase" style={{ color: 'var(--ryu-text)', fontWeight: 600 }}>{c.title}</span>
-                      : <span style={{ color: 'var(--ryu-text-3)', fontStyle: 'italic', fontSize: 12 }}>Untitled</span>
                     }
                   </td>
 

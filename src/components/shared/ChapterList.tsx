@@ -68,7 +68,7 @@ function ChapterRow({
   isLast: boolean
 }) {
   const href = `/comics/${seriesSlug}/${chapter.chapter_number}`
-  const chapterLabel = chapter.title ?? `Chapter ${chapter.chapter_number}`
+  const chapterLabel = `Chapter ${chapter.chapter_number}`
 
   function renderSubLabel() {
     if (readState.state === 'reading' && readState.currentPage && readState.totalPages) {

@@ -298,7 +298,7 @@ export default function PageUploader({
       )}
 
       <p style={{ fontSize: 11, color: 'var(--ryu-text-3)', margin: 0 }}>
-        Name files <span style={{ fontFamily: 'monospace' }}>001.jpg, 002.jpg</span> — they upload in filename order.
+        Name files <span style={{ fontFamily: 'monospace' }}>001.jpg, 002.jpg</span>, they upload in filename order.
         <span className="max-md:hidden">Drag thumbnails to reorder.</span>
         <span className="md:hidden">Press and hold a thumbnail, then drag to reorder.</span>
       </p>

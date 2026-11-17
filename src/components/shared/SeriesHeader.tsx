@@ -98,7 +98,7 @@ export default function SeriesHeader({
       : `/comics/${series.slug}/${progress.chapterNumber}`
     : startHref
   const ctaHref = hasProgress ? continueHref : startHref
-  const ctaLabel = hasProgress ? `CONTINUE — CH. ${progress!.chapterNumber}` : 'START READING'
+  const ctaLabel = hasProgress ? `CONTINUE CH. ${progress!.chapterNumber}` : 'START READING'
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 sm:pt-12 pb-8 sm:pb-12">

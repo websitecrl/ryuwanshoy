@@ -118,7 +118,6 @@ export default function NewChapterPage() {
   const [seriesIsPublished, setSeriesIsPublished] = useState<boolean | null>(null)
   const [chapterNumber,    setChapterNumber]    = useState('')
   const [existingNumbers,  setExistingNumbers]  = useState<number[]>([])
-  const [chapterTitle,     setChapterTitle]     = useState('')
   const [isEarlyAccess]    = useState(false)
   const [pages,            setPages]            = useState<PageFile[]>([])
   const [dragOver,         setDragOver]         = useState(false)
@@ -237,7 +236,7 @@ export default function NewChapterPage() {
     if (!savedChapterId.current) {
       const chRes  = await fetch('/api/chapters', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: chapterTitle.trim() || null, is_early_access: isEarlyAccess, is_published: false, is_draft: true, published_at: new Date().toISOString() }),
+        body: JSON.stringify({ series_id: selectedSeriesId, chapter_number: chapterNum, title: null, is_early_access: isEarlyAccess, is_published: false, is_draft: true, published_at: new Date().toISOString() }),
       })
       const chJson = await chRes.json().catch(() => null) as { data?: { id: string }; error?: string } | null
       if (!chRes.ok || chJson?.error || !chJson?.data) {
@@ -374,10 +373,6 @@ export default function NewChapterPage() {
                   />
                   {chapterNumber && !isValidNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Must be 1 or higher</p>}
                   {chapterNumber && isValidNumber && isDuplicateNumber && <p style={{ fontSize: 11.5, color: 'var(--ryu-danger)', marginTop: 4 }}>Chapter {chapterNum} already exists</p>}
-                </div>
-                <div>
-                  <label style={labelStyle}>Title <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>(optional)</span></label>
-                  <input style={inputStyle} value={chapterTitle} onChange={e => setChapterTitle(e.target.value)} placeholder="e.g. The Beginning" disabled={chapterSaved} />
                 </div>
               </div>
               {chapterSaved && (

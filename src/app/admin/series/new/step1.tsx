@@ -253,7 +253,7 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
             onClick={() => proceed('next')}
             style={{ padding: '10px 22px', borderRadius: 8, border: '1px solid var(--ryu-primary-deep)', background: 'var(--ryu-primary)', color: 'var(--ryu-on-primary)', fontSize: 13.5, fontWeight: 600, cursor: !hasTitle || !hasSlug ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 1px 0 color-mix(in srgb, var(--ryu-shadow) 6%, transparent)', opacity: !hasTitle || !hasSlug ? 0.5 : 1 }}>
             {checkingSlug ? <Loader2 size={14} className="animate-spin" /> : null}
-            {checkingSlug ? 'Checking slug...' : 'Next — First Chapter →'}
+            {checkingSlug ? 'Checking slug...' : 'Next: First Chapter →'}
           </button>
         </div>
       </div>

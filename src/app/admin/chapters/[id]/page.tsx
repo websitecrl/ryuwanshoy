@@ -33,7 +33,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
 
   const [chapter,         setChapter]         = useState<Chapter | null>(null)
   const [chapterNumber,   setChapterNumber]   = useState('')
-  const [title,           setTitle]           = useState('')
   const [isEarlyAccess,   setIsEarlyAccess]   = useState(false)
   const [publishedAt,     setPublishedAt]     = useState('')
   // date as loaded -> tells "admin picked a date" from "left as it was"
@@ -57,7 +56,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         const c: Chapter = data.data
         setChapter(c)
         setChapterNumber(String(c.chapter_number))
-        setTitle(c.title ?? '')
         setIsEarlyAccess(c.is_early_access ?? false)
         const loadedDate = c.published_at ? new Date(c.published_at).toISOString().slice(0, 16) : ''
         setPublishedAt(loadedDate)
@@ -77,7 +75,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
     pagesOrderedCorrectly: computePagesOrderedCorrectly(pages),
     publishedAt,
     seriesPublished,
-    title,
   })
   const checklistDone = checklist.filter(c => c.done).length
   // required items still missing (pages) -> Publish stays blocked
@@ -109,7 +106,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chapter_number: Number(chapterNumber),
-          title: title.trim() || null,
           is_early_access: isEarlyAccess,
           published_at: publish && !pickedDate ? new Date().toISOString() : publishedAt || null,
           ...(publish ? { is_published: true } : {}),
@@ -216,20 +212,6 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                     value={chapterNumber}
                     onChange={e => setChapterNumber(e.target.value)}
                     required
-                  />
-                </div>
-                <div>
-                  <label style={labelStyle}>
-                    Title{' '}
-                    <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ryu-text-3)' }}>
-                      (optional)
-                    </span>
-                  </label>
-                  <input
-                    style={inputStyle}
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    placeholder="e.g. The Beginning"
                   />
                 </div>
               </div>
