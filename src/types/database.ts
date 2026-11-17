@@ -432,7 +432,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      renumber_pages: {
+        Args: { p_chapter_id: string; p_page_ids: string[] }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
