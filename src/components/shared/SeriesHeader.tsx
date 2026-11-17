@@ -11,7 +11,6 @@ import { getBookmarkMap, setSeriesBookmarked } from '@/lib/bookmarks'
 
 type Props = {
   series: Tables<'series'>
-  chapterCount: number
   totalPages: number
   lastPublishedAt: string | null
   firstChapterNumber: number
@@ -43,7 +42,6 @@ function getReadingProgress(seriesId: string, chapterIds: string[]): ReadingProg
 
 export default function SeriesHeader({
   series,
-  chapterCount,
   lastPublishedAt,
   firstChapterNumber,
   chapterIds,
@@ -173,17 +171,10 @@ export default function SeriesHeader({
 
           <h1
             className="font-comic text-3xl sm:text-4xl md:text-5xl
-                       text-[var(--ryu-text)] leading-none mb-3"
+                       text-[var(--ryu-text)] leading-none mb-5"
           >
             {series.title}
           </h1>
-
-          <div className="flex items-center gap-8 py-4 border-y border-[var(--ryu-border)] mb-5">
-            <div className="flex items-center gap-1.5">
-              <span className="font-comic text-4xl text-[var(--ryu-text)]">{chapterCount}</span>
-              <span className="text-xs font-bold uppercase tracking-widest text-[var(--ryu-text-3)]">chapters</span>
-            </div>
-          </div>
 
           <div className="flex flex-wrap items-center gap-3">
           <Link

@@ -134,7 +134,6 @@ export default async function SeriesDetailPage({
     <main className="min-h-screen bg-[var(--background)] animate-page-in">
       <SeriesHeader
         series={series}
-        chapterCount={chapters.length}
         totalPages={totalPages}
         lastPublishedAt={lastPublishedAt}
         firstChapterNumber={firstChapterNumber}
