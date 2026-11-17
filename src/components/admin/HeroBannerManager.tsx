@@ -186,21 +186,24 @@ export default function HeroBannerManager() {
 return (
     <div className="space-y-4">
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm" style={{ color: 'var(--ryu-text-2)' }}>
           Max 5 slides. Only visible slides show on the site.
         </p>
         {slides.length < 5 && (
           <button
             onClick={() => { setShowForm(p => !p); setCreateError(null) }}
-            className="flex items-center gap-1.5 px-3 py-1.5 max-md:min-h-11 rounded-lg text-sm font-semibold cursor-pointer transition-colors duration-100"
+            aria-label={showForm ? 'Cancel' : 'Add slide'}
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 max-md:min-h-11 max-md:w-11 max-md:justify-center max-md:px-0 rounded-lg text-sm font-semibold cursor-pointer transition-colors duration-100"
             style={{
               background: showForm ? 'var(--ryu-surface-3)' : 'var(--ryu-surface-2)',
               border: '1px solid var(--ryu-border)',
               color: 'var(--ryu-text)',
             }}
           >
-            {showForm ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Add Slide</>}
+            {showForm
+              ? <><X size={14} className="max-md:size-[18px]" /> <span className="max-md:hidden">Cancel</span></>
+              : <><Plus size={14} className="max-md:size-[18px]" /> <span className="max-md:hidden">Add Slide</span></>}
           </button>
         )}
       </div>

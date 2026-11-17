@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Plus, Pencil, BookOpen, Search } from 'lucide-react'
 import DeleteButton from '@/components/admin/DeleteButton'
+import MobileCreateButton from '@/components/admin/MobileCreateButton'
 import type { Tables } from '@/types/database'
 
 type Chapter = Tables<'chapters'> & { series: { title: string } | null }
@@ -65,7 +66,9 @@ export default function AdminChaptersPage() {
   }
 
   return (
-    <div className="p-8 max-md:p-4 animate-page-in">
+    <div className="p-8 max-md:p-4 max-md:pb-24 animate-page-in">
+      {/* chapters are created from a series, so this opens the series list (same as the header button) */}
+      <MobileCreateButton href="/admin/series" label="New chapter" />
 
       <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div className="max-md:w-full">
@@ -100,7 +103,7 @@ export default function AdminChaptersPage() {
             </div>
           )}
         </div>
-        <Link href="/admin/series" className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+        <Link href="/admin/series" className="max-md:hidden flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',

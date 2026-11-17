@@ -339,11 +339,6 @@ export default function SettingsPage() {
                 </Field>
               </div>
 
-              <div style={{ marginTop: 14, padding: '12px 14px', background: 'var(--ryu-accent)', border: '1px solid var(--ryu-accent-deep)', borderRadius: 8, fontSize: 12.5, color: 'var(--ryu-on-accent)', display: 'flex', gap: 10 }}>
-                <Info size={15} style={{ flexShrink: 0, marginTop: 1 }} />
-                <span>Donations are <strong>direct to you</strong>. Ryuwanshoy never takes a cut.</span>
-              </div>
-
               <SaveRow
                 savedSection={savedSection}
                 onClick={() => handleSave({ kofi_url: settings.kofi_url, patreon_url: settings.patreon_url, donation_message: settings.donation_message }, setSavingDonation, 'donations')}

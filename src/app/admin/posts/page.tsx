@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Plus, Pencil, Image as ImageIcon } from 'lucide-react'
 import DeleteButton from '@/components/admin/DeleteButton'
+import MobileCreateButton from '@/components/admin/MobileCreateButton'
 import { formatDate } from '@/lib/time'
 
 type Post = {
@@ -55,7 +56,8 @@ export default function AdminPostsPage() {
   if (error) return <div className="p-8 max-md:p-4 text-sm" style={{ color: 'var(--ryu-danger)' }}>{error}</div>
 
   return (
-    <div className="p-8 max-md:p-4 animate-page-in">
+    <div className="p-8 max-md:p-4 max-md:pb-24 animate-page-in">
+      <MobileCreateButton href="/admin/posts/new" label="New illustration" />
 
       <div className="flex max-md:flex-col max-md:items-start items-end justify-between mb-8 gap-4">
         <div>
@@ -72,7 +74,7 @@ export default function AdminPostsPage() {
           </p>
         </div>
         <Link href="/admin/posts/new"
-            className="flex items-center gap-2 px-4 h-10 max-md:h-11 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
+            className="max-md:hidden flex items-center gap-2 px-4 h-10 rounded-full text-sm font-semibold shrink-0 transition-opacity hover:opacity-80"
             style={{
               background: 'var(--ryu-primary-soft)',
               color: 'var(--ryu-primary-deep)',

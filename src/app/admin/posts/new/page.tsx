@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { CloudUpload, X, Loader2, ImageIcon, CheckCircle2, Circle } from 'lucide-react'
+import { CloudUpload, X, Loader2, ImageIcon, CheckCircle2, Circle, Trash2 } from 'lucide-react'
 import {
   Select, SelectContent, SelectItem,
   SelectTrigger,
@@ -338,9 +338,9 @@ export default function NewPostPage() {
         padding: '20px 32px 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <Link href="/admin/posts"
+        <Link href="/admin/posts" aria-label="Discard" className="action-icon"
           style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>
-          Discard
+          <Trash2 size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Discard</span>
         </Link>
         <button
           type="button"

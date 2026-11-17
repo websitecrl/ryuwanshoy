@@ -631,6 +631,14 @@ html[data-reader-age="16"] .age-restricted[data-min-age="18"] > .age-restricted-
     display: inline-flex !important;
     align-items: center;
   }
+  /* .action-icon: a control that shows only its icon on a phone (Discard,
+     Cancel, Back, Add chapter). A 44px square that doesn't take half the bar. */
+  .admin-root .action-bar .action-icon {
+    flex: 0 0 44px !important;
+    width: 44px;
+    padding: 0 !important;
+    justify-content: center;
+  }
 
   /* Flip preview: two pages and the 8px spine have to fit across the screen.
      92px = page padding (32) + card padding (32) + preview padding (16) + spine

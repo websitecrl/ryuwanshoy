@@ -305,9 +305,11 @@ export default function Step2({ chapterTitle, onChapterTitleChange, pages, setPa
         <button
           onClick={onBack}
           disabled={submitting}
+          aria-label="Back to series info"
+          className="action-icon"
           style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: submitting ? 'var(--ryu-text-3)' : 'var(--ryu-text-2)', background: 'none', border: 'none', cursor: submitting ? 'not-allowed' : 'pointer' }}
         >
-          <ArrowLeft size={15} /> Back to series info
+          <ArrowLeft size={15} /> <span className="max-md:hidden">Back to series info</span>
         </button>
         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
           {!submitting && (

@@ -4,7 +4,7 @@ import DeleteButton from '@/components/admin/DeleteButton'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Loader2, AlertCircle, CheckCircle2, Circle } from 'lucide-react'
+import { Loader2, AlertCircle, CheckCircle2, Circle, X } from 'lucide-react'
 import PageUploader from '../../PageUploader'
 import type { Tables } from '@/types/database'
 import { getChapterChecklist, pagesOrderedCorrectly as computePagesOrderedCorrectly, publishBlockers } from '@/lib/checklists'
@@ -353,7 +353,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
           />
 
           <div style={{ display: 'flex', gap: 10 }}>
-            <Link href="/admin/chapters"
+            <Link href="/admin/chapters" aria-label="Cancel" className="action-icon"
                 style={{ display: 'inline-block',
                   padding: '10px 18px', borderRadius: 8,
                   border: '1px solid var(--ryu-border)',
@@ -362,7 +362,7 @@ export default function EditChapterPage({ params }: { params: Promise<{ id: stri
                   fontSize: 13.5, fontWeight: 600, cursor: 'pointer',
                 }}
               >
-                Cancel
+                <X size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Cancel</span>
               </Link>
             <button
               type="button"

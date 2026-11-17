@@ -4,7 +4,7 @@ import { useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { toast } from 'sonner'
-import { Image as ImageIcon, CheckCircle2, Circle, Loader2 } from 'lucide-react'
+import { Image as ImageIcon, CheckCircle2, Circle, Loader2, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Card, CardLabel } from './components'
 import { BOTTOM_BAR, GENRES, inputStyle, labelStyle, generateSlug, type SeriesFormData, type SaveState } from './types'
@@ -235,8 +235,8 @@ export default function Step1({ data, onChange, saving, onNext, onSaveDraft }: S
 
       <div className="action-bar" style={BOTTOM_BAR}>
         {!submitting && (
-          <Link href="/admin/series" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>
-            Discard
+          <Link href="/admin/series" aria-label="Discard" className="action-icon" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ryu-danger)', textDecoration: 'none' }}>
+            <Trash2 size={18} className="md:hidden" aria-hidden="true" /><span className="max-md:hidden">Discard</span>
           </Link>
         )}
         <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: submitting ? 'auto' : 0 }}>
